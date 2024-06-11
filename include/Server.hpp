@@ -6,7 +6,7 @@
 /*   By: opelser <opelser@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/11 19:17:58 by opelser           #+#    #+#             */
-/*   Updated: 2024/06/11 19:52:47 by opelser          ###   ########.fr       */
+/*   Updated: 2024/06/11 21:43:09 by opelser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,13 +15,14 @@
 
 # include <string>
 
+# define BUFFER_SIZE 1024
+
 class Server
 {
 	private:
 		// Private Attributes
-		// int				_port;
-		// std::string		_password;
-		
+		std::string		_password;	// Password for connecting to the server
+		int				_socketfd;	// Socket file descriptor
 
 	public:
 		// Constructors and Destructors
@@ -30,8 +31,14 @@ class Server
 		Server &operator=(const Server &rhs);
 		~Server(void);
 
-		// Public Methods
+		// Getters and Setters
+		void				setPassword(const std::string &password);
+		const std::string	&getPassword(void) const;
 
+		// Public Methods
+		void				bindSocket(const std::string &port);
+		void				start(void);
+		void				stop(void);
 } ;
 
 
