@@ -1,5 +1,5 @@
-NAME			:= ircserv
-NICKNAME		:= IRC
+NAME			:= ircclient
+NICKNAME		:= CLIENT
 
 # Directories
 HDR_DIR			:= include
@@ -17,13 +17,11 @@ endif
 
 # Includes
 HDR_FILES		:=								\
-					Server.hpp					\
 
 
 # Files
 SRC_FILES		:=								\
-					main.cpp					\
-					Server.cpp					\
+					client.cpp					\
 
 SRC				:= $(addprefix $(SRC_DIR)/, $(SRC_FILES))
 OBJ				:= ${addprefix ${OBJ_DIR}/, ${SRC_FILES:.cpp=.o}}
@@ -63,4 +61,4 @@ fclean:
 
 re: fclean ${NAME}
 
-.PHONY: all clean fclean re open
+.PHONY: all clean fclean re

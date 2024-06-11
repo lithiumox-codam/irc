@@ -26,8 +26,13 @@
 *.a
 *.lib
 
+# VScode
+.vscode
+
 # Executables
 *.exe
 *.out
 *.app
-irc
+ircserv
+ircclient
+

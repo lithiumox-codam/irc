@@ -6,7 +6,7 @@
 /*   By: opelser <opelser@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/11 19:17:58 by opelser           #+#    #+#             */
-/*   Updated: 2024/06/11 19:25:02 by opelser          ###   ########.fr       */
+/*   Updated: 2024/06/11 19:52:47 by opelser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,8 @@ class Server
 {
 	private:
 		// Private Attributes
-		int				_port;
-		std::string		_password;
+		// int				_port;
+		// std::string		_password;
 		
 
 	public:
