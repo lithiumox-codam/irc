@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+
+# Project related files
+.cache
+compile_commands.json
+ircserver

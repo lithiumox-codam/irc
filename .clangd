@@ -1,0 +1,8 @@
+{
+  "CompileFlags": {
+    "Add": ["-Wall", "-Wextra", "-Werror", "-std=c++11", "-pedantic", "-Wno-unused-parameter", "-Wno-unused-variable", "-Wno-unused-but-set-variable", "-Wno-unused-function", "-Wno-unused-value", "-Wno-unused-local-typedefs"]
+  },
+  "Index": {
+    "Background": "Build"
+  }
+}
