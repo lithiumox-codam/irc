@@ -38,7 +38,9 @@ int main(int argc, char **argv) {
 
 	for (auto &member : channel.getMembers()) {
 		if (member.getUsername() == "Mees") {
-			member.setPermissions(PERMISSIONS_READ | PERMISSIONS_WRITE);
+			member.setPermissions(PERMISSIONS_ALL);
+		} else if (member.getUsername() == "Kees") {
+			member.addPermissions(PERMISSIONS_READ | PERMISSIONS_WRITE | PERMISSIONS_KICK);
 		}
 		member.printPermissions();
 	}

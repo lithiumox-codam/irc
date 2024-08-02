@@ -4,12 +4,13 @@
 
 #include "./User.hpp"
 
-unsigned int const PERMISSIONS_NONE = 1 << 0;
 unsigned int const PERMISSIONS_READ = 1 << 1;
 unsigned int const PERMISSIONS_WRITE = 1 << 2;
 unsigned int const PERMISSIONS_MANAGE = 1 << 3;
 unsigned int const PERMISSIONS_BAN = 1 << 4;
 unsigned int const PERMISSIONS_KICK = 1 << 5;
+unsigned int const PERMISSIONS_ALL =
+	PERMISSIONS_READ | PERMISSIONS_WRITE | PERMISSIONS_MANAGE | PERMISSIONS_BAN | PERMISSIONS_KICK;
 
 class channelMember : public User {
    private:

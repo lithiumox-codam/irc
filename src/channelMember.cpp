@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-channelMember::channelMember(const User &user) : User(user) { this->permissions = PERMISSIONS_NONE; }
+channelMember::channelMember(const User &user) : User(user) { this->permissions = 0; }
 
 channelMember::~channelMember() {}
 
@@ -20,9 +20,6 @@ bool channelMember::hasPermissions(unsigned int permissions) {
 
 void channelMember::printPermissions() {
 	cout << "Permissions for " << this->getUsername() << ":" << endl;
-	if (this->hasPermissions(PERMISSIONS_NONE)) {
-		std::cout << "  No permissions" << std::endl;
-	}
 	if (this->hasPermissions(PERMISSIONS_READ)) {
 		std::cout << "  Read permissions" << std::endl;
 	}
@@ -40,4 +37,4 @@ void channelMember::printPermissions() {
 	}
 }
 
-void channelMember::clearPermissions() { this->permissions = PERMISSIONS_NONE; }
+void channelMember::clearPermissions() { this->permissions = 0; }
