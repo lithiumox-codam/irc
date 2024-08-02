@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        ::::::::            */
-/*   Server.hpp                                         :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: opelser <opelser@student.42.fr>              +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/06/11 19:17:58 by opelser       #+#    #+#                 */
-/*   Updated: 2024/08/02 16:29:14 by mdekker       ########   odam.nl         */
+/*                                                        :::      ::::::::   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: opelser <opelser@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/06/11 19:17:58 by opelser           #+#    #+#             */
+/*   Updated: 2024/08/02 18:21:13 by opelser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #define SERVER_HPP
 
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -35,6 +36,7 @@ class Server {
 	bool running;  // Server running status
 
    public:
+	Server();
 	Server(const string &password, const string &port);
 	Server(const Server &rhs);
 	Server &operator=(const Server &rhs);
@@ -42,10 +44,10 @@ class Server {
 
 	// Getters and Setters
 	void setPassword(const string &password);
-	const std::string &getPassword(void) const;
+	const string &getPassword(void) const;
 
 	// Public Methods
-	void bindSocket(const string &port);
+	void bindSocket(const string &portString);
 	void start(void);
 	void stop(void);
 };

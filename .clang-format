@@ -29,17 +29,17 @@ AttributeMacros:
 BinPackArguments: true
 BinPackParameters: true
 BraceWrapping:
-  AfterCaseLabel:  false
-  AfterClass:      false
-  AfterControlStatement: Never
-  AfterEnum:       false
-  AfterFunction:   false
-  AfterNamespace:  false
-  AfterObjCDeclaration: false
-  AfterStruct:     false
-  AfterUnion:      false
-  AfterExternBlock: false
-  BeforeCatch:     false
+  AfterCaseLabel:  true
+  AfterClass:      true
+  AfterControlStatement: Always
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  true
+  AfterObjCDeclaration: true
+  AfterStruct:     true
+  AfterUnion:      true
+  AfterExternBlock: true
+  BeforeCatch:     true
   BeforeElse:      false
   BeforeLambdaBody: false
   BeforeWhile:     false
@@ -68,7 +68,7 @@ DeriveLineEnding: true
 DerivePointerAlignment: true
 DisableFormat:   false
 EmptyLineAfterAccessModifier: Never
-EmptyLineBeforeAccessModifier: LogicalBlock
+EmptyLineBeforeAccessModifier: Always
 ExperimentalAutoDetectBinPacking: false
 PackConstructorInitializers: NextLine
 BasedOnStyle:    ''

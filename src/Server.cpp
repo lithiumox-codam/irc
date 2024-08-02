@@ -1,71 +1,104 @@
 #include "../include/Server.hpp"
 
-#include <unistd.h>
+#include <cstring>
+#include <string>
 
-Server::Server(const string &password, const string &port) {
+Server::Server() {
 	char hostname[1024];
 	try {
 		gethostname(hostname, 1024);
-		this->password = password;
-		this->port = stoi(port);
 		this->hostname = hostname;
 		this->running = false;
 		this->socket = 0;
-	} catch (const std::exception &e) {
-		std::cerr << "Error: " << e.what() << std::endl;
+	} catch (const exception &e) {
+		cerr << "Error: " << e.what() << endl;
 	}
-	this->start();
 }
 
 Server::~Server() { this->stop(); }
 
-void Server::stop() {
+void Server::setPassword(const string &password) { this->password = password; }
+
+const string &Server::getPassword() const { return this->password; }
+
+void Server::bindSocket(const string &portString) {
+	// Set the port
+	in_port_t port = htons(stoi(portString));
+
+	// Create a socket
+	this->socket = ::socket(AF_INET, SOCK_STREAM, 0);
+
+	if (this->socket == -1) {
+		cerr << "Error: socket creation failed" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	int flags = fcntl(this->socket, F_GETFL, 0);
+
+	if (fcntl(this->socket, F_SETFL, flags | O_NONBLOCK) == -1) {
+		cerr << "Error: fcntl failed" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	const struct sockaddr_in addr = {
+		.sin_family = AF_INET, .sin_port = port, .sin_addr = {INADDR_ANY}, .sin_zero = {0}};
+
+	if (bind(this->socket, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+		cerr << "Error: bind failed" << endl;
+		exit(EXIT_FAILURE);
+	}
+	cout << "Socket bound to port " << portString << endl;
+}
+
+static void receiveMessage(int client) {
+	char buffer[BUFFER_SIZE + 1];
+
+	cout << "Received message:" << endl;
+
+	while (recv(client, buffer, BUFFER_SIZE, 0) > 0) {
+		buffer[BUFFER_SIZE] = '\0';
+		cout << buffer;
+	}
+	cout << endl;
+}
+
+void Server::start(void) {
+	// Listen for incoming connections, with a backlog of 10 pending connections
+	if (listen(this->socket, 10) == -1) {
+		cerr << "Error: listen failed" << endl;
+		return;
+	} else {
+		cout << "Server started on socket fd " << this->socket << endl;
+		cout << "Press Ctrl+C to stop the server" << endl;
+		cout << "Password: " << this->password << endl;
+		cout << "\nListening for incoming connections..." << endl;
+	}
+
+	this->running = true;
+	// Listen for incoming connections, with a backlog of 10 pending connections
+	while (1) {
+		// Accept a connection
+		const int client = accept(this->socket, NULL, NULL);
+
+		if (client == -1) {
+			if (errno == EWOULDBLOCK) continue;
+
+			cerr << strerror(errno) << endl;
+			cerr << "Error: accept failed" << endl;
+			exit(EXIT_FAILURE);
+		} else {
+			cout << "Connection accepted" << endl;
+		}
+
+		// Receive a message from the client
+		receiveMessage(client);
+	}
+}
+
+void Server::stop(void) {
 	cout << "Server stopped" << endl;
 	if (this->running) {
 		close(this->socket);
 		this->running = false;
-	}
-}
-
-void Server::start() {
-	struct sockaddr_in address;
-	if (this->running) {
-		std::cerr << "Server is already running" << std::endl;
-		return;
-	}
-
-	if ((this->socket = ::socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-		std::cerr << "Socket creation error" << std::endl;
-		return;
-	}
-
-	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(this->port);
-
-	if (bind(this->socket, (struct sockaddr *)&address, sizeof(address)) < 0) {
-		std::cerr << "Bind failed" << std::endl;
-		return;
-	}
-
-	if (listen(this->socket, 3) < 0) {
-		std::cerr << "Listen failed" << std::endl;
-		return;
-	}
-
-	this->running = true;
-	cout << "Server started on " << this->hostname << ":" << this->port << endl;
-
-	while (running) {
-		int new_socket;
-		int addrlen = sizeof(address);
-		if ((new_socket = accept(this->socket, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
-			std::cerr << "Accept failed" << std::endl;
-			return;
-		}
-
-		char buffer[BUFFER_SIZE] = {0};
-		read(new_socket, buffer, BUFFER_SIZE);
-		cout << buffer << endl;
 	}
 }

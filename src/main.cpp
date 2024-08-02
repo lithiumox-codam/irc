@@ -3,6 +3,8 @@
 
 #include "../include/Server.hpp"
 
+Server server;
+
 void signalHandler(int signum) {
 	std::cerr << "Interrupt signal (" << signum << ") received" << std::endl;
 
@@ -17,8 +19,8 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	Server server(argv[2], argv[1]);
-	atexit(server.stop());
-
+	server.bindSocket(argv[1]);
+	server.setPassword(argv[2]);
+	server.start();
 	return 0;
 }
