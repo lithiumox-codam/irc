@@ -10,8 +10,9 @@ class User {
 	string nickname;
 
    public:
-	void Client(const string &username, const string &nickname);
-	~Client();
-	void stop();
-	void start();
-}
+	User(const string &username, const string &nickname);
+	~User();
+	const string &getUsername();
+	const string &getNickname();
+	void setNickname(const string &nickname);
+};
