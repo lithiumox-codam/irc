@@ -1,5 +1,5 @@
-NAME			:= ircserv
-NICKNAME		:= IRC
+NAME			:= ircclient
+NICKNAME		:= CLIENT
 
 # Directories
 HDR_DIR			:= include
@@ -9,7 +9,7 @@ OBJ_DIR			:= obj
 
 # Compiler flags
 CC				:= c++
-CFLAGS			:= -Wall -Werror -Wextra -std=c++20
+CFLAGS			:= -Wall -Werror -Wextra -std=c++11 
 
 ifdef DEBUG
 	CFLAGS		+= -g -fsanitize=address
@@ -17,13 +17,11 @@ endif
 
 # Includes
 HDR_FILES		:=								\
-					Server.hpp					\
 
 
 # Files
 SRC_FILES		:=								\
-					main.cpp					\
-					Server.cpp					\
+					client.cpp					\
 
 SRC				:= $(addprefix $(SRC_DIR)/, $(SRC_FILES))
 OBJ				:= ${addprefix ${OBJ_DIR}/, ${SRC_FILES:.cpp=.o}}
@@ -41,7 +39,7 @@ all: ${NAME}
 
 $(NAME): $(OBJ)
 	@ printf "%b%s%b" "$(YELLOW)$(BOLD)" "Compiling $(NICKNAME)..." "$(RESET)"
-	@ $(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+	@ $(CC) $(CFLAGS) $(OBJ) -o $(NAME) 
 	@ printf "\t\t%b%s%b\n" "$(GREEN)$(BOLD)" "[OK]" "$(RESET)"
 
 
@@ -63,4 +61,4 @@ fclean:
 
 re: fclean ${NAME}
 
-.PHONY: all clean fclean re open
+.PHONY: all clean fclean re

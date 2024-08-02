@@ -26,12 +26,23 @@
 *.a
 *.lib
 
+# VScode
+.vscode
+
 # Executables
 *.exe
 *.out
 *.app
+<<<<<<< HEAD
 
 # Project related files
 .cache
 compile_commands.json
 ircserver
+=======
+ircserv
+ircclient
+
+# Subject File
+subject.pdf
+>>>>>>> refs/remotes/origin/main
