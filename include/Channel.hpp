@@ -17,4 +17,5 @@ class Channel {
 	void addUser(const User &user);
 	void removeUser(User &user);
 	bool hasUser(User &user);
+	std::vector<channelMember> &getMembers();
 };

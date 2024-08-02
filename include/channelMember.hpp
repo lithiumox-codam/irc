@@ -23,5 +23,6 @@ class channelMember : public User {
 	void addPermissions(unsigned int permissions);
 	void removePermissions(unsigned int permissions);
 	bool hasPermissions(unsigned int permissions);
+	void printPermissions();
 	void clearPermissions();
 };

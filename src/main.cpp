@@ -11,7 +11,14 @@ Server server;
 
 void signalHandler(int signum) {
 	std::cerr << "Interrupt signal (" << signum << ") received" << std::endl;
-
+	switch (signum) {
+		case SIGINT:  // ctrl + c
+			std::cerr << "Exiting..." << std::endl;
+			server.stop();
+			break;
+		default:
+			break;
+	}
 	exit(signum);
 }
 
@@ -24,11 +31,16 @@ int main(int argc, char **argv) {
 	}
 
 	User mees = User("Mees", "Joe Mama");
+	User kees = User("Kees", "Joe Mama");
 	Channel channel = Channel("General");
 	channel.addUser(mees);
+	channel.addUser(kees);
 
-	if (channel.hasUser(mees)) {
-		std::cout << "Mees is in the channel" << std::endl;
+	for (auto &member : channel.getMembers()) {
+		if (member.getUsername() == "Mees") {
+			member.setPermissions(PERMISSIONS_READ | PERMISSIONS_WRITE);
+		}
+		member.printPermissions();
 	}
 
 	server.bindSocket(argv[1]);

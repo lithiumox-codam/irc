@@ -1,5 +1,7 @@
 #include "../include/Channel.hpp"
 
+#include <iostream>
+
 Channel::Channel(const std::string &name) : name(name) {}
 
 Channel::~Channel() {}
@@ -21,9 +23,12 @@ void Channel::removeUser(User &user) {
 
 bool Channel::hasUser(User &user) {
 	for (auto it = this->members.begin(); it != this->members.end(); it++) {
+		cout << it->getUsername() << " " << user.getUsername() << endl;
 		if (it->getUsername() == user.getUsername()) {
 			return true;
 		}
 	}
 	return false;
 }
+
+std::vector<channelMember> &Channel::getMembers() { return this->members; }
