@@ -20,5 +20,15 @@ When there is new data available in at least one of the FDs in the interest list
 https://github.com/marineks/Ft_irc
 https://ircgod.com/
 
-
-
+## Example event loop
+event loop:
+	accept connections, save them in a list
+	for each connection in the list:
+		poll for incoming data
+		if data is available:
+			read data
+			if data not complete:
+				continue
+			else:
+				process data (parse):
+				write message to all clients
