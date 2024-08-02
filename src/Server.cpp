@@ -1,37 +1,71 @@
-#include "../includes/irc.hpp"
+#include "../include/Server.hpp"
 
-IRC::Server::Server() {
-	this->socket = 0;
-	this->host = "localhost";
-	this->port = 6667;
-	this->name = "irc_server";
-	this->password = "";
-	this->motd = "Welcome to the server!";
-	this->max_clients = 10;
+#include <unistd.h>
+
+Server::Server(const string &password, const string &port) {
+	char hostname[1024];
+	try {
+		gethostname(hostname, 1024);
+		this->password = password;
+		this->port = stoi(port);
+		this->hostname = hostname;
+		this->running = false;
+		this->socket = 0;
+	} catch (const std::exception &e) {
+		std::cerr << "Error: " << e.what() << std::endl;
+	}
+	this->start();
 }
 
-IRC::Server::Server(const std::string &host, int port, const std::string &name, int max_clients, const std::string &password) {
-	this->socket = 0;
-	this->host = host;
-	this->port = port;
-	this->name = name;
-	this->password = password;
-	this->motd = "Welcome to the server!";
-	this->max_clients = max_clients;
+Server::~Server() { this->stop(); }
+
+void Server::stop() {
+	cout << "Server stopped" << endl;
+	if (this->running) {
+		close(this->socket);
+		this->running = false;
+	}
 }
 
-IRC::Server::~Server() {}
+void Server::start() {
+	struct sockaddr_in address;
+	if (this->running) {
+		std::cerr << "Server is already running" << std::endl;
+		return;
+	}
 
-void IRC::Server::send(const std::string &message, Options options = Options()) {
-	if (options == Options::ALL) {
-		for (auto &client : this->clients) {
-			client->send(message);
+	if ((this->socket = ::socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		std::cerr << "Socket creation error" << std::endl;
+		return;
+	}
+
+	address.sin_family = AF_INET;
+	address.sin_addr.s_addr = INADDR_ANY;
+	address.sin_port = htons(this->port);
+
+	if (bind(this->socket, (struct sockaddr *)&address, sizeof(address)) < 0) {
+		std::cerr << "Bind failed" << std::endl;
+		return;
+	}
+
+	if (listen(this->socket, 3) < 0) {
+		std::cerr << "Listen failed" << std::endl;
+		return;
+	}
+
+	this->running = true;
+	cout << "Server started on " << this->hostname << ":" << this->port << endl;
+
+	while (running) {
+		int new_socket;
+		int addrlen = sizeof(address);
+		if ((new_socket = accept(this->socket, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
+			std::cerr << "Accept failed" << std::endl;
+			return;
 		}
-	} else if (options == Options::EXCEPT) {
-		for (auto &client : this->clients) {
-			if (client->getSocket() != this->socket) {
-				client->send(message);
-			}
-		}
+
+		char buffer[BUFFER_SIZE] = {0};
+		read(new_socket, buffer, BUFFER_SIZE);
+		cout << buffer << endl;
 	}
 }

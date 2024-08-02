@@ -1,7 +1,7 @@
 # ToDo
 - [ ] Establish a working client/server socket connection
 
-- [ ] Add the signal handling 
+- [ ] Add the signal handling
 	- [ ] CTRL + C
 	- [ ] CTRL + Z
 	- [ ] CTRL + D
@@ -21,7 +21,7 @@
 - [ ] The operator commands
 	- [ ] KICK
 	- [ ] INVITE
-	- [ ] TOPIC 
+	- [ ] TOPIC
 	- [ ] MODE
 		- [ ] i: Set/remove Invite-only channel
 		- [ ] t: Set/remove the restrictions of the TOPIC command to channel operators

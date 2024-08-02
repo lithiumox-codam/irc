@@ -5,7 +5,7 @@ NICKNAME		:= IRC
 HDR_DIR			:= include
 LIB_DIR			:= lib
 SRC_DIR			:= src
-OBJ_DIR			:= obj
+OBJ_DIR			:= build
 
 # Compiler flags
 CC				:= c++
@@ -16,18 +16,12 @@ ifdef DEBUG
 endif
 
 # Includes
-HDR_FILES		:=								\
-					Server.hpp					\
-
+HDR		:= $(wildcard $(HDR_DIR)/*.hpp)
 
 # Files
-SRC_FILES		:=								\
-					main.cpp					\
-					Server.cpp					\
+SRC		:=	$(wildcard $(SRC_DIR)/*.cpp)
 
-SRC				:= $(addprefix $(SRC_DIR)/, $(SRC_FILES))
-OBJ				:= ${addprefix ${OBJ_DIR}/, ${SRC_FILES:.cpp=.o}}
-HDR				:= $(addprefix $(HDR_DIR)/, $(HDR_FILES))
+OBJ				:= $(addprefix $(OBJ_DIR)/, $(notdir $(SRC:.cpp=.o)))
 
 # Colours
 GREEN			:= \033[32;1m
@@ -46,7 +40,7 @@ $(NAME): $(OBJ)
 
 
 $(OBJ_DIR)/%.o: src/%.cpp $(HDR)
-	@ mkdir -p obj
+	@ mkdir -p $(OBJ_DIR)
 	@ $(CC) $(CFLAGS) -c $< -o $@ -I $(HDR_DIR)
 
 open: $(NAME)
@@ -62,5 +56,8 @@ fclean:
 	@ rm -rf ${NAME}
 
 re: fclean ${NAME}
+
+format:
+	@ clang-format -i $(SRC) $(HDR)
 
 .PHONY: all clean fclean re open
