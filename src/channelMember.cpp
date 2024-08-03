@@ -1,40 +1,40 @@
-#include "../include/channelMember.hpp"
+#include "ChannelMember.hpp"
 
 #include <iostream>
 
-channelMember::channelMember(const User &user) : User(user) { this->permissions = 0; }
+ChannelMember::ChannelMember(const User &user) : User(user) { this->permissions = 0; }
 
-channelMember::~channelMember() {}
+ChannelMember::~ChannelMember() {}
 
-void channelMember::setPermissions(unsigned int permissions) { this->permissions = permissions; }
+void ChannelMember::setPermissions(unsigned int permissions) { this->permissions = permissions; }
 
-unsigned int channelMember::getPermissions() { return this->permissions; }
+unsigned int ChannelMember::getPermissions() { return this->permissions; }
 
-void channelMember::addPermissions(unsigned int permissions) { this->permissions |= permissions; }
+void ChannelMember::addPermissions(unsigned int permissions) { this->permissions |= permissions; }
 
-void channelMember::removePermissions(unsigned int permissions) { this->permissions &= ~permissions; }
+void ChannelMember::removePermissions(unsigned int permissions) { this->permissions &= ~permissions; }
 
-bool channelMember::hasPermissions(unsigned int permissions) {
+bool ChannelMember::hasPermissions(unsigned int permissions) {
 	return (this->permissions & permissions) == permissions;
 }
 
-void channelMember::printPermissions() {
+void ChannelMember::printPermissions() {
 	cout << "Permissions for " << this->getUsername() << ":" << endl;
-	if (this->hasPermissions(PERMISSIONS_READ)) {
+	if (this->hasPermissions(P_READ)) {
 		std::cout << "  Read permissions" << std::endl;
 	}
-	if (this->hasPermissions(PERMISSIONS_WRITE)) {
+	if (this->hasPermissions(P_WRITE)) {
 		std::cout << "  Write permissions" << std::endl;
 	}
-	if (this->hasPermissions(PERMISSIONS_MANAGE)) {
+	if (this->hasPermissions(P_MANAGE)) {
 		std::cout << "  Manage permissions" << std::endl;
 	}
-	if (this->hasPermissions(PERMISSIONS_BAN)) {
+	if (this->hasPermissions(P_BAN)) {
 		std::cout << "  Ban permissions" << std::endl;
 	}
-	if (this->hasPermissions(PERMISSIONS_KICK)) {
+	if (this->hasPermissions(P_KICK)) {
 		std::cout << "  Kick permissions" << std::endl;
 	}
 }
 
-void channelMember::clearPermissions() { this->permissions = 0; }
+void ChannelMember::clearPermissions() { this->permissions = 0; }

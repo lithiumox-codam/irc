@@ -1,6 +1,8 @@
-#include "../include/Channel.hpp"
+#include "Channel.hpp"
 
 #include <iostream>
+
+#include "ChannelMember.hpp"
 
 Channel::Channel(const std::string &name) : name(name) {}
 
@@ -10,7 +12,7 @@ std::string Channel::getName() { return this->name; }
 
 void Channel::setName(const std::string &name) { this->name = name; }
 
-void Channel::addUser(const User &user) { this->members.push_back(channelMember(user)); }
+void Channel::addUser(const User &user) { this->members.push_back(ChannelMember(user)); }
 
 void Channel::removeUser(User &user) {
 	for (auto it = this->members.begin(); it != this->members.end(); it++) {
@@ -31,4 +33,4 @@ bool Channel::hasUser(User &user) {
 	return false;
 }
 
-std::vector<channelMember> &Channel::getMembers() { return this->members; }
+std::vector<ChannelMember> &Channel::getMembers() { return this->members; }

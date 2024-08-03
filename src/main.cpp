@@ -4,16 +4,21 @@
 #include <iostream>
 #include <vector>
 
-#include "../include/Channel.hpp"
-#include "../include/Server.hpp"
+#include "Channel.hpp"
+#include "ChannelMember.hpp"
+#include "Server.hpp"
 
 Server server;
 
 void signalHandler(int signum) {
-	std::cerr << "Interrupt signal (" << signum << ") received" << std::endl;
 	switch (signum) {
 		case SIGINT:  // ctrl + c
-			std::cerr << "Exiting..." << std::endl;
+			server.stop();
+			break;
+		case SIGTERM:  // kill command
+			server.stop();
+			break;
+		case SIGKILL:  // kill -9 command
 			server.stop();
 			break;
 		default:
@@ -38,11 +43,19 @@ int main(int argc, char **argv) {
 
 	for (auto &member : channel.getMembers()) {
 		if (member.getUsername() == "Mees") {
-			member.setPermissions(PERMISSIONS_ALL);
+			member.setPermissions(P_ALL);
 		} else if (member.getUsername() == "Kees") {
-			member.addPermissions(PERMISSIONS_READ | PERMISSIONS_WRITE | PERMISSIONS_KICK);
+			member.setPermissions(P_READ | P_WRITE);
+			member.addPermissions(P_BAN);
 		}
 		member.printPermissions();
+	}
+
+	// list all the members of the channel with ban permissions
+	for (auto &member : channel.getMembers()) {
+		if (member.hasPermissions(P_KICK | P_MANAGE)) {
+			std::cout << member.getUsername() << " has kick permissions" << std::endl;
+		}
 	}
 
 	server.bindSocket(argv[1]);

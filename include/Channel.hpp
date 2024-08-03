@@ -2,11 +2,11 @@
 
 #include <vector>
 
-#include "channelMember.hpp"
+#include "ChannelMember.hpp"
 
 class Channel {
    private:
-	vector<channelMember> members;
+	vector<ChannelMember> members;
 	std::string name;
 
    public:
@@ -17,5 +17,5 @@ class Channel {
 	void addUser(const User &user);
 	void removeUser(User &user);
 	bool hasUser(User &user);
-	std::vector<channelMember> &getMembers();
+	std::vector<ChannelMember> &getMembers();
 };

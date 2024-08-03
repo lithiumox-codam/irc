@@ -1,7 +1,12 @@
-#include "../include/Server.hpp"
+#include "Server.hpp"
+
+#include <unistd.h>
 
 #include <cstring>
+#include <iostream>
+#include <sstream>
 #include <string>
+#include <vector>
 
 Server::Server() {
 	char hostname[1024];
@@ -50,16 +55,44 @@ void Server::bindSocket(const string &portString) {
 	cout << "Socket bound to port " << portString << endl;
 }
 
-static void receiveMessage(int client) {
-	char buffer[BUFFER_SIZE + 1];
+static string receiveMessage(int client) {
+	string message;
+	int bytesReceived;
+	char buffer[BUFFER_SIZE];
 
-	cout << "Received message:" << endl;
+	while (1) {
+		bytesReceived = recv(client, buffer, BUFFER_SIZE, 0);
 
-	while (recv(client, buffer, BUFFER_SIZE, 0) > 0) {
-		buffer[BUFFER_SIZE] = '\0';
-		cout << buffer;
+		if (bytesReceived == -1) {
+			if (errno == EWOULDBLOCK) continue;
+
+			cerr << strerror(errno) << endl;
+			cerr << "Error: recv failed" << endl;
+			exit(EXIT_FAILURE);
+		} else if (bytesReceived == 0) {
+			cout << "Connection closed" << endl;
+			close(client);
+			return nullptr;
+		} else {
+			cout << "Received " << bytesReceived << " bytes" << endl;
+			buffer[bytesReceived] = '\0';
+			return message.append(buffer);
+		}
 	}
-	cout << endl;
+}
+
+std::vector<std::string> split(const std::string &str, const std::string &delimiter) {
+	std::vector<std::string> parts;
+	size_t start = 0;
+	size_t end = 0;
+
+	while ((end = str.find(delimiter, start)) != std::string::npos) {
+		parts.push_back(str.substr(start, end - start));
+		start = end + delimiter.length();
+	}
+
+	parts.push_back(str.substr(start));
+	return parts;
 }
 
 void Server::start(void) {
@@ -76,6 +109,7 @@ void Server::start(void) {
 
 	this->running = true;
 	// Listen for incoming connections, with a backlog of 10 pending connections
+	string message;
 	while (1) {
 		// Accept a connection
 		const int client = accept(this->socket, NULL, NULL);
@@ -91,14 +125,18 @@ void Server::start(void) {
 		}
 
 		// Receive a message from the client
-		receiveMessage(client);
+		message.append(receiveMessage(client));
+		if (message.empty()) continue;
+		if (message.ends_with("\r\n")) {
+			cout << "Received message:\n" << message << endl;
+			message.clear();
+		}
 	}
 }
 
 void Server::stop(void) {
-	cout << "Server stopped" << endl;
-	if (this->running) {
-		close(this->socket);
-		this->running = false;
-	}
+	if (!this->running) return;
+	cout << "\rServer stopped" << endl;
+	close(this->socket);
+	this->running = false;
 }

@@ -9,7 +9,7 @@ OBJ_DIR			:= build
 
 # Compiler flags
 CC				:= c++
-CFLAGS			:= -Wall -Werror -Wextra -std=c++20
+CFLAGS			:= -Wall -Werror -Wextra -std=c++20 -I./$(HDR_DIR) -I $(LIB_DIR)
 
 ifdef DEBUG
 	CFLAGS		+= -g -fsanitize=address
@@ -59,5 +59,11 @@ re: fclean ${NAME}
 
 format:
 	@ clang-format -i $(SRC) $(HDR)
+
+run: all
+	@ ./$(NAME) 8080 test
+
+bear: fclean
+	@ bear -- make
 
 .PHONY: all clean fclean re open
