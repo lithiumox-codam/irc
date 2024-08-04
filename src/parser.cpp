@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <iostream>
 #include <ostream>
 #include <string>
@@ -40,8 +41,7 @@ typedef struct func_arr {
 } func_arr;
 
 static pair<PacketType, string> extract(PacketType type, const string &str, unsigned long start) {
-	if (type == PacketType::PASS) cout << str << endl;
-	return {type, str.substr(start, str.find("\n") - 1)};
+	return {type, str.substr(start, str.find("\n", start) - start)};
 }
 
 static const func_arr funcs[] = {{"CAP", PacketType::CAP, &extract},   {"NICK", PacketType::NICK, &extract},
@@ -58,12 +58,15 @@ vector<string> split(const string &str, const string &delimiter) {
 		parts.push_back(str.substr(start, (end - start)));
 		start = end + delimiter.length();
 	}
+
 	if (start != str.length()) parts.push_back(str.substr(start));
+
 	return parts;
 }
 
 unordered_map<PacketType, string> parse(const string &message) {
 	unordered_map<PacketType, string> parsed;
+
 	for (const auto &func : funcs) {
 		unsigned long pos = message.find(func.key);
 		if (func.func && pos != string::npos) {

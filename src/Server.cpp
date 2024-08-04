@@ -122,7 +122,7 @@ void Server::start(void) {
 		if (message.ends_with("\r\n")) {
 			unordered_map<PacketType, string> parsed = parse(message);
 			for (auto &pair : parsed) {
-				cout << pair.first << " " << pair.second << endl;
+				cout << pair.first << "\t" << pair.second << endl;
 			}
 			sendMessage(
 				client,
