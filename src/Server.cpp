@@ -1,12 +1,16 @@
 #include "Server.hpp"
 
+#include <sys/socket.h>
 #include <unistd.h>
 
 #include <cstring>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+#include "General.hpp"
 
 Server::Server() {
 	char hostname[1024];
@@ -32,6 +36,8 @@ void Server::bindSocket(const string &portString) {
 
 	// Create a socket
 	this->socket = ::socket(AF_INET, SOCK_STREAM, 0);
+	int reuseAddr = 1;
+	setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr));
 
 	if (this->socket == -1) {
 		cerr << "Error: socket creation failed" << endl;
@@ -81,20 +87,6 @@ static string receiveMessage(int client) {
 	}
 }
 
-std::vector<std::string> split(const std::string &str, const std::string &delimiter) {
-	std::vector<std::string> parts;
-	size_t start = 0;
-	size_t end = 0;
-
-	while ((end = str.find(delimiter, start)) != std::string::npos) {
-		parts.push_back(str.substr(start, end - start));
-		start = end + delimiter.length();
-	}
-
-	parts.push_back(str.substr(start));
-	return parts;
-}
-
 void Server::start(void) {
 	// Listen for incoming connections, with a backlog of 10 pending connections
 	if (listen(this->socket, 10) == -1) {
@@ -128,9 +120,25 @@ void Server::start(void) {
 		message.append(receiveMessage(client));
 		if (message.empty()) continue;
 		if (message.ends_with("\r\n")) {
-			cout << "Received message:\n" << message << endl;
+			unordered_map<PacketType, string> parsed = parse(message);
+			for (auto &pair : parsed) {
+				cout << pair.first << " " << pair.second << endl;
+			}
+			sendMessage(
+				client,
+				":localhost 001 LithiumOx :Welcome to the Internet Relay Network LithiumOx!~lithiumox@localhost\r\n");
+
 			message.clear();
+			close(client);
 		}
+	}
+}
+
+void Server::sendMessage(int client, const string &message) {
+	if (send(client, message.c_str(), message.length(), 0) == -1) {
+		cerr << strerror(errno) << endl;
+		cerr << "Error: send failed" << endl;
+		exit(EXIT_FAILURE);
 	}
 }
 

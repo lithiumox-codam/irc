@@ -12,6 +12,8 @@ unsigned int const U_REGISTERED = 1 << 2;
 unsigned int const U_AUTHENTICATED = 1 << 3;
 /** Determines if the user has received the welcome message. */
 unsigned int const U_WELCOME = 1 << 4;
+/** Combines all the user flags. To easily check if someone is fully registered. */
+unsigned int const U_COMPLETED = U_INFO | U_REGISTERED | U_AUTHENTICATED | U_WELCOME;
 
 class User {
    private:

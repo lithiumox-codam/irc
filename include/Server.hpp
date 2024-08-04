@@ -6,7 +6,7 @@
 /*   By: opelser <opelser@student.42.fr>              +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/11 19:17:58 by opelser       #+#    #+#                 */
-/*   Updated: 2024/08/03 23:30:32 by mdekker       ########   odam.nl         */
+/*   Updated: 2024/08/04 20:28:36 by mdekker       ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,9 @@
 #include <iostream>
 #include <string>
 
+#include "Channel.hpp"
+#include "User.hpp"
+
 using namespace std;
 
 #define BUFFER_SIZE 1024
@@ -29,6 +32,9 @@ using namespace std;
 
 class Server {
    private:
+	vector<Channel> channels;  // List of channels
+	vector<User> users;		   // List of users
+
 	string password;  // Password for connecting to the server
 	string hostname;  // Hostname of the server
 
@@ -51,6 +57,7 @@ class Server {
 	void bindSocket(const string &portString);
 	void start(void);
 	void stop(void);
+	void sendMessage(int client, const string &message);
 };
 
 #endif
