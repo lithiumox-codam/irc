@@ -4,37 +4,25 @@
 
 #include "User.hpp"
 
-/**
- * @brief These are the possible permissions for a channel member.
- *
- * P_READ: The user has read permissions. 0000 0010
- * P_WRITE: The user has write permissions 0000 0100
- * P_MANAGE: The user has manage permissions 0000 1000
- * P_BAN: The user has ban permissions 0001 0000
- * P_KICK: The user has kick permissions 0010 0000
- * P_ALL: The user has all permissions 0011 1110
- */
-
-unsigned int const P_NONE = 1 << 0;
-unsigned int const P_READ = 1 << 1;
-unsigned int const P_WRITE = 1 << 2;
-unsigned int const P_MANAGE = 1 << 3;
-unsigned int const P_BAN = 1 << 4;
-unsigned int const P_KICK = 1 << 5;
-unsigned int const P_ALL = P_READ | P_WRITE | P_MANAGE | P_BAN | P_KICK;
+/** Determines if the user is a channel operator. (will be defaulted to true when the user is a server operator) */
+unsigned int const M_OPERATOR = 1 << 1;
+/** Determines if the user can speak when the channel is moderated. */
+unsigned int const M_VOICE = 1 << 2;
+/** Determines if the user is invisible to other users. */
+unsigned int const M_INVISIBLE = 1 << 3;
 
 class ChannelMember : public User {
    private:
-	unsigned int permissions;
+	unsigned int modes;
 
    public:
 	ChannelMember(const User &user);
 	~ChannelMember();
-	void setPermissions(unsigned int permissions);
-	unsigned int getPermissions();
-	void addPermissions(unsigned int permissions);
-	void removePermissions(unsigned int permissions);
-	bool hasPermissions(unsigned int permissions);
-	void printPermissions();
-	void clearPermissions();
+	void setModes(unsigned int modes);
+	unsigned int getModes();
+	void addModes(unsigned int modes);
+	void removeModes(unsigned int modes);
+	bool hasModes(unsigned int modes);
+	void printModes();
+	void clearModes();
 };

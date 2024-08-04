@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: opelser <opelser@student.42.fr>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/11 19:17:58 by opelser           #+#    #+#             */
-/*   Updated: 2024/08/02 18:21:13 by opelser          ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   Server.hpp                                         :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: opelser <opelser@student.42.fr>              +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/06/11 19:17:58 by opelser       #+#    #+#                 */
+/*   Updated: 2024/08/03 23:30:32 by mdekker       ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 using namespace std;
 
 #define BUFFER_SIZE 1024
+#define SERVER_NAME "ft_irc"
 
 class Server {
    private:

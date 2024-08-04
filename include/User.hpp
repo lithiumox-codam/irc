@@ -4,24 +4,21 @@
 
 using namespace std;
 
-/**
- * These are the possible handshake flags for a user.
- *
- * U_INFO: The user has sent the INFO command.
- * U_REGISTERED: The user has sent the NICK and USER commands.
- * U_AUTHENTICATED: The user has sent the PASS command.
- * U_WELCOME: The user has received the welcome message.
- */
-
+/** Determines if the user has sent the INFO command. */
 unsigned int const U_INFO = 1 << 1;
+/** Determines if the user has sent the NICK and USER commands. */
 unsigned int const U_REGISTERED = 1 << 2;
+/** Determines if the user has sent the PASS command. */
 unsigned int const U_AUTHENTICATED = 1 << 3;
+/** Determines if the user has received the welcome message. */
 unsigned int const U_WELCOME = 1 << 4;
 
 class User {
    private:
 	string username;
 	string nickname;
+	string realname;
+	string hostname;
 
 	unsigned int handshake;
 

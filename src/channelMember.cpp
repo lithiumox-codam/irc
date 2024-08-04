@@ -2,39 +2,31 @@
 
 #include <iostream>
 
-ChannelMember::ChannelMember(const User &user) : User(user) { this->permissions = 0; }
+ChannelMember::ChannelMember(const User &user) : User(user), modes(0) {}
 
 ChannelMember::~ChannelMember() {}
 
-void ChannelMember::setPermissions(unsigned int permissions) { this->permissions = permissions; }
+void ChannelMember::setModes(unsigned int modes) { this->modes = modes; }
 
-unsigned int ChannelMember::getPermissions() { return this->permissions; }
+unsigned int ChannelMember::getModes() { return this->modes; }
 
-void ChannelMember::addPermissions(unsigned int permissions) { this->permissions |= permissions; }
+void ChannelMember::addModes(unsigned int modes) { this->modes |= modes; }
 
-void ChannelMember::removePermissions(unsigned int permissions) { this->permissions &= ~permissions; }
+void ChannelMember::removeModes(unsigned int modes) { this->modes &= ~modes; }
 
-bool ChannelMember::hasPermissions(unsigned int permissions) {
-	return (this->permissions & permissions) == permissions;
-}
+bool ChannelMember::hasModes(unsigned int modes) { return (this->modes & modes) == modes; }
 
-void ChannelMember::printPermissions() {
-	cout << "Permissions for " << this->getUsername() << ":" << endl;
-	if (this->hasPermissions(P_READ)) {
-		std::cout << "  Read permissions" << std::endl;
+void ChannelMember::printModes() {
+	cout << "Modes for " << this->getUsername() << ":" << endl;
+	if (this->hasModes(M_INVISIBLE)) {
+		cout << "  +i (invisible)" << endl;
 	}
-	if (this->hasPermissions(P_WRITE)) {
-		std::cout << "  Write permissions" << std::endl;
+	if (this->hasModes(M_OPERATOR)) {
+		cout << "  +o (operator)" << endl;
 	}
-	if (this->hasPermissions(P_MANAGE)) {
-		std::cout << "  Manage permissions" << std::endl;
-	}
-	if (this->hasPermissions(P_BAN)) {
-		std::cout << "  Ban permissions" << std::endl;
-	}
-	if (this->hasPermissions(P_KICK)) {
-		std::cout << "  Kick permissions" << std::endl;
+	if (this->hasModes(M_VOICE)) {
+		cout << "  +v (voice)" << endl;
 	}
 }
 
-void ChannelMember::clearPermissions() { this->permissions = 0; }
+void ChannelMember::clearModes() { this->modes = 0; }

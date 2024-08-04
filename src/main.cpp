@@ -41,20 +41,29 @@ int main(int argc, char **argv) {
 	channel.addUser(mees);
 	channel.addUser(kees);
 
+	channel.addModes(M_MODERATED | M_INVITE_ONLY | M_PASSWORD);
+	channel.removeModes(M_INVITE_ONLY);
+	channel.printModes();
+
 	for (auto &member : channel.getMembers()) {
 		if (member.getUsername() == "Mees") {
-			member.setPermissions(P_ALL);
+			member.setModes(M_OPERATOR);
+			member.addModes(M_VOICE);
 		} else if (member.getUsername() == "Kees") {
-			member.setPermissions(P_READ | P_WRITE);
-			member.addPermissions(P_BAN);
+			member.addModes(M_VOICE | M_INVISIBLE);
 		}
-		member.printPermissions();
+		member.printModes();
 	}
 
-	// list all the members of the channel with ban permissions
 	for (auto &member : channel.getMembers()) {
-		if (member.hasPermissions(P_KICK | P_MANAGE)) {
-			std::cout << member.getUsername() << " has kick permissions" << std::endl;
+		if (member.hasModes(M_OPERATOR)) {
+			std::cout << member.getUsername() << " is an operator!" << std::endl;
+		}
+	}
+
+	for (auto &member : channel.getMembers()) {
+		if (member.hasModes(M_VOICE)) {
+			std::cout << member.getUsername() << " has voice!" << std::endl;
 		}
 	}
 

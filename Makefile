@@ -61,7 +61,7 @@ format:
 	@ clang-format -i $(SRC) $(HDR)
 
 run: all
-	@ ./$(NAME) 8080 test
+	@ ./$(NAME) 6667 test
 
 bear: fclean
 	@ bear -- make
