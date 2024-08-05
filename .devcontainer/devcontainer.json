@@ -1,14 +1,23 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/cpp
 {
-	"name": "C++",
+	"name": "irc",
 	"build": {
 		"dockerfile": "Dockerfile"
 	},
 	"features": {
 		"ghcr.io/dhoeric/features/act:1": {},
-		"ghcr.io/jungaretti/features/make:1": {}
-	}
+		"ghcr.io/jungaretti/features/make:1": {},
+		"ghcr.io/devcontainers-community/features/llvm": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"llvm-vs-code-extensions.vscode-clangd",
+				"xaver.clang-format"
+			]
+		}
+	},
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -17,7 +26,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "gcc -v",
+	"postCreateCommand": "make bear -C /workspaces/irc"
 
 	// Configure tool-specific properties.
 	// "customizations": {},
