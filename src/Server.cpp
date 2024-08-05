@@ -12,6 +12,7 @@
 #include <sys/epoll.h>
 
 #include "General.hpp"
+#include "User.hpp"
 
 #define MAX_EVENTS 10
 
@@ -190,6 +191,8 @@ void Server::stop(void) {
 	close(this->socket);
 	this->running = false;
 }
+
+vector<User> Server::getUsers(void) { return this->users; }
 
 void Server::addUser(const User &user) { this->users.push_back(user); }
 
