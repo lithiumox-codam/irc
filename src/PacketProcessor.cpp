@@ -57,7 +57,10 @@ void USER(const string &args, const int &client) {
 		return;
 	}
 	User temp = User(tokens[0], "localhost", tokens[3], client);
+	temp.addHandshake(U_USER);
 	server.addUser(temp);
+	for (auto &u : server.getUsers()) u.printUser();
+
 	cout << "User " << tokens[0] << " has connected" << endl;
 }
 

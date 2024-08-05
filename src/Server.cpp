@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "General.hpp"
+#include "User.hpp"
 
 Server::Server() {
 	char hostname[1024];
@@ -146,6 +147,8 @@ void Server::stop(void) {
 	close(this->socket);
 	this->running = false;
 }
+
+vector<User> Server::getUsers(void) { return this->users; }
 
 void Server::addUser(const User &user) { this->users.push_back(user); }
 
