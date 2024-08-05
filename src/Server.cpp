@@ -13,6 +13,8 @@
 
 #include "General.hpp"
 
+#define MAX_EVENTS 10
+
 Server::Server() : password(""), socket(0), port(0), running(false) {
 	char hostname[1024];
 	try {
@@ -111,7 +113,7 @@ static void pollUsers(int epollFD, vector<User> &users) {
 	(void) users;
 
 	struct epoll_event events[10];
-	int numberOfEvents = epoll_wait(epollFD, events, 10, 0);
+	int numberOfEvents = epoll_wait(epollFD, events, MAX_EVENTS, 0);
 	if (numberOfEvents == -1) {
 		cerr << strerror(errno) << endl;
 		cerr << "Error: epoll_wait failed" << endl;
