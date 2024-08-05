@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        ::::::::            */
-/*   Server.hpp                                         :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: opelser <opelser@student.42.fr>              +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/06/11 19:17:58 by opelser       #+#    #+#                 */
-/*   Updated: 2024/08/05 14:04:32 by mdekker       ########   odam.nl         */
+/*                                                        :::      ::::::::   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: opelser <opelser@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/06/11 19:17:58 by opelser           #+#    #+#             */
+/*   Updated: 2024/08/05 22:31:22 by opelser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ using namespace std;
 class Server {
    private:
 	vector<Channel> channels;  // List of channels
-	vector<User> users;		   // List of users
+	vector<User *> users;		   // List of users
 
 	string password;  // Password for connecting to the server
 	string hostname;  // Hostname of the server
@@ -58,9 +58,9 @@ class Server {
 	void start(void);
 	void stop(void);
 	void sendMessage(int client, const string &message);
-	void addUser(const User &user);
-	void removeUser(User &user);
-	vector<User> getUsers(void);
+	void addUser(User *user);
+	void removeUser(User *user);
+	vector<User *> getUsers(void);
 };
 
 #endif

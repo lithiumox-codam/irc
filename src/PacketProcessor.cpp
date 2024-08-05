@@ -56,10 +56,8 @@ void USER(const string &args, const int &client) {
 		cerr << "Error: USER packet has less than 4 arguments" << endl;
 		return;
 	}
-	User temp = User(tokens[0], "localhost", tokens[3], client);
-	temp.addHandshake(U_USER);
-	server.addUser(temp);
-	for (auto &u : server.getUsers()) u.printUser();
+
+	for (auto *u : server.getUsers()) u->printUser();
 
 	cout << "User " << tokens[0] << " has connected" << endl;
 }

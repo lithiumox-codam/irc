@@ -73,11 +73,11 @@ static int createEpoll() {
 	return epollFd;
 }
 
-static void addUserToEpoll(int epollFD, int userFD)
+static void addUserToEpoll(int epollFD, User *user)
 {
-	struct epoll_event event = { .events = EPOLLIN, .data = { .fd = userFD } };
+	struct epoll_event event = { .events = EPOLLIN, .data = { .ptr = (void *) user } };
 
-	if (epoll_ctl(epollFD, EPOLL_CTL_ADD, userFD, &event) == -1) {
+	if (epoll_ctl(epollFD, EPOLL_CTL_ADD, user->getSocket(), &event) == -1) {
 		cerr << strerror(errno) << endl;
 		cerr << "Error: epoll_ctl failed" << endl;
 		exit(EXIT_FAILURE);
@@ -110,9 +110,7 @@ static string receiveMessage(int client) {
 	}
 }
 
-static void pollUsers(int epollFD, vector<User> &users) {
-	(void) users;
-
+static void pollUsers(int epollFD) {
 	struct epoll_event events[10];
 	int numberOfEvents = epoll_wait(epollFD, events, MAX_EVENTS, 0);
 	if (numberOfEvents == -1) {
@@ -122,11 +120,11 @@ static void pollUsers(int epollFD, vector<User> &users) {
 	}
 
 	for (int i = 0; i < numberOfEvents; i++) {
-		int userFD = events[i].data.fd;
+		User *user = (User *) events[i].data.ptr;
 
-		cout << "Received message from user with socket file descriptor " << userFD << endl;
+		cout << "Received message from user with socket file descriptor " << user->getSocket() << endl;
 
-		string message = receiveMessage(userFD);
+		string message = receiveMessage(user->getSocket());
 
 		if (message.empty()) continue;
 		if (message.ends_with("\r\n")) {
@@ -136,7 +134,7 @@ static void pollUsers(int epollFD, vector<User> &users) {
 				cout << pair.first << "\t" << pair.second << endl;
 			}
 
-			PacketProcessor(parsed, userFD);
+			PacketProcessor(parsed, user->getSocket());
 		}
 	}
 }
@@ -158,20 +156,21 @@ void Server::start(void) {
 
 	string message;
 	while (1) {
-		pollUsers(epollFD, this->users);
+		pollUsers(epollFD);
 
 		// Accept a connection
-		const int client = accept(this->socket, NULL, NULL);
+		const int clientSocket = accept(this->socket, NULL, NULL);
 
-		if (client == -1) {
+		if (clientSocket == -1) {
 			if (errno == EWOULDBLOCK) continue;
 
 			cerr << strerror(errno) << endl;
 			cerr << "Error: accept failed" << endl;
 			exit(EXIT_FAILURE);
 		} else {
-			this->addUser(User(client));
-			addUserToEpoll(epollFD, client);
+			User *newUser = new User(clientSocket);
+			this->addUser(newUser);
+			addUserToEpoll(epollFD, newUser);
 			cout << "Connection accepted" << endl;
 		}
 	}
@@ -192,13 +191,13 @@ void Server::stop(void) {
 	this->running = false;
 }
 
-vector<User> Server::getUsers(void) { return this->users; }
+vector<User *> Server::getUsers(void) { return this->users; }
 
-void Server::addUser(const User &user) { this->users.push_back(user); }
+void Server::addUser(User *user) { this->users.push_back(user); }
 
-void Server::removeUser(User &user) {
+void Server::removeUser(User *user) {
 	for (auto it = this->users.begin(); it != this->users.end(); ++it) {
-		if (it->getNickname() == user.getNickname()) {
+		if ((*it)->getSocket() == user->getSocket()) {
 			this->users.erase(it);
 			break;
 		}
