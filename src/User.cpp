@@ -1,9 +1,13 @@
 #include "User.hpp"
 
+User::User(int socket) : username(""), nickname(""), realname(""), hostname(""), socket(socket), handshake(0) {}
+
 User::User(const string &username, const string &realname, const string &hostname, int socket)
 	: username(username), realname(realname), hostname(hostname), socket(socket) {}
 
 User::~User() {}
+
+int User::getSocket() const { return this->socket; }
 
 const string &User::getUsername() { return this->username; }
 

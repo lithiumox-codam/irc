@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <sys/epoll.h>
 
 #include "General.hpp"
 
@@ -59,6 +60,27 @@ void Server::bindSocket(const string &portString) {
 	cout << "Socket bound to port " << portString << endl;
 }
 
+static int createEpoll() {
+	int epollFd = epoll_create1(0);
+	if (epollFd == -1) {
+		cerr << strerror(errno) << endl;
+		cerr << "Error: epoll_create1 failed" << endl;
+		exit(EXIT_FAILURE);
+	}
+	return epollFd;
+}
+
+static void addUserToEpoll(int epollFD, int userFD)
+{
+	struct epoll_event event = { .events = EPOLLIN, .data = { .fd = userFD } };
+
+	if (epoll_ctl(epollFD, EPOLL_CTL_ADD, userFD, &event) == -1) {
+		cerr << strerror(errno) << endl;
+		cerr << "Error: epoll_ctl failed" << endl;
+		exit(EXIT_FAILURE);
+	}
+}
+
 static string receiveMessage(int client) {
 	string message;
 	int bytesReceived;
@@ -77,10 +99,41 @@ static string receiveMessage(int client) {
 			cout << "Connection closed" << endl;
 			close(client);
 			return nullptr;
-		} else {
-			cout << "Received " << bytesReceived << " bytes" << endl;
-			buffer[bytesReceived] = '\0';
-			return message.append(buffer);
+		}
+
+		cout << "Received " << bytesReceived << " bytes" << endl;
+		buffer[bytesReceived] = '\0';
+		return message.append(buffer);
+	}
+}
+
+static void pollUsers(int epollFD, vector<User> &users) {
+	(void) users;
+
+	struct epoll_event events[10];
+	int numberOfEvents = epoll_wait(epollFD, events, 10, 0);
+	if (numberOfEvents == -1) {
+		cerr << strerror(errno) << endl;
+		cerr << "Error: epoll_wait failed" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	for (int i = 0; i < numberOfEvents; i++) {
+		int userFD = events[i].data.fd;
+
+		cout << "Received message from user with socket file descriptor " << userFD << endl;
+
+		string message = receiveMessage(userFD);
+
+		if (message.empty()) continue;
+		if (message.ends_with("\r\n")) {
+			unordered_map<PacketType, string> parsed = parse(message);
+
+			for (auto &pair : parsed) {
+				cout << pair.first << "\t" << pair.second << endl;
+			}
+
+			PacketProcessor(parsed, userFD);
 		}
 	}
 }
@@ -98,8 +151,12 @@ void Server::start(void) {
 	}
 	this->running = true;
 
+	int epollFD = createEpoll();
+
 	string message;
 	while (1) {
+		pollUsers(epollFD, this->users);
+
 		// Accept a connection
 		const int client = accept(this->socket, NULL, NULL);
 
@@ -110,21 +167,9 @@ void Server::start(void) {
 			cerr << "Error: accept failed" << endl;
 			exit(EXIT_FAILURE);
 		} else {
+			this->addUser(User(client));
+			addUserToEpoll(epollFD, client);
 			cout << "Connection accepted" << endl;
-		}
-
-		// Receive a message from the client
-		message.append(receiveMessage(client));
-		if (message.empty()) continue;
-		if (message.ends_with("\r\n")) {
-			unordered_map<PacketType, string> parsed = parse(message);
-			for (auto &pair : parsed) {
-				cout << pair.first << "\t" << pair.second << endl;
-			}
-			PacketProcessor(parsed, client);
-
-			message.clear();
-			close(client);
 		}
 	}
 }

@@ -26,8 +26,10 @@ class User {
 	unsigned int handshake;
 
    public:
+	User(int socket);
 	User(const string &username, const string &hostname, const string &realname, int socket);
 	~User();
+	int getSocket() const;
 	const string &getUsername();
 	const string &getNickname();
 	void setNickname(const string &nickname);
