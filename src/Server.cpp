@@ -1,7 +1,17 @@
-#include "../include/Server.hpp"
+#include "Server.hpp"
+
+#include <sys/socket.h>
+#include <unistd.h>
 
 #include <cstring>
+#include <iostream>
+#include <sstream>
 #include <string>
+#include <unordered_map>
+#include <vector>
+
+#include "General.hpp"
+#include "User.hpp"
 
 Server::Server() {
 	char hostname[1024];
@@ -27,6 +37,8 @@ void Server::bindSocket(const string &portString) {
 
 	// Create a socket
 	this->socket = ::socket(AF_INET, SOCK_STREAM, 0);
+	int reuseAddr = 1;
+	setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr));
 
 	if (this->socket == -1) {
 		cerr << "Error: socket creation failed" << endl;
@@ -50,16 +62,30 @@ void Server::bindSocket(const string &portString) {
 	cout << "Socket bound to port " << portString << endl;
 }
 
-static void receiveMessage(int client) {
-	char buffer[BUFFER_SIZE + 1];
+static string receiveMessage(int client) {
+	string message;
+	int bytesReceived;
+	char buffer[BUFFER_SIZE];
 
-	cout << "Received message:" << endl;
+	while (1) {
+		bytesReceived = recv(client, buffer, BUFFER_SIZE, 0);
 
-	while (recv(client, buffer, BUFFER_SIZE, 0) > 0) {
-		buffer[BUFFER_SIZE] = '\0';
-		cout << buffer;
+		if (bytesReceived == -1) {
+			if (errno == EWOULDBLOCK) continue;
+
+			cerr << strerror(errno) << endl;
+			cerr << "Error: recv failed" << endl;
+			exit(EXIT_FAILURE);
+		} else if (bytesReceived == 0) {
+			cout << "Connection closed" << endl;
+			close(client);
+			return nullptr;
+		} else {
+			cout << "Received " << bytesReceived << " bytes" << endl;
+			buffer[bytesReceived] = '\0';
+			return message.append(buffer);
+		}
 	}
-	cout << endl;
 }
 
 void Server::start(void) {
@@ -76,6 +102,7 @@ void Server::start(void) {
 
 	this->running = true;
 	// Listen for incoming connections, with a backlog of 10 pending connections
+	string message;
 	while (1) {
 		// Accept a connection
 		const int client = accept(this->socket, NULL, NULL);
@@ -91,14 +118,45 @@ void Server::start(void) {
 		}
 
 		// Receive a message from the client
-		receiveMessage(client);
+		message.append(receiveMessage(client));
+		if (message.empty()) continue;
+		if (message.ends_with("\r\n")) {
+			unordered_map<PacketType, string> parsed = parse(message);
+			for (auto &pair : parsed) {
+				cout << pair.first << "\t" << pair.second << endl;
+			}
+			PacketProcessor(parsed, client);
+
+			message.clear();
+			close(client);
+		}
+	}
+}
+
+void Server::sendMessage(int client, const string &message) {
+	if (send(client, message.c_str(), message.length(), 0) == -1) {
+		cerr << strerror(errno) << endl;
+		cerr << "Error: send failed" << endl;
+		exit(EXIT_FAILURE);
 	}
 }
 
 void Server::stop(void) {
-	cout << "Server stopped" << endl;
-	if (this->running) {
-		close(this->socket);
-		this->running = false;
+	if (!this->running) return;
+	cout << "\rServer stopped" << endl;
+	close(this->socket);
+	this->running = false;
+}
+
+vector<User> Server::getUsers(void) { return this->users; }
+
+void Server::addUser(const User &user) { this->users.push_back(user); }
+
+void Server::removeUser(User &user) {
+	for (auto it = this->users.begin(); it != this->users.end(); ++it) {
+		if (it->getNickname() == user.getNickname()) {
+			this->users.erase(it);
+			break;
+		}
 	}
 }

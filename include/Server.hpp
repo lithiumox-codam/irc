@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: opelser <opelser@student.42.fr>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/11 19:17:58 by opelser           #+#    #+#             */
-/*   Updated: 2024/08/02 18:21:13 by opelser          ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   Server.hpp                                         :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: opelser <opelser@student.42.fr>              +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/06/11 19:17:58 by opelser       #+#    #+#                 */
+/*   Updated: 2024/08/05 14:04:32 by mdekker       ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,12 +22,19 @@
 #include <iostream>
 #include <string>
 
+#include "Channel.hpp"
+#include "User.hpp"
+
 using namespace std;
 
 #define BUFFER_SIZE 1024
+#define SERVER_NAME "ft_irc"
 
 class Server {
    private:
+	vector<Channel> channels;  // List of channels
+	vector<User> users;		   // List of users
+
 	string password;  // Password for connecting to the server
 	string hostname;  // Hostname of the server
 
@@ -50,6 +57,10 @@ class Server {
 	void bindSocket(const string &portString);
 	void start(void);
 	void stop(void);
+	void sendMessage(int client, const string &message);
+	void addUser(const User &user);
+	void removeUser(User &user);
+	vector<User> getUsers(void);
 };
 
 #endif
