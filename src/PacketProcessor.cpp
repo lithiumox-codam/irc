@@ -23,6 +23,11 @@ vector<string> split(const string &str, const char &delim) {
 	return tokens;
 }
 
+/*
+ * !TODO: instead of getting a client here we should get a user that is associated with the client and then do all the
+ * processing from there. Maybe even the ChannelMember class while we are at it.
+ */
+
 void CAP(const string &args, const int &client) {
 	if (args.empty()) {
 		server.sendMessage(client, "ERROR :Closing Link: (localhost) [CAP command is invalid]\r\n");

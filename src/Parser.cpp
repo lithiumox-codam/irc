@@ -47,7 +47,6 @@ ostream &operator<<(ostream &os, const PacketType &type) {
  * @return string The extracted string
  */
 static string extract(const string &str, unsigned long start) {
-	// strip all whitespace from the start and end
 	return str.substr(start, str.find("\r\n", start) - start);
 }
 
