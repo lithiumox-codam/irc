@@ -1,7 +1,5 @@
 #pragma once
 
-#include <type_traits>
-
 #include "User.hpp"
 
 /** Determines if the user is a channel operator. (will be defaulted to true when the user is a server operator) */

@@ -37,6 +37,9 @@ class User {
 	const string &getUsername();
 	const string &getNickname();
 	void setNickname(const string &nickname);
+	void setUsername(const string &username);
+	void setRealname(const string &realname);
+	void setHostname(const string &hostname);
 	void addHandshake(unsigned int handshake);
 	bool hasHandshake(unsigned int handshake);
 	unsigned int getHandshake();

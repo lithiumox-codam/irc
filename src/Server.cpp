@@ -1,17 +1,14 @@
 #include "Server.hpp"
 
+#include <sys/epoll.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
 #include <cstring>
 #include <iostream>
-#include <sstream>
 #include <string>
-#include <unordered_map>
 #include <vector>
-#include <sys/epoll.h>
 
-#include "General.hpp"
 #include "User.hpp"
 
 extern Server server;
@@ -75,9 +72,8 @@ static int createEpoll() {
 	return epollFd;
 }
 
-static void addUserToEpoll(int epollFD, User *user)
-{
-	struct epoll_event event = { .events = EPOLLIN, .data = { .ptr = (void *) user } };
+static void addUserToEpoll(int epollFD, User *user) {
+	struct epoll_event event = {.events = EPOLLIN, .data = {.ptr = (void *)user}};
 
 	if (epoll_ctl(epollFD, EPOLL_CTL_ADD, user->getSocket(), &event) == -1) {
 		cerr << strerror(errno) << endl;
@@ -96,7 +92,7 @@ static void pollUsers(int epollFD) {
 	}
 
 	for (int i = 0; i < numberOfEvents; i++) {
-		User *user = (User *) events[i].data.ptr;
+		User *user = (User *)events[i].data.ptr;
 
 		cout << "Received message from user with socket: " << user->getSocket() << endl;
 

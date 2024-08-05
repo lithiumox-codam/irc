@@ -1,10 +1,12 @@
+#include <arpa/inet.h>
+
 #include <iostream>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "General.hpp"
 #include "Server.hpp"
+#include "User.hpp"
 
 extern Server server;
 
@@ -45,6 +47,13 @@ void NICK(const string &args, const int &client) {
 		cerr << "Error: NICK packet has a space in the argument" << endl;
 		return;
 	}
+	vector<User *> users = server.getUsers();
+	for (const auto &user : users) {
+		if (client == user->getSocket()) {
+			user->setNickname(args);
+		}
+		user->printUser();
+	}
 	server.sendMessage(client, "NICK " + args + "\r\n");
 }
 
@@ -56,9 +65,18 @@ void USER(const string &args, const int &client) {
 		cerr << "Error: USER packet has less than 4 arguments" << endl;
 		return;
 	}
+	vector<User *> users = server.getUsers();
+	for (const auto &user : users) {
+		if (client == user->getSocket()) {
+			user->setUsername(tokens[0]);
+			user->setRealname(tokens[3]);
+			user->setHostname("localhost");
+			user->addHandshake(U_USER);
+		}
+		user->printUser();
+	}
 
-	for (auto *u : server.getUsers()) u->printUser();
-
+	server.sendMessage(client, "USER " + args + "\r\n");
 	cout << "User " << tokens[0] << " has connected" << endl;
 }
 
@@ -68,8 +86,13 @@ void PASS(const string &args, const int &client) {
 		return;
 	}
 	if (args == server.getPassword()) {
+		vector<User *> users = server.getUsers();
+		for (const auto &user : users) {
+			if (client == user->getSocket()) {
+				user->addHandshake(U_AUTHENTICATED);
+			}
+		}
 		server.sendMessage(client, "AUTHENTICATE\r\n");
-		cout << "User has the correct password" << endl;
 	} else {
 		server.sendMessage(client, "ERROR :Closing Link: (localhost) [Authentication failed]\r\n");
 		cerr << "Error: User has failed to authenticate expecte: \"" << server.getPassword() << "\" got: \"" << args

@@ -19,7 +19,6 @@
 #include <unistd.h>
 
 #include <csignal>
-#include <iostream>
 #include <string>
 
 #include "Channel.hpp"

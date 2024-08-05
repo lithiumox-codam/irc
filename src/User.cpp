@@ -1,11 +1,15 @@
 #include "User.hpp"
-#include "General.hpp"
+
 #include <sys/socket.h>
 #include <unistd.h>
+
 #include <iomanip>
 #include <iostream>
 
-User::User(int socket) : username(""), nickname(""), realname(""), hostname(""), socket(socket), handshake(0), context("") {}
+#include "General.hpp"
+
+User::User(int socket)
+	: username(""), nickname(""), realname(""), hostname(""), socket(socket), handshake(0), context("") {}
 
 User::User(const string &username, const string &realname, const string &hostname, int socket)
 	: username(username), realname(realname), hostname(hostname), socket(socket), handshake(0), context("") {}
@@ -19,6 +23,12 @@ const string &User::getUsername() { return this->username; }
 const string &User::getNickname() { return this->nickname; }
 
 void User::setNickname(const string &nickname) { this->nickname = nickname; }
+
+void User::setUsername(const string &username) { this->username = username; }
+
+void User::setRealname(const string &realname) { this->realname = realname; }
+
+void User::setHostname(const string &hostname) { this->hostname = hostname; }
 
 void User::addHandshake(unsigned int handshake) { this->handshake |= handshake; }
 
