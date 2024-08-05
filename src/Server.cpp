@@ -106,6 +106,8 @@ static string receiveMessage(int client) {
 
 		cout << "Received " << bytesReceived << " bytes" << endl;
 		buffer[bytesReceived] = '\0';
+		cout << "Received message: " << buffer << endl;
+
 		return message.append(buffer);
 	}
 }
@@ -128,7 +130,7 @@ static void pollUsers(int epollFD) {
 
 		if (message.empty()) continue;
 		if (message.ends_with("\r\n")) {
-			unordered_map<PacketType, string> parsed = parse(message);
+			Packet parsed = parse(message);
 
 			for (auto &pair : parsed) {
 				cout << pair.first << "\t" << pair.second << endl;

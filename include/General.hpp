@@ -69,6 +69,9 @@ typedef struct {
 	void (*func)(const string &, const int &);
 } PacketTypeMap;
 
+/* A typedef for the Packet. */
+typedef unordered_map<PacketType, string> Packet;
+
 void CAP(const string &args, const int &client);
 void NICK(const string &args, const int &client);
 void USER(const string &args, const int &client);
@@ -86,5 +89,5 @@ const PacketTypeMap store[] = {{"CAP", PacketType::CAP, &CAP},	  {"NICK", Packet
 							   {"INFO", PacketType::INFO, &INFO}, {"JOIN", PacketType::JOIN, &JOIN},
 							   {"", PacketType::NONE, nullptr}};
 
-std::unordered_map<PacketType, string> parse(const string &message);
-void PacketProcessor(const unordered_map<PacketType, string> &packet, const int &client);
+Packet parse(const string &message);
+void PacketProcessor(const Packet &packet, const int &client);

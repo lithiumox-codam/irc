@@ -95,7 +95,7 @@ void JOIN(const string &args, const int &client) {
 	server.sendMessage(client, "JOIN " + args + "\r\n");
 }
 
-void PacketProcessor(const unordered_map<PacketType, string> &packet, const int &client) {
+void PacketProcessor(const Packet &packet, const int &client) {
 	for (const auto &p : packet) {
 		for (const auto &s : store) {
 			if (p.first == s.type) s.func(p.second, client);

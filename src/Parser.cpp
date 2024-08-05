@@ -54,10 +54,10 @@ static string extract(const string &str, unsigned long start) {
  * @brief The parse function takes a message and returns a map of PacketType and the message.
  *
  * @param message The entire message to parse
- * @return unordered_map<PacketType, string> A map of PacketType and the message representing the packet
+ * @return Packet A map of PacketType and the message representing the packet
  */
-unordered_map<PacketType, string> parse(const string &message) {
-	unordered_map<PacketType, string> parsed;
+Packet parse(const string &message) {
+	Packet parsed;
 
 	for (const auto &item : store) {
 		unsigned long pos = message.find(item.key);
