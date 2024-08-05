@@ -1,6 +1,7 @@
 #include "User.hpp"
 
-User::User(const string &username, const string &nick) : username(username), nickname(nick) {}
+User::User(const string &username, const string &realname, const string &hostname, int socket)
+	: username(username), realname(realname), hostname(hostname), socket(socket) {}
 
 User::~User() {}
 

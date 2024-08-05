@@ -35,8 +35,8 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	User mees = User("Mees", "Joe Mama");
-	User kees = User("Kees", "Joe Mama");
+	User mees = User("Mees", "localhost", "Joe Mama", -1);
+	User kees = User("Kees", "localhost", "Joe Mama", -1);
 	Channel channel = Channel("General");
 	channel.addUser(mees);
 	channel.addUser(kees);

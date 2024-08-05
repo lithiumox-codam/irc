@@ -6,7 +6,7 @@
 /*   By: opelser <opelser@student.42.fr>              +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/11 19:17:58 by opelser       #+#    #+#                 */
-/*   Updated: 2024/08/04 20:28:36 by mdekker       ########   odam.nl         */
+/*   Updated: 2024/08/05 11:37:34 by mdekker       ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,8 @@ class Server {
 	void start(void);
 	void stop(void);
 	void sendMessage(int client, const string &message);
+	void addUser(const User &user);
+	void removeUser(User &user);
 };
 
 #endif

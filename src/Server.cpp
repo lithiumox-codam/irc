@@ -124,9 +124,7 @@ void Server::start(void) {
 			for (auto &pair : parsed) {
 				cout << pair.first << "\t" << pair.second << endl;
 			}
-			sendMessage(
-				client,
-				":localhost 001 LithiumOx :Welcome to the Internet Relay Network LithiumOx!~lithiumox@localhost\r\n");
+			PacketProcessor(parsed, client);
 
 			message.clear();
 			close(client);
@@ -147,4 +145,15 @@ void Server::stop(void) {
 	cout << "\rServer stopped" << endl;
 	close(this->socket);
 	this->running = false;
+}
+
+void Server::addUser(const User &user) { this->users.push_back(user); }
+
+void Server::removeUser(User &user) {
+	for (auto it = this->users.begin(); it != this->users.end(); ++it) {
+		if (it->getNickname() == user.getNickname()) {
+			this->users.erase(it);
+			break;
+		}
+	}
 }

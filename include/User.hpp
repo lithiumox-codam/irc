@@ -22,10 +22,11 @@ class User {
 	string realname;
 	string hostname;
 
+	int socket;
 	unsigned int handshake;
 
    public:
-	User(const string &username, const string &nickname);
+	User(const string &username, const string &hostname, const string &realname, int socket);
 	~User();
 	const string &getUsername();
 	const string &getNickname();
