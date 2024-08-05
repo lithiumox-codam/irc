@@ -12,13 +12,11 @@
 
 #include "General.hpp"
 
-Server::Server() {
+Server::Server() : password(""), socket(0), port(0), running(false) {
 	char hostname[1024];
 	try {
 		gethostname(hostname, 1024);
 		this->hostname = hostname;
-		this->running = false;
-		this->socket = 0;
 	} catch (const exception &e) {
 		cerr << "Error: " << e.what() << endl;
 	}
@@ -98,9 +96,8 @@ void Server::start(void) {
 		cout << "Password: " << this->password << endl;
 		cout << "\nListening for incoming connections..." << endl;
 	}
-
 	this->running = true;
-	// Listen for incoming connections, with a backlog of 10 pending connections
+
 	string message;
 	while (1) {
 		// Accept a connection
