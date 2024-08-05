@@ -14,6 +14,8 @@
 #include "General.hpp"
 #include "User.hpp"
 
+extern Server server;
+
 #define MAX_EVENTS 10
 
 Server::Server() : password(""), socket(0), port(0), running(false) {
@@ -84,34 +86,6 @@ static void addUserToEpoll(int epollFD, User *user)
 	}
 }
 
-static string receiveMessage(int client) {
-	string message;
-	int bytesReceived;
-	char buffer[BUFFER_SIZE];
-
-	while (1) {
-		bytesReceived = recv(client, buffer, BUFFER_SIZE, 0);
-
-		if (bytesReceived == -1) {
-			if (errno == EWOULDBLOCK) continue;
-
-			cerr << strerror(errno) << endl;
-			cerr << "Error: recv failed" << endl;
-			exit(EXIT_FAILURE);
-		} else if (bytesReceived == 0) {
-			cout << "Connection closed" << endl;
-			close(client);
-			return nullptr;
-		}
-
-		cout << "Received " << bytesReceived << " bytes" << endl;
-		buffer[bytesReceived] = '\0';
-		cout << "Received message: " << buffer << endl;
-
-		return message.append(buffer);
-	}
-}
-
 static void pollUsers(int epollFD) {
 	struct epoll_event events[10];
 	int numberOfEvents = epoll_wait(epollFD, events, MAX_EVENTS, 0);
@@ -124,19 +98,12 @@ static void pollUsers(int epollFD) {
 	for (int i = 0; i < numberOfEvents; i++) {
 		User *user = (User *) events[i].data.ptr;
 
-		cout << "Received message from user with socket file descriptor " << user->getSocket() << endl;
+		cout << "Received message from user with socket: " << user->getSocket() << endl;
 
-		string message = receiveMessage(user->getSocket());
-
-		if (message.empty()) continue;
-		if (message.ends_with("\r\n")) {
-			Packet parsed = parse(message);
-
-			for (auto &pair : parsed) {
-				cout << pair.first << "\t" << pair.second << endl;
-			}
-
-			PacketProcessor(parsed, user->getSocket());
+		if (user->readFromSocket() == 2) {
+			epoll_ctl(epollFD, EPOLL_CTL_DEL, user->getSocket(), NULL);
+			server.removeUser(user);
+			continue;
 		}
 	}
 }
@@ -199,8 +166,9 @@ void Server::addUser(User *user) { this->users.push_back(user); }
 
 void Server::removeUser(User *user) {
 	for (auto it = this->users.begin(); it != this->users.end(); ++it) {
-		if ((*it)->getSocket() == user->getSocket()) {
+		if (*it == user) {
 			this->users.erase(it);
+			delete *it;
 			break;
 		}
 	}

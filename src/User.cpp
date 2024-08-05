@@ -1,13 +1,16 @@
 #include "User.hpp"
+#include "General.hpp"
+#include <sys/socket.h>
+#include <unistd.h>
 #include <iomanip>
 #include <iostream>
 
-User::User(int socket) : username(""), nickname(""), realname(""), hostname(""), socket(socket), handshake(0) {}
+User::User(int socket) : username(""), nickname(""), realname(""), hostname(""), socket(socket), handshake(0), context("") {}
 
 User::User(const string &username, const string &realname, const string &hostname, int socket)
-	: username(username), realname(realname), hostname(hostname), socket(socket), handshake(0) {}
+	: username(username), realname(realname), hostname(hostname), socket(socket), handshake(0), context("") {}
 
-User::~User() {}
+User::~User() { close(this->socket); }
 
 int User::getSocket() const { return this->socket; }
 
@@ -41,4 +44,46 @@ void User::printUser() {
 	cout << setw(10) << left << "Socket:" << this->socket << endl;
 	this->printHandshake();
 	cout << "======================" << endl;
+}
+
+bool User::checkPacket() const {
+	if (this->context.empty()) return false;
+	if (!this->context.ends_with("\r\n")) return false;
+
+	Packet packet = parse(this->context);
+
+	for (auto &pair : packet) {
+		cout << pair.first << "\t" << pair.second << endl;
+	}
+
+	PacketProcessor(packet, this->socket);
+
+	return true;
+}
+
+int User::readFromSocket() {
+	char buffer[1024];
+	int bytesRead = recv(this->socket, buffer, 1024, 0);
+
+	if (bytesRead == -1) {
+		cerr << "Error: recv failed" << endl;
+		return 1;
+	}
+
+	if (bytesRead == 0) {
+		cerr << "Error: client disconnected" << endl;
+		return 2;
+	}
+
+	buffer[bytesRead] = '\0';
+
+	this->context.append(buffer);
+
+	cout << "Buffer for socket " << this->socket << ": " << this->context << endl;
+
+	// This needs to only clear unti /r/n
+	if (this->checkPacket() == true) {
+		this->context.clear();
+	}
+	return 0;
 }

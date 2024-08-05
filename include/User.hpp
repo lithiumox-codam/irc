@@ -27,6 +27,8 @@ class User {
 	int socket;
 	unsigned int handshake;
 
+	string context;
+
    public:
 	User(int socket);
 	User(const string &username, const string &hostname, const string &realname, int socket);
@@ -40,4 +42,7 @@ class User {
 	unsigned int getHandshake();
 	void printHandshake();
 	void printUser();
+
+	bool checkPacket() const;
+	int readFromSocket();
 };
