@@ -17,10 +17,10 @@ class ChannelMember : public User {
 	ChannelMember(const User &user);
 	~ChannelMember();
 	void setModes(unsigned int modes);
-	unsigned int getModes();
+	[[nodiscard]] auto getModes() const -> unsigned int;
 	void addModes(unsigned int modes);
 	void removeModes(unsigned int modes);
-	bool hasModes(unsigned int modes);
+	[[nodiscard]] auto hasModes(unsigned int modes) const -> bool;
 	void printModes();
 	void clearModes();
 };

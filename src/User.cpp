@@ -1,23 +1,24 @@
 #include "User.hpp"
 
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <iomanip>
 #include <iostream>
+#include <vector>
 
 #include "General.hpp"
 
-User::User(int socket)
-	: username(""), nickname(""), realname(""), hostname(""), socket(socket), handshake(0), context("") {}
+User::User(int socket) : socket(socket), handshake(0) {}
 
 User::~User() { close(this->socket); }
 
-int User::getSocket() const { return this->socket; }
+auto User::getSocket() const -> int { return this->socket; }
 
-const string &User::getUsername() { return this->username; }
+auto User::getUsername() -> const string & { return this->username; };
 
-const string &User::getNickname() { return this->nickname; }
+auto User::getNickname() -> const string & { return this->nickname; }
 
 void User::setNickname(const string &nickname) { this->nickname = nickname; }
 
@@ -29,18 +30,26 @@ void User::setHostname(const string &hostname) { this->hostname = hostname; }
 
 void User::addHandshake(unsigned int handshake) { this->handshake |= handshake; }
 
-void User::printHandshake() {
+void User::printHandshake() const {
 	cout << "Handshake contains: [";
-	if (this->hasHandshake(U_USER)) cout << "U_USER ";
-	if (this->hasHandshake(U_NICK)) cout << "U_NICK ";
-	if (this->hasHandshake(U_AUTHENTICATED)) cout << "U_AUTHENTICATED ";
-	if (this->hasHandshake(U_WELCOME)) cout << "U_WELCOME ";
+	if (this->hasHandshake(U_USER)) {
+		cout << "U_USER ";
+	}
+	if (this->hasHandshake(U_NICK)) {
+		cout << "U_NICK ";
+	}
+	if (this->hasHandshake(U_AUTHENTICATED)) {
+		cout << "U_AUTHENTICATED ";
+	}
+	if (this->hasHandshake(U_WELCOME)) {
+		cout << "U_WELCOME ";
+	}
 	cout << "]" << "\n";
 }
 
-unsigned int User::getHandshake() { return this->handshake; }
+auto User::getHandshake() const -> unsigned int { return this->handshake; }
 
-bool User::hasHandshake(unsigned int handshake) { return (this->handshake & handshake) == handshake; }
+auto User::hasHandshake(unsigned int handshake) const -> bool { return (this->handshake & handshake) == handshake; }
 
 void User::printUser() {
 	cout << "======================" << "\n";
@@ -53,11 +62,15 @@ void User::printUser() {
 	cout << "======================" << "\n";
 }
 
-bool User::checkPacket() const {
-	if (this->context.empty()) return false;
-	if (!this->context.ends_with("\r\n")) return false;
+auto User::checkPacket() const -> bool {
+	if (this->context.empty()) {
+		return false;
+	}
+	if (!this->context.ends_with("\r\n")) {
+		return false;
+	}
 
-	Packet packet = parse(this->context);
+	Packet packet = Parse(this->context);
 
 	for (auto &pair : packet) {
 		cout << pair.first << "\t" << pair.second << "\n";
@@ -68,9 +81,9 @@ bool User::checkPacket() const {
 	return true;
 }
 
-int User::readFromSocket() {
-	char buffer[1024];
-	int bytesRead = recv(this->socket, buffer, 1024, 0);
+auto User::readFromSocket() -> int {
+	vector<char> buffer;
+	int bytesRead = recv(this->socket, buffer.data(), buffer.size(), 0);
 
 	if (bytesRead == -1) {
 		cerr << "Error: recv failed" << "\n";
@@ -82,14 +95,14 @@ int User::readFromSocket() {
 		return 2;
 	}
 
-	buffer[bytesRead] = '\0';
+	buffer.push_back('\0');
 
-	this->context.append(buffer);
+	this->context.append(buffer.data());
 
 	cout << "Buffer for socket " << this->socket << ": " << this->context << "\n";
 
 	// This needs to only clear unti /r/n
-	if (this->checkPacket() == true) {
+	if (this->checkPacket()) {
 		this->context.clear();
 	}
 	return 0;

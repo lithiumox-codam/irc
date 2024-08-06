@@ -26,13 +26,12 @@
 
 using namespace std;
 
-#define BUFFER_SIZE 1024
 #define SERVER_NAME "ft_irc"
 
 class Server {
    private:
 	vector<Channel> channels;  // List of channels
-	vector<User *> users;		   // List of users
+	vector<User *> users;	   // List of users
 
 	string password;  // Password for connecting to the server
 	string hostname;  // Hostname of the server
@@ -45,21 +44,21 @@ class Server {
 	Server();
 	Server(const string &password, const string &port);
 	Server(const Server &rhs);
-	Server &operator=(const Server &rhs);
-	~Server(void);
+	auto operator=(const Server &rhs) -> Server &;
+	~Server();
 
 	// Getters and Setters
 	void setPassword(const string &password);
-	const string &getPassword(void) const;
+	[[nodiscard]] auto getPassword() const -> const string &;
 
 	// Public Methods
 	void bindSocket(const string &portString);
-	void start(void);
-	void stop(void);
+	void start();
+	void stop();
 	void sendMessage(int client, const string &message);
 	void addUser(User *user);
 	void removeUser(User *user);
-	vector<User *> getUsers(void);
+	auto getUsers() -> vector<User *>;
 };
 
 #endif

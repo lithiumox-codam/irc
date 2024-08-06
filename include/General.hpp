@@ -61,7 +61,7 @@ enum class PacketType {
 	INFO,
 	SERVLIST,
 };
-ostream &operator<<(ostream &os, const PacketType &type);
+auto operator<<(ostream &outputStream, const PacketType &type) -> ostream &;
 
 /* A struct that maps a key to a PacketType also used by the PacketProcessor later on. */
 typedef struct {
@@ -82,8 +82,8 @@ void JOIN(const string &args, const int &client);
 
 /**
  * @brief The store array is a map of PacketType and the key to look for in a message.
- * @note If you add a new PacketType, make sure to add it to the store array. If you don't, the parse function will not
- * be able to find the key in the message.
+ * @note If you add a new PacketType, make sure to add it to the store array. If you don't, the parse function will
+ * not be able to find the key in the message.
  */
 
 const std::array<PacketTypeMap, 7> store = {{{"CAP", PacketType::CAP, &CAP},
@@ -94,5 +94,5 @@ const std::array<PacketTypeMap, 7> store = {{{"CAP", PacketType::CAP, &CAP},
 											 {"JOIN", PacketType::JOIN, &JOIN},
 											 {"", PacketType::NONE, nullptr}}};
 
-Packet parse(const string &message);
+auto Parse(const string &message) -> Packet;
 void PacketProcessor(const Packet &packet, const int &client);

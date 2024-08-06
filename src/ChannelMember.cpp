@@ -8,13 +8,13 @@ ChannelMember::~ChannelMember() {}
 
 void ChannelMember::setModes(unsigned int modes) { this->modes = modes; }
 
-unsigned int ChannelMember::getModes() { return this->modes; }
+auto ChannelMember::getModes() const -> unsigned int { return this->modes; }
 
 void ChannelMember::addModes(unsigned int modes) { this->modes |= modes; }
 
 void ChannelMember::removeModes(unsigned int modes) { this->modes &= ~modes; }
 
-bool ChannelMember::hasModes(unsigned int modes) { return (this->modes & modes) == modes; }
+auto ChannelMember::hasModes(unsigned int modes) const -> bool { return (this->modes & modes) == modes; }
 
 void ChannelMember::printModes() {
 	cout << "Modes for " << this->getUsername() << ":" << "\n";

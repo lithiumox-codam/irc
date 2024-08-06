@@ -10,15 +10,15 @@
 
 extern Server server;
 
-vector<string> split(const string &str, const char &delim) {
+static auto split(const string &str, const char &delim) -> vector<string> {
 	vector<string> tokens;
 	string token;
-	for (const char &c : str) {
-		if (c == delim) {
+	for (const char &character : str) {
+		if (character == delim) {
 			tokens.push_back(token);
 			token.clear();
 		} else {
-			token += c;
+			token += character;
 		}
 	}
 	tokens.push_back(token);
@@ -43,7 +43,8 @@ void NICK(const string &args, const int &client) {
 	if (args.empty()) {
 		cerr << "Error: NICK packet has no argument" << "\n";
 		return;
-	} else if (args.find(' ') != string::npos) {
+	}
+	if (args.find(' ') != string::npos) {
 		cerr << "Error: NICK packet has a space in the argument" << "\n";
 		return;
 	}
