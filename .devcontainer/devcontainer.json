@@ -14,7 +14,8 @@
 		"vscode": {
 			"extensions": [
 				"llvm-vs-code-extensions.vscode-clangd",
-				"xaver.clang-format"
+				"xaver.clang-format",
+				"CS128.cs128-clang-tidy"
 			]
 		}
 	},
@@ -23,7 +24,7 @@
 	// "features": {},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
+	"forwardPorts": [6667],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": "make bear -C /workspaces/irc"

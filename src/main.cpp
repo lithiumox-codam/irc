@@ -1,5 +1,4 @@
-#include <signal.h>
-
+#include <csignal>
 #include <cstdlib>
 #include <iostream>
 
@@ -24,11 +23,11 @@ void signalHandler(int signum) {
 	exit(signum);
 }
 
-int main(int argc, char **argv) {
+auto main(int argc, char **argv) -> int {
 	signal(SIGINT, signalHandler);
 	signal(SIGTERM, signalHandler);
 	if (argc != 3) {
-		std::cerr << "Usage: ./ircserver [port] [password]" << std::endl;
+		cerr << "Usage: ./ircserver [port] [password]" << '\n';
 		return 1;
 	}
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include <unordered_map>
 
@@ -84,10 +85,14 @@ void JOIN(const string &args, const int &client);
  * @note If you add a new PacketType, make sure to add it to the store array. If you don't, the parse function will not
  * be able to find the key in the message.
  */
-const PacketTypeMap store[] = {{"CAP", PacketType::CAP, &CAP},	  {"NICK", PacketType::NICK, &NICK},
-							   {"USER", PacketType::USER, &USER}, {"PASS", PacketType::PASS, &PASS},
-							   {"INFO", PacketType::INFO, &INFO}, {"JOIN", PacketType::JOIN, &JOIN},
-							   {"", PacketType::NONE, nullptr}};
+
+const std::array<PacketTypeMap, 7> store = {{{"CAP", PacketType::CAP, &CAP},
+											 {"NICK", PacketType::NICK, &NICK},
+											 {"USER", PacketType::USER, &USER},
+											 {"PASS", PacketType::PASS, &PASS},
+											 {"INFO", PacketType::INFO, &INFO},
+											 {"JOIN", PacketType::JOIN, &JOIN},
+											 {"", PacketType::NONE, nullptr}}};
 
 Packet parse(const string &message);
 void PacketProcessor(const Packet &packet, const int &client);

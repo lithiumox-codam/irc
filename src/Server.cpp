@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <array>
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -15,13 +16,13 @@ extern Server server;
 
 #define MAX_EVENTS 10
 
-Server::Server() : password(""), socket(0), port(0), running(false) {
+Server::Server() : socket(0), port(0), running(false) {
 	char hostname[1024];
 	try {
 		gethostname(hostname, 1024);
 		this->hostname = hostname;
 	} catch (const exception &e) {
-		cerr << "Error: " << e.what() << endl;
+		cerr << "Error: " << e.what() << '\n';
 	}
 }
 
@@ -29,7 +30,7 @@ Server::~Server() { this->stop(); }
 
 void Server::setPassword(const string &password) { this->password = password; }
 
-const string &Server::getPassword() const { return this->password; }
+auto Server::getPassword() const -> const string & { return this->password; }
 
 void Server::bindSocket(const string &portString) {
 	// Set the port
@@ -41,14 +42,14 @@ void Server::bindSocket(const string &portString) {
 	setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr));
 
 	if (this->socket == -1) {
-		cerr << "Error: socket creation failed" << endl;
+		cerr << "Error: socket creation failed" << '\n';
 		exit(EXIT_FAILURE);
 	}
 
 	int flags = fcntl(this->socket, F_GETFL, 0);
 
 	if (fcntl(this->socket, F_SETFL, flags | O_NONBLOCK) == -1) {
-		cerr << "Error: fcntl failed" << endl;
+		cerr << "Error: fcntl failed" << '\n';
 		exit(EXIT_FAILURE);
 	}
 
@@ -56,17 +57,17 @@ void Server::bindSocket(const string &portString) {
 		.sin_family = AF_INET, .sin_port = port, .sin_addr = {INADDR_ANY}, .sin_zero = {0}};
 
 	if (bind(this->socket, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-		cerr << "Error: bind failed" << endl;
+		cerr << "Error: bind failed" << '\n';
 		exit(EXIT_FAILURE);
 	}
-	cout << "Socket bound to port " << portString << endl;
+	cout << "Socket bound to port " << portString << '\n';
 }
 
-static int createEpoll() {
+static auto createEpoll() -> int {
 	int epollFd = epoll_create1(0);
 	if (epollFd == -1) {
-		cerr << strerror(errno) << endl;
-		cerr << "Error: epoll_create1 failed" << endl;
+		cerr << strerror(errno) << '\n';
+		cerr << "Error: epoll_create1 failed" << '\n';
 		exit(EXIT_FAILURE);
 	}
 	return epollFd;
@@ -76,82 +77,75 @@ static void addUserToEpoll(int epollFD, User *user) {
 	struct epoll_event event = {.events = EPOLLIN, .data = {.ptr = (void *)user}};
 
 	if (epoll_ctl(epollFD, EPOLL_CTL_ADD, user->getSocket(), &event) == -1) {
-		cerr << strerror(errno) << endl;
-		cerr << "Error: epoll_ctl failed" << endl;
+		cerr << strerror(errno) << '\n';
+		cerr << "Error: epoll_ctl failed" << '\n';
 		exit(EXIT_FAILURE);
 	}
 }
 
 static void pollUsers(int epollFD) {
-	struct epoll_event events[10];
-	int numberOfEvents = epoll_wait(epollFD, events, MAX_EVENTS, 0);
+	const int maxEvents = 10;
+	array<struct epoll_event, maxEvents> events;
+	int numberOfEvents = epoll_wait(epollFD, events.data(), MAX_EVENTS, 0);
 	if (numberOfEvents == -1) {
-		cerr << strerror(errno) << endl;
-		cerr << "Error: epoll_wait failed" << endl;
+		cerr << strerror(errno) << '\n';
+		cerr << "Error: epoll_wait failed" << '\n';
 		exit(EXIT_FAILURE);
 	}
 
 	for (int i = 0; i < numberOfEvents; i++) {
 		User *user = (User *)events[i].data.ptr;
 
-		cout << "Received message from user with socket: " << user->getSocket() << endl;
+		cout << "Received message from user with socket: " << user->getSocket() << '\n';
 
 		if (user->readFromSocket() == 2) {
-			epoll_ctl(epollFD, EPOLL_CTL_DEL, user->getSocket(), NULL);
+			epoll_ctl(epollFD, EPOLL_CTL_DEL, user->getSocket(), nullptr);
 			server.removeUser(user);
 			continue;
 		}
 	}
 }
 
-void Server::start(void) {
+void Server::start() {
 	// Listen for incoming connections, with a backlog of 10 pending connections
-	if (listen(this->socket, 10) == -1) {
-		cerr << "Error: listen failed" << endl;
-		return;
+	if (listen(this->socket, 10) != -1) {
+		cout << "Server started on socket fd " << this->socket << '\n';
+		cout << "Press Ctrl+C to stop the server" << '\n';
+		cout << "Password: " << this->password << '\n';
+		cout << "\nListening for incoming connections..." << '\n';
 	} else {
-		cout << "Server started on socket fd " << this->socket << endl;
-		cout << "Press Ctrl+C to stop the server" << endl;
-		cout << "Password: " << this->password << endl;
-		cout << "\nListening for incoming connections..." << endl;
+		cerr << "Error: listen failed" << '\n';
+		return;
 	}
 	this->running = true;
 
 	int epollFD = createEpoll();
 
 	string message;
-	while (1) {
+	while (true) {
 		pollUsers(epollFD);
 
 		// Accept a connection
-		const int clientSocket = accept(this->socket, NULL, NULL);
+		const int clientSocket = accept(this->socket, nullptr, nullptr);
 
 		if (clientSocket == -1) {
 			if (errno == EWOULDBLOCK) continue;
 
-			cerr << strerror(errno) << endl;
-			cerr << "Error: accept failed" << endl;
+			cerr << strerror(errno) << '\n';
+			cerr << "Error: accept failed" << '\n';
 			exit(EXIT_FAILURE);
 		} else {
 			User *newUser = new User(clientSocket);
 			this->addUser(newUser);
 			addUserToEpoll(epollFD, newUser);
-			cout << "Connection accepted" << endl;
+			cout << "Connection accepted" << '\n';
 		}
-	}
-}
-
-void Server::sendMessage(int client, const string &message) {
-	if (send(client, message.c_str(), message.length(), 0) == -1) {
-		cerr << strerror(errno) << endl;
-		cerr << "Error: send failed" << endl;
-		exit(EXIT_FAILURE);
 	}
 }
 
 void Server::stop(void) {
 	if (!this->running) return;
-	cout << "\rServer stopped" << endl;
+	cout << "\rServer stopped" << '\n';
 	close(this->socket);
 	this->running = false;
 }

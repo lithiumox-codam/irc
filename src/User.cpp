@@ -11,9 +11,6 @@
 User::User(int socket)
 	: username(""), nickname(""), realname(""), hostname(""), socket(socket), handshake(0), context("") {}
 
-User::User(const string &username, const string &realname, const string &hostname, int socket)
-	: username(username), realname(realname), hostname(hostname), socket(socket), handshake(0), context("") {}
-
 User::~User() { close(this->socket); }
 
 int User::getSocket() const { return this->socket; }
@@ -38,7 +35,7 @@ void User::printHandshake() {
 	if (this->hasHandshake(U_NICK)) cout << "U_NICK ";
 	if (this->hasHandshake(U_AUTHENTICATED)) cout << "U_AUTHENTICATED ";
 	if (this->hasHandshake(U_WELCOME)) cout << "U_WELCOME ";
-	cout << "]" << endl;
+	cout << "]" << "\n";
 }
 
 unsigned int User::getHandshake() { return this->handshake; }
@@ -46,14 +43,14 @@ unsigned int User::getHandshake() { return this->handshake; }
 bool User::hasHandshake(unsigned int handshake) { return (this->handshake & handshake) == handshake; }
 
 void User::printUser() {
-	cout << "======================" << endl;
-	cout << setw(10) << left << "Username:" << this->username << endl;
-	cout << setw(10) << left << "Nickname:" << this->nickname << endl;
-	cout << setw(10) << left << "Realname:" << this->realname << endl;
-	cout << setw(10) << left << "Hostname:" << this->hostname << endl;
-	cout << setw(10) << left << "Socket:" << this->socket << endl;
+	cout << "======================" << "\n";
+	cout << setw(10) << left << "Username:" << this->username << "\n";
+	cout << setw(10) << left << "Nickname:" << this->nickname << "\n";
+	cout << setw(10) << left << "Realname:" << this->realname << "\n";
+	cout << setw(10) << left << "Hostname:" << this->hostname << "\n";
+	cout << setw(10) << left << "Socket:" << this->socket << "\n";
 	this->printHandshake();
-	cout << "======================" << endl;
+	cout << "======================" << "\n";
 }
 
 bool User::checkPacket() const {
@@ -63,7 +60,7 @@ bool User::checkPacket() const {
 	Packet packet = parse(this->context);
 
 	for (auto &pair : packet) {
-		cout << pair.first << "\t" << pair.second << endl;
+		cout << pair.first << "\t" << pair.second << "\n";
 	}
 
 	PacketProcessor(packet, this->socket);
@@ -76,12 +73,12 @@ int User::readFromSocket() {
 	int bytesRead = recv(this->socket, buffer, 1024, 0);
 
 	if (bytesRead == -1) {
-		cerr << "Error: recv failed" << endl;
+		cerr << "Error: recv failed" << "\n";
 		return 1;
 	}
 
 	if (bytesRead == 0) {
-		cerr << "Error: client disconnected" << endl;
+		cerr << "Error: client disconnected" << "\n";
 		return 2;
 	}
 
@@ -89,7 +86,7 @@ int User::readFromSocket() {
 
 	this->context.append(buffer);
 
-	cout << "Buffer for socket " << this->socket << ": " << this->context << endl;
+	cout << "Buffer for socket " << this->socket << ": " << this->context << "\n";
 
 	// This needs to only clear unti /r/n
 	if (this->checkPacket() == true) {

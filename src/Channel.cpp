@@ -45,20 +45,20 @@ void Channel::removeModes(unsigned int modes) { this->modes &= ~modes; }
 bool Channel::hasModes(unsigned int modes) { return (this->modes & modes) == modes; }
 
 void Channel::printModes() {
-	cout << "Modes for " << this->getName() << ":" << endl;
+	cout << "Modes for " << this->getName() << ":" << "\n";
 	if (this->hasModes(M_OPERATOR)) {
-		cout << "  +o (operator)" << endl;
+		cout << "  +o (operator)" << "\n";
 	}
 	if (this->hasModes(M_VOICE)) {
-		cout << "  +v (voice)" << endl;
+		cout << "  +v (voice)" << "\n";
 	}
 	if (this->hasModes(M_MODERATED)) {
-		cout << "  +m (moderated)" << endl;
+		cout << "  +m (moderated)" << "\n";
 	}
 	if (this->hasModes(M_INVITE_ONLY)) {
-		cout << "  +i (invite only)" << endl;
+		cout << "  +i (invite only)" << "\n";
 	}
 	if (this->hasModes(M_PASSWORD)) {
-		cout << "  +k (password protected)" << endl;
+		cout << "  +k (password protected)" << "\n";
 	}
 }

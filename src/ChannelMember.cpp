@@ -17,15 +17,15 @@ void ChannelMember::removeModes(unsigned int modes) { this->modes &= ~modes; }
 bool ChannelMember::hasModes(unsigned int modes) { return (this->modes & modes) == modes; }
 
 void ChannelMember::printModes() {
-	cout << "Modes for " << this->getUsername() << ":" << endl;
+	cout << "Modes for " << this->getUsername() << ":" << "\n";
 	if (this->hasModes(M_INVISIBLE)) {
-		cout << "  +i (invisible)" << endl;
+		cout << "  +i (invisible)" << "\n";
 	}
 	if (this->hasModes(M_OPERATOR)) {
-		cout << "  +o (operator)" << endl;
+		cout << "  +o (operator)" << "\n";
 	}
 	if (this->hasModes(M_VOICE)) {
-		cout << "  +v (voice)" << endl;
+		cout << "  +v (voice)" << "\n";
 	}
 }
 

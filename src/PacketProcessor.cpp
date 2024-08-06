@@ -31,20 +31,20 @@ vector<string> split(const string &str, const char &delim) {
  */
 
 void CAP(const string &args, const int &client) {
+	(void)client;
+
 	if (args.empty()) {
-		server.sendMessage(client, "ERROR :Closing Link: (localhost) [CAP command is invalid]\r\n");
-		cerr << "Error: CAP command is invalid" << endl;
+		cerr << "Error: CAP command is invalid" << "\n";
 		return;
 	}
-	server.sendMessage(client, "CAP " + args + "\r\n");
 }
 
 void NICK(const string &args, const int &client) {
 	if (args.empty()) {
-		cerr << "Error: NICK packet has no argument" << endl;
+		cerr << "Error: NICK packet has no argument" << "\n";
 		return;
 	} else if (args.find(' ') != string::npos) {
-		cerr << "Error: NICK packet has a space in the argument" << endl;
+		cerr << "Error: NICK packet has a space in the argument" << "\n";
 		return;
 	}
 	vector<User *> users = server.getUsers();
@@ -54,15 +54,13 @@ void NICK(const string &args, const int &client) {
 		}
 		user->printUser();
 	}
-	server.sendMessage(client, "NICK " + args + "\r\n");
 }
 
 void USER(const string &args, const int &client) {
-	// split LithiumOx 0 * LithiumOx into {username, 0, *, realname}
+	(void)client;
 	vector<string> tokens = split(args, ' ');
 	if (tokens.size() < 4) {
-		server.sendMessage(client, "ERROR :Closing Link: (localhost) [USER command is invalid]\r\n");
-		cerr << "Error: USER packet has less than 4 arguments" << endl;
+		cerr << "Error: USER packet has less than 4 arguments" << "\n";
 		return;
 	}
 	vector<User *> users = server.getUsers();
@@ -76,13 +74,12 @@ void USER(const string &args, const int &client) {
 		user->printUser();
 	}
 
-	server.sendMessage(client, "USER " + args + "\r\n");
-	cout << "User " << tokens[0] << " has connected" << endl;
+	cout << "User " << tokens[0] << " has connected" << "\n";
 }
 
 void PASS(const string &args, const int &client) {
 	if (args.empty()) {
-		cerr << "Error: PASS packet has less than 1 argument" << endl;
+		cerr << "Error: PASS packet has less than 1 argument" << "\n";
 		return;
 	}
 	if (args == server.getPassword()) {
@@ -92,36 +89,36 @@ void PASS(const string &args, const int &client) {
 				user->addHandshake(U_AUTHENTICATED);
 			}
 		}
-		server.sendMessage(client, "AUTHENTICATE\r\n");
+
 	} else {
-		server.sendMessage(client, "ERROR :Closing Link: (localhost) [Authentication failed]\r\n");
 		cerr << "Error: User has failed to authenticate expecte: \"" << server.getPassword() << "\" got: \"" << args
-			 << "\"" << endl;
+			 << "\"" << "\n";
 	}
 }
 
 void INFO(const string &args, const int &client) {
+	(void)client;
 	if (args.empty()) {
-		server.sendMessage(client, "ERROR :Closing Link: (localhost) [INFO command is invalid]\r\n");
-		cerr << "Error: INFO packet has less than 1 argument" << endl;
+		cerr << "Error: INFO packet has less than 1 argument" << "\n";
 		return;
 	}
-	server.sendMessage(client, "INFO " + args + "\r\n");
 }
 
 void JOIN(const string &args, const int &client) {
+	(void)client;
+
 	if (args.empty()) {
-		server.sendMessage(client, "ERROR :Closing Link: (localhost) [JOIN command is invalid]\r\n");
-		cerr << "Error: JOIN packet has less than 1 argument" << endl;
+		cerr << "Error: JOIN packet has less than 1 argument" << "\n";
 		return;
 	}
-	server.sendMessage(client, "JOIN " + args + "\r\n");
 }
 
 void PacketProcessor(const Packet &packet, const int &client) {
-	for (const auto &p : packet) {
-		for (const auto &s : store) {
-			if (p.first == s.type) s.func(p.second, client);
+	for (const auto &single : packet) {
+		for (const auto &singlePacket : store) {
+			if (single.first == singlePacket.type) {
+				singlePacket.func(single.second, client);
+			}
 		}
 	}
 }

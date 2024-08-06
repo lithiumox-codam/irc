@@ -17,3 +17,4 @@ ARG REINSTALL_CMAKE_VERSION_FROM_SOURCE="none"
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 	&& apt-get -y install --no-install-recommends bear netcat-traditional clangd clang-tidy clang-format \
 	&& apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+   
