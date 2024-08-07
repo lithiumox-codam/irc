@@ -5,6 +5,8 @@
 
 #include "ChannelMember.hpp"
 
+#include <algorithm>
+
 using namespace std;
 
 Channel::Channel(string &name) : name(std::move(name)), modes(0) {}
@@ -33,7 +35,7 @@ auto Channel::hasUser(User *user) const -> bool {
 	return false;
 }
 
-auto Channel::getMembers() const -> const std::vector<ChannelMember> & { return this->members; }
+auto Channel::getMembers() -> std::vector<ChannelMember> & { return this->members; }
 
 void Channel::setModes(unsigned int modes) { this->modes = modes; }
 

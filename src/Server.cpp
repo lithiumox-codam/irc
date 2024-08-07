@@ -164,3 +164,26 @@ void Server::removeUser(User *user) {
 		}
 	}
 }
+
+void Server::addChannel(Channel *channel) { this->channels.push_back(channel); }
+
+void Server::removeChannel(Channel *channel) {
+	for (auto it = this->channels.begin(); it != this->channels.end(); ++it) {
+		if (*it == channel) {
+			this->channels.erase(it);
+			delete *it;
+			break;
+		}
+	}
+}
+
+auto Server::getChannels() -> vector<Channel *> & { return this->channels; }
+
+auto Server::getChannel(const string &name) -> Channel * {
+	for (auto &channel : this->channels) {
+		if (channel->getName() == name) { return channel; }
+	}
+	return nullptr;
+}
+
+

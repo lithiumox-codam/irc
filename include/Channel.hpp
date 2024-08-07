@@ -30,7 +30,7 @@ class Channel {
 	void removeUser(User *user);
 	auto hasUser(User *user) const -> bool;
 
-	[[nodiscard]] auto getMembers() const -> const vector<ChannelMember> &;
+	[[nodiscard]] auto getMembers() -> vector<ChannelMember> &;
 
 	void setModes(unsigned int modes);
 	[[nodiscard]] auto getModes() const -> unsigned int;
