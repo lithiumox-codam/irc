@@ -52,6 +52,7 @@ void NICK(const string &args, const int &client) {
 	for (const auto &user : users) {
 		if (client == user->getSocket()) {
 			user->setNickname(args);
+			user->addHandshake(U_NICK);
 		}
 		user->printUser();
 	}

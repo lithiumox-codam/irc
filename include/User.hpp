@@ -1,11 +1,13 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 using namespace std;
 
-#define BUFFER_SIZE = 1024
-
+enum UserConfig : uint16_t {
+	BUFFER_SIZE = 1024 // The size of the buffer that will be used to read from the socket.
+};
 /** Determines if the user has sent the INFO command. */
 unsigned int const U_INFO = 1 << 1;
 /** Determines if the user has sent the USER command. */

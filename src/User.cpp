@@ -82,7 +82,7 @@ auto User::checkPacket() const -> bool {
 }
 
 auto User::readFromSocket() -> int {
-	vector<char> buffer;
+	vector<char> buffer(UserConfig::BUFFER_SIZE);
 	int bytesRead = recv(this->socket, buffer.data(), buffer.size(), 0);
 
 	if (bytesRead == -1) {
