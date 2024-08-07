@@ -21,13 +21,17 @@ class Channel {
 	unsigned int modes;
 
    public:
-	Channel(string name);
-	auto getName() -> string;
+	Channel(string &name);
+
+	[[nodiscard]] auto getName() const -> const string&;
 	void setName(const std::string &name);
-	void addUser(const User &user);
-	void removeUser(User &user);
-	auto hasUser(User &user) -> bool;
-	auto getMembers() -> vector<ChannelMember> &;
+
+	void addUser(const User *user);
+	void removeUser(User *user);
+	auto hasUser(User *user) -> bool;
+
+	[[nodiscard]] auto getMembers() const -> const vector<ChannelMember> &;
+
 	void setModes(unsigned int modes);
 	[[nodiscard]] auto getModes() const -> unsigned int;
 	void addModes(unsigned int modes);

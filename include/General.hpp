@@ -64,15 +64,13 @@ enum class PacketType {
 auto operator<<(ostream &outputStream, const PacketType &type) -> ostream &;
 
 /* A struct that maps a key to a PacketType also used by the PacketProcessor later on. */
-typedef struct {
+using PacketTypeMap = struct {
 	const string key;
 	PacketType type;
 	void (*func)(const string &, const int &);
-} PacketTypeMap;
+};
 
-/* A typedef for the Packet. */
-typedef unordered_map<PacketType, string> Packet;
-
+/* A typedef for the unordered_map<PacketType, string>. */
 void CAP(const string &args, const int &client);
 void NICK(const string &args, const int &client);
 void USER(const string &args, const int &client);
@@ -94,5 +92,5 @@ const std::array<PacketTypeMap, 7> store = {{{"CAP", PacketType::CAP, &CAP},
 											 {"JOIN", PacketType::JOIN, &JOIN},
 											 {"", PacketType::NONE, nullptr}}};
 
-auto parse(const string &message) -> Packet;
-void packetProcessor(const Packet &packet, const int &client);
+auto parse(const string &message) -> unordered_map<PacketType, string>;
+void packetProcessor(const unordered_map<PacketType, string> &packet, const int &client);

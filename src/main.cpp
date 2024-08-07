@@ -2,7 +2,9 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "Channel.hpp"
 #include "Server.hpp"
+#include "User.hpp"
 
 Server server;
 
@@ -31,6 +33,7 @@ auto main(int argc, char **argv) -> int {
 		return 1;
 	}
 
+	cout << endl << endl;
 	server.bindSocket(argv[1]);
 	server.setPassword(argv[2]);
 	server.start();

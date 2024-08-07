@@ -36,19 +36,24 @@ class User {
    public:
 	User(int socket);
 	virtual ~User();
+
 	[[nodiscard]] auto getSocket() const -> int;
-	auto getUsername() -> const string &;
-	auto getNickname() -> const string &;
+
+	[[nodiscard]] auto getUsername() const -> const string &;
+	[[nodiscard]] auto getNickname() const -> const string &;
 	void setNickname(const string &nickname);
 	void setUsername(const string &username);
 	void setRealname(const string &realname);
 	void setHostname(const string &hostname);
+
 	void addHandshake(unsigned int handshake);
 	[[nodiscard]] auto hasHandshake(unsigned int handshake) const -> bool;
 	[[nodiscard]] auto getHandshake() const -> unsigned int;
+
 	void printHandshake() const;
 	void printUser();
 
 	[[nodiscard]] auto checkPacket() const -> bool;
+
 	auto readFromSocket() -> int;
 };

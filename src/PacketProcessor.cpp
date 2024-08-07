@@ -115,7 +115,7 @@ void JOIN(const string &args, const int &client) {
 	}
 }
 
-void packetProcessor(const Packet &packet, const int &client) {
+void packetProcessor(const unordered_map<PacketType, string> &packet, const int &client) {
 	for (const auto &single : packet) {
 		for (const auto &singlePacket : store) {
 			if (single.first == singlePacket.type) {

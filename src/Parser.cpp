@@ -51,10 +51,10 @@ static auto extract(const string &str, unsigned long start) -> string {
  * @brief The parse function takes a message and returns a map of PacketType and the message.
  *
  * @param message The entire message to parse
- * @return Packet A map of PacketType and the message representing the packet
+ * @return unordered_map<PacketType, string> A map of PacketType and the message representing the packet
  */
-auto parse(const string &message) -> Packet {
-	Packet parsed;
+auto parse(const string &message) -> unordered_map<PacketType, string> {
+	unordered_map<PacketType, string> parsed;
 
 	for (const auto &item : store) {
 		unsigned long pos = message.find(item.key);

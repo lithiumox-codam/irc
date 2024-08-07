@@ -26,11 +26,15 @@
 
 using namespace std;
 
-#define SERVER_NAME "ft_irc"
+enum ServerConfig {
+   BACKLOG = 10,
+   MAX_EVENTS = 10,
+   HOSTNAME_BUFFER_SIZE = 1024,
+};
 
 class Server {
    private:
-	vector<Channel> channels;  // List of channels
+	vector<Channel *> channels;  // List of channels
 	vector<User *> users;	   // List of users
 
 	string password;  // Password for connecting to the server
@@ -58,7 +62,7 @@ class Server {
 	void sendMessage(int client, const string &message);
 	void addUser(User *user);
 	void removeUser(User *user);
-	auto getUsers() -> vector<User *>;
+	[[nodiscard]] auto getUsers() const -> const vector<User *> &;
 };
 
 #endif

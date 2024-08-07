@@ -14,12 +14,10 @@
 
 extern Server server;
 
-#define MAX_EVENTS 10
-
 Server::Server() : socket(0), port(0), running(false) {
-	char hostname[1024];
+	string hostname(ServerConfig::HOSTNAME_BUFFER_SIZE, '\0');
 	try {
-		gethostname(hostname, 1024);
+		gethostname(hostname.data(), hostname.size());
 		this->hostname = hostname;
 	} catch (const exception &e) {
 		cerr << "Error: " << e.what() << '\n';
@@ -86,7 +84,7 @@ static void addUserToEpoll(int epollFD, User *user) {
 static void pollUsers(int epollFD) {
 	const int maxEvents = 10;
 	array<struct epoll_event, maxEvents> events;
-	int numberOfEvents = epoll_wait(epollFD, events.data(), MAX_EVENTS, 0);
+	int numberOfEvents = epoll_wait(epollFD, events.data(), ServerConfig::MAX_EVENTS, 0);
 	if (numberOfEvents == -1) {
 		cerr << strerror(errno) << '\n';
 		cerr << "Error: epoll_wait failed" << '\n';
@@ -108,7 +106,7 @@ static void pollUsers(int epollFD) {
 
 void Server::start() {
 	// Listen for incoming connections, with a backlog of 10 pending connections
-	if (listen(this->socket, 10) != -1) {
+	if (listen(this->socket, ServerConfig::BACKLOG) != -1) {
 		cout << "Server started on socket fd " << this->socket << '\n';
 		cout << "Press Ctrl+C to stop the server" << '\n';
 		cout << "Password: " << this->password << '\n';
@@ -129,7 +127,7 @@ void Server::start() {
 		const int clientSocket = accept(this->socket, nullptr, nullptr);
 
 		if (clientSocket == -1) {
-			if (errno == EWOULDBLOCK) continue;
+			if (errno == EWOULDBLOCK) { continue; }
 
 			cerr << strerror(errno) << '\n';
 			cerr << "Error: accept failed" << '\n';
@@ -143,14 +141,14 @@ void Server::start() {
 	}
 }
 
-void Server::stop(void) {
-	if (!this->running) return;
+void Server::stop() {
+	if (!this->running) { return; }
 	cout << "\rServer stopped" << '\n';
 	close(this->socket);
 	this->running = false;
 }
 
-vector<User *> Server::getUsers(void) { return this->users; }
+auto Server::getUsers() const -> const vector<User *> & { return this->users; }
 
 void Server::addUser(User *user) { this->users.push_back(user); }
 

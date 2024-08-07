@@ -16,9 +16,9 @@ User::~User() { close(this->socket); }
 
 auto User::getSocket() const -> int { return this->socket; }
 
-auto User::getUsername() -> const string & { return this->username; };
+auto User::getUsername() const -> const string & { return this->username; };
 
-auto User::getNickname() -> const string & { return this->nickname; }
+auto User::getNickname() const -> const string & { return this->nickname; }
 
 void User::setNickname(const string &nickname) { this->nickname = nickname; }
 
@@ -70,7 +70,7 @@ auto User::checkPacket() const -> bool {
 		return false;
 	}
 
-	Packet packet = parse(this->context);
+	unordered_map<PacketType, string> packet = parse(this->context);
 
 	for (auto &pair : packet) {
 		cout << pair.first << "\t" << pair.second << "\n";
