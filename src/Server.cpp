@@ -15,11 +15,13 @@
 extern Server server;
 
 Server::Server() : socket(0), port(0), running(false) {
-	string hostname(ServerConfig::HOSTNAME_BUFFER_SIZE, '\0');
+	string hostname((int) ServerConfig::BUFFER_SIZE, '\0');
+
 	try {
 		gethostname(hostname.data(), hostname.size());
 		this->hostname = hostname;
-	} catch (const exception &e) {
+	}
+	catch (const exception &e) {
 		cerr << "Error: " << e.what() << '\n';
 	}
 }
@@ -84,7 +86,7 @@ static void addUserToEpoll(int epollFD, User *user) {
 static void pollUsers(int epollFD) {
 	const int maxEvents = 10;
 	array<struct epoll_event, maxEvents> events;
-	int numberOfEvents = epoll_wait(epollFD, events.data(), ServerConfig::MAX_EVENTS, 0);
+	int numberOfEvents = epoll_wait(epollFD, events.data(), (int) ServerConfig::MAX_EVENTS, 0);
 	if (numberOfEvents == -1) {
 		cerr << strerror(errno) << '\n';
 		cerr << "Error: epoll_wait failed" << '\n';
@@ -106,7 +108,7 @@ static void pollUsers(int epollFD) {
 
 void Server::start() {
 	// Listen for incoming connections, with a backlog of 10 pending connections
-	if (listen(this->socket, ServerConfig::BACKLOG) != -1) {
+	if (listen(this->socket, (int) ServerConfig::BACKLOG) != -1) {
 		cout << "Server started on socket fd " << this->socket << '\n';
 		cout << "Press Ctrl+C to stop the server" << '\n';
 		cout << "Password: " << this->password << '\n';
@@ -132,7 +134,8 @@ void Server::start() {
 			cerr << strerror(errno) << '\n';
 			cerr << "Error: accept failed" << '\n';
 			exit(EXIT_FAILURE);
-		} else {
+		}
+		else {
 			User *newUser = new User(clientSocket);
 			this->addUser(newUser);
 			addUserToEpoll(epollFD, newUser);

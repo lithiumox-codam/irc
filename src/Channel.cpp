@@ -24,8 +24,8 @@ void Channel::removeUser(User *user) {
 	}
 }
 
-auto Channel::hasUser(User *user) -> bool {
-	for (const auto &member : this->members) {
+auto Channel::hasUser(User *user) const -> bool {
+	for (auto & member : this->members) {
 		if (member.getSocket() == user->getSocket()) {
 			return true;
 		}
@@ -45,7 +45,7 @@ void Channel::removeModes(unsigned int modes) { this->modes &= ~modes; }
 
 auto Channel::hasModes(unsigned int modes) const -> bool { return (this->modes & modes) == modes; }
 
-void Channel::printModes() {
+void Channel::printModes() const {
 	cout << "Modes for " << this->getName() << ":" << "\n";
 	if (this->hasModes(M_OPERATOR)) {
 		cout << "  +o (operator)" << "\n";

@@ -1,17 +1,4 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: opelser <opelser@student.42.fr>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/11 19:17:58 by opelser           #+#    #+#             */
-/*   Updated: 2024/08/05 22:31:22 by opelser          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#ifndef SERVER_HPP
-#define SERVER_HPP
+#pragma once
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -26,10 +13,11 @@
 
 using namespace std;
 
-enum ServerConfig {
+// NOLINTNEXTLINE
+enum class ServerConfig {
    BACKLOG = 10,
    MAX_EVENTS = 10,
-   HOSTNAME_BUFFER_SIZE = 1024,
+   BUFFER_SIZE = 1024,
 };
 
 class Server {
@@ -47,8 +35,6 @@ class Server {
    public:
 	Server();
 	Server(const string &password, const string &port);
-	Server(const Server &rhs);
-	auto operator=(const Server &rhs) -> Server &;
 	~Server();
 
 	// Getters and Setters
@@ -64,5 +50,3 @@ class Server {
 	void removeUser(User *user);
 	[[nodiscard]] auto getUsers() const -> const vector<User *> &;
 };
-
-#endif

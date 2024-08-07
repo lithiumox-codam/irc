@@ -21,6 +21,6 @@ class ChannelMember : public User {
 	void addModes(unsigned int modes);
 	void removeModes(unsigned int modes);
 	[[nodiscard]] auto hasModes(unsigned int modes) const -> bool;
-	void printModes();
+	void printModes() const;
 	void clearModes();
 };

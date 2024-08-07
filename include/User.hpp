@@ -51,7 +51,7 @@ class User {
 	[[nodiscard]] auto getHandshake() const -> unsigned int;
 
 	void printHandshake() const;
-	void printUser();
+	void printUser() const;
 
 	[[nodiscard]] auto checkPacket() const -> bool;
 

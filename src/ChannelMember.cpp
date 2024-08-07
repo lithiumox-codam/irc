@@ -14,7 +14,7 @@ void ChannelMember::removeModes(unsigned int modes) { this->modes &= ~modes; }
 
 auto ChannelMember::hasModes(unsigned int modes) const -> bool { return (this->modes & modes) == modes; }
 
-void ChannelMember::printModes() {
+void ChannelMember::printModes() const {
 	cout << "Modes for " << this->getUsername() << ":" << "\n";
 	if (this->hasModes(M_INVISIBLE)) {
 		cout << "  +i (invisible)" << "\n";

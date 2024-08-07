@@ -28,6 +28,7 @@ using namespace std;
 /*
  * Parser related definitions.
  */
+ // NOLINTNEXTLINE
 enum class PacketType {
 	NONE = -1,
 	CAP,
@@ -61,6 +62,7 @@ enum class PacketType {
 	INFO,
 	SERVLIST,
 };
+
 auto operator<<(ostream &outputStream, const PacketType &type) -> ostream &;
 
 /* A struct that maps a key to a PacketType also used by the PacketProcessor later on. */
@@ -70,7 +72,6 @@ using PacketTypeMap = struct {
 	void (*func)(const string &, const int &);
 };
 
-/* A typedef for the unordered_map<PacketType, string>. */
 void CAP(const string &args, const int &client);
 void NICK(const string &args, const int &client);
 void USER(const string &args, const int &client);

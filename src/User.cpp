@@ -51,7 +51,7 @@ auto User::getHandshake() const -> unsigned int { return this->handshake; }
 
 auto User::hasHandshake(unsigned int handshake) const -> bool { return (this->handshake & handshake) == handshake; }
 
-void User::printUser() {
+void User::printUser() const {
 	cout << "======================" << "\n";
 	cout << setw(10) << left << "Username:" << this->username << "\n";
 	cout << setw(10) << left << "Nickname:" << this->nickname << "\n";
