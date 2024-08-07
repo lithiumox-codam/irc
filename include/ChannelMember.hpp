@@ -15,7 +15,7 @@ class ChannelMember : public User {
 
    public:
 	ChannelMember(const User &user);
-	~ChannelMember();
+
 	void setModes(unsigned int modes);
 	[[nodiscard]] auto getModes() const -> unsigned int;
 	void addModes(unsigned int modes);

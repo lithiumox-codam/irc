@@ -53,7 +53,7 @@ static auto extract(const string &str, unsigned long start) -> string {
  * @param message The entire message to parse
  * @return Packet A map of PacketType and the message representing the packet
  */
-auto Parse(const string &message) -> Packet {
+auto parse(const string &message) -> Packet {
 	Packet parsed;
 
 	for (const auto &item : store) {

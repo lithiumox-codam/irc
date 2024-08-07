@@ -7,8 +7,6 @@
 
 Channel::Channel(string name) : name(std::move(name)), modes(0) {}
 
-Channel::~Channel() = default;
-
 auto Channel::getName() -> string { return this->name; }
 
 void Channel::setName(const string &name) { this->name = name; }

@@ -22,7 +22,6 @@ class Channel {
 
    public:
 	Channel(string name);
-	~Channel();
 	auto getName() -> string;
 	void setName(const std::string &name);
 	void addUser(const User &user);

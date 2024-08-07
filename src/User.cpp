@@ -70,13 +70,13 @@ auto User::checkPacket() const -> bool {
 		return false;
 	}
 
-	Packet packet = Parse(this->context);
+	Packet packet = parse(this->context);
 
 	for (auto &pair : packet) {
 		cout << pair.first << "\t" << pair.second << "\n";
 	}
 
-	PacketProcessor(packet, this->socket);
+	packetProcessor(packet, this->socket);
 
 	return true;
 }

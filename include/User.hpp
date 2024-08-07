@@ -35,7 +35,7 @@ class User {
 
    public:
 	User(int socket);
-	~User();
+	virtual ~User();
 	[[nodiscard]] auto getSocket() const -> int;
 	auto getUsername() -> const string &;
 	auto getNickname() -> const string &;

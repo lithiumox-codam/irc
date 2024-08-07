@@ -94,5 +94,5 @@ const std::array<PacketTypeMap, 7> store = {{{"CAP", PacketType::CAP, &CAP},
 											 {"JOIN", PacketType::JOIN, &JOIN},
 											 {"", PacketType::NONE, nullptr}}};
 
-auto Parse(const string &message) -> Packet;
-void PacketProcessor(const Packet &packet, const int &client);
+auto parse(const string &message) -> Packet;
+void packetProcessor(const Packet &packet, const int &client);

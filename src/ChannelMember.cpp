@@ -4,8 +4,6 @@
 
 ChannelMember::ChannelMember(const User &user) : User(user), modes(0) {}
 
-ChannelMember::~ChannelMember() {}
-
 void ChannelMember::setModes(unsigned int modes) { this->modes = modes; }
 
 auto ChannelMember::getModes() const -> unsigned int { return this->modes; }
