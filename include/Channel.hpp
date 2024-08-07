@@ -26,9 +26,9 @@ class Channel {
 	[[nodiscard]] auto getName() const -> const string&;
 	void setName(const std::string &name);
 
-	void addUser(const User *user);
-	void removeUser(User *user);
-	auto hasUser(User *user) const -> bool;
+	void addUser(const User &user);
+	void removeUser(User &user);
+	auto hasUser(User &user) const -> bool;
 
 	[[nodiscard]] auto getMembers() -> vector<ChannelMember> &;
 

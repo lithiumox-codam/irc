@@ -5,8 +5,6 @@
 
 #include "ChannelMember.hpp"
 
-#include <algorithm>
-
 using namespace std;
 
 Channel::Channel(string &name) : name(std::move(name)), modes(0) {}
@@ -15,20 +13,20 @@ auto Channel::getName() const -> const string & { return this->name; }
 
 void Channel::setName(const string &name) { this->name = name; }
 
-void Channel::addUser(const User *user) { this->members.emplace_back(*user); }
+void Channel::addUser(const User &user) { this->members.emplace_back(user); }
 
-void Channel::removeUser(User *user) {
+void Channel::removeUser(User &user) {
 	for (auto it = this->members.begin(); it != this->members.end(); ++it) {
-		if (it->getSocket() == user->getSocket()) {
+		if (it->getSocket() == user.getSocket()) {
 			this->members.erase(it);
 			break;
 		}
 	}
 }
 
-auto Channel::hasUser(User *user) const -> bool {
+auto Channel::hasUser(User &user) const -> bool {
 	for (auto & member : this->members) {
-		if (member.getSocket() == user->getSocket()) {
+		if (member.getSocket() == user.getSocket()) {
 			return true;
 		}
 	}

@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "ChannelMember.hpp"
 #include "Server.hpp"
 
 Server server;

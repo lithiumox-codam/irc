@@ -73,10 +73,10 @@ static auto createEpoll() -> int {
 	return epollFd;
 }
 
-static void addUserToEpoll(int epollFD, User *user) {
-	struct epoll_event event = {.events = EPOLLIN, .data = {.ptr = (void *)user}};
+static void addUserToEpoll(int epollFD, User &user) {
+	struct epoll_event event = {.events = EPOLLIN, .data = {.ptr = (void *) &user}};
 
-	if (epoll_ctl(epollFD, EPOLL_CTL_ADD, user->getSocket(), &event) == -1) {
+	if (epoll_ctl(epollFD, EPOLL_CTL_ADD, user.getSocket(), &event) == -1) {
 		cerr << strerror(errno) << '\n';
 		cerr << "Error: epoll_ctl failed" << '\n';
 		exit(EXIT_FAILURE);
@@ -100,7 +100,7 @@ static void pollUsers(int epollFD) {
 
 		if (user->readFromSocket() == 2) {
 			epoll_ctl(epollFD, EPOLL_CTL_DEL, user->getSocket(), nullptr);
-			server.removeUser(user);
+			server.removeUser(*user);
 			continue;
 		}
 	}
@@ -136,8 +136,7 @@ void Server::start() {
 			exit(EXIT_FAILURE);
 		}
 		else {
-			User *newUser = new User(clientSocket);
-			this->addUser(newUser);
+			User &newUser = this->addUser(clientSocket);
 			addUserToEpoll(epollFD, newUser);
 			cout << "Connection accepted" << '\n';
 		}
@@ -151,39 +150,39 @@ void Server::stop() {
 	this->running = false;
 }
 
-auto Server::getUsers() const -> const vector<User *> & { return this->users; }
+auto Server::getUsers() const -> const vector<User> & { return this->users; }
 
-void Server::addUser(User *user) { this->users.push_back(user); }
+auto Server::addUser(unsigned int socket) -> User & {
+	return this->users.emplace_back(socket);
+}
 
-void Server::removeUser(User *user) {
+void Server::removeUser(User &user) {
 	for (auto it = this->users.begin(); it != this->users.end(); ++it) {
-		if (*it == user) {
+		if (it->getSocket() == user.getSocket()) {
 			this->users.erase(it);
-			delete *it;
 			break;
 		}
 	}
 }
 
-void Server::addChannel(Channel *channel) { this->channels.push_back(channel); }
+auto Server::addChannel(string &channelName) -> Channel & { return this->channels.emplace_back(channelName); }
 
-void Server::removeChannel(Channel *channel) {
+void Server::removeChannel(Channel &channel) {
 	for (auto it = this->channels.begin(); it != this->channels.end(); ++it) {
-		if (*it == channel) {
+		if (it->getName() == channel.getName()) {
 			this->channels.erase(it);
-			delete *it;
 			break;
 		}
 	}
 }
 
-auto Server::getChannels() -> vector<Channel *> & { return this->channels; }
+auto Server::getChannels() -> vector<Channel> & { return this->channels; }
 
-auto Server::getChannel(const string &name) -> Channel * {
+auto Server::getChannel(const string &name) -> Channel & {
 	for (auto &channel : this->channels) {
-		if (channel->getName() == name) { return channel; }
+		if (channel.getName() == name) { return channel; }
 	}
-	return nullptr;
+	throw runtime_error("Channel not found");
 }
 
 
