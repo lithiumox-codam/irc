@@ -1,17 +1,4 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        ::::::::            */
-/*   Server.hpp                                         :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: opelser <opelser@student.42.fr>              +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/06/11 19:17:58 by opelser       #+#    #+#                 */
-/*   Updated: 2024/08/05 14:04:32 by mdekker       ########   odam.nl         */
-/*                                                                            */
-/* ************************************************************************** */
-
-#ifndef SERVER_HPP
-#define SERVER_HPP
+#pragma once
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -19,7 +6,6 @@
 #include <unistd.h>
 
 #include <csignal>
-#include <iostream>
 #include <string>
 
 #include "Channel.hpp"
@@ -27,13 +13,17 @@
 
 using namespace std;
 
-#define BUFFER_SIZE 1024
-#define SERVER_NAME "ft_irc"
+// NOLINTNEXTLINE
+enum class ServerConfig {
+   BACKLOG = 10,
+   MAX_EVENTS = 10,
+   BUFFER_SIZE = 1024,
+};
 
 class Server {
    private:
-	vector<Channel> channels;  // List of channels
-	vector<User> users;		   // List of users
+	vector<Channel *> channels;  // List of channels
+	vector<User *> users;	   // List of users
 
 	string password;  // Password for connecting to the server
 	string hostname;  // Hostname of the server
@@ -45,22 +35,18 @@ class Server {
    public:
 	Server();
 	Server(const string &password, const string &port);
-	Server(const Server &rhs);
-	Server &operator=(const Server &rhs);
-	~Server(void);
+	~Server();
 
 	// Getters and Setters
 	void setPassword(const string &password);
-	const string &getPassword(void) const;
+	[[nodiscard]] auto getPassword() const -> const string &;
 
 	// Public Methods
 	void bindSocket(const string &portString);
-	void start(void);
-	void stop(void);
+	void start();
+	void stop();
 	void sendMessage(int client, const string &message);
-	void addUser(const User &user);
-	void removeUser(User &user);
-	vector<User> getUsers(void);
+	void addUser(User *user);
+	void removeUser(User *user);
+	[[nodiscard]] auto getUsers() const -> const vector<User *> &;
 };
-
-#endif

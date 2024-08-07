@@ -1,9 +1,13 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 using namespace std;
 
+enum UserConfig : uint16_t {
+	BUFFER_SIZE = 1024 // The size of the buffer that will be used to read from the socket.
+};
 /** Determines if the user has sent the INFO command. */
 unsigned int const U_INFO = 1 << 1;
 /** Determines if the user has sent the USER command. */
@@ -27,15 +31,29 @@ class User {
 	int socket;
 	unsigned int handshake;
 
+	string context;
+
    public:
-	User(const string &username, const string &hostname, const string &realname, int socket);
-	~User();
-	const string &getUsername();
-	const string &getNickname();
+	User(int socket);
+	virtual ~User();
+
+	[[nodiscard]] auto getSocket() const -> int;
+
+	[[nodiscard]] auto getUsername() const -> const string &;
+	[[nodiscard]] auto getNickname() const -> const string &;
 	void setNickname(const string &nickname);
+	void setUsername(const string &username);
+	void setRealname(const string &realname);
+	void setHostname(const string &hostname);
+
 	void addHandshake(unsigned int handshake);
-	bool hasHandshake(unsigned int handshake);
-	unsigned int getHandshake();
-	void printHandshake();
-	void printUser();
+	[[nodiscard]] auto hasHandshake(unsigned int handshake) const -> bool;
+	[[nodiscard]] auto getHandshake() const -> unsigned int;
+
+	void printHandshake() const;
+	void printUser() const;
+
+	[[nodiscard]] auto checkPacket() const -> bool;
+
+	auto readFromSocket() -> int;
 };

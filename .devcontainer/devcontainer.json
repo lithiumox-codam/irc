@@ -1,0 +1,38 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/cpp
+{
+	"name": "irc",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"features": {
+		"ghcr.io/dhoeric/features/act:1": {},
+		"ghcr.io/jungaretti/features/make:1": {},
+		"ghcr.io/devcontainers-community/features/llvm": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"llvm-vs-code-extensions.vscode-clangd",
+				"xaver.clang-format",
+				"CS128.cs128-clang-tidy"
+			]
+		}
+	},
+	"updateRemoteUserUID": false,
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [6667],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "make bear -C /workspaces/irc",
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	"remoteUser": "root"
+}

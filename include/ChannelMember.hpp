@@ -1,7 +1,5 @@
 #pragma once
 
-#include <type_traits>
-
 #include "User.hpp"
 
 /** Determines if the user is a channel operator. (will be defaulted to true when the user is a server operator) */
@@ -17,12 +15,12 @@ class ChannelMember : public User {
 
    public:
 	ChannelMember(const User &user);
-	~ChannelMember();
+
 	void setModes(unsigned int modes);
-	unsigned int getModes();
+	[[nodiscard]] auto getModes() const -> unsigned int;
 	void addModes(unsigned int modes);
 	void removeModes(unsigned int modes);
-	bool hasModes(unsigned int modes);
-	void printModes();
+	[[nodiscard]] auto hasModes(unsigned int modes) const -> bool;
+	void printModes() const;
 	void clearModes();
 };
