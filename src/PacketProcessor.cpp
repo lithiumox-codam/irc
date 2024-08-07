@@ -48,13 +48,13 @@ void NICK(const string &args, const int &client) {
 		cerr << "Error: NICK packet has a space in the argument" << "\n";
 		return;
 	}
-	vector<User *> users = server.getUsers();
-	for (const auto &user : users) {
-		if (client == user->getSocket()) {
-			user->setNickname(args);
-			user->addHandshake(U_NICK);
+	vector<User> users = server.getUsers();
+	for (auto &user : users) {
+		if (client == user.getSocket()) {
+			user.setNickname(args);
+			user.addHandshake(U_NICK);
 		}
-		user->printUser();
+		user.printUser();
 	}
 }
 
@@ -65,15 +65,15 @@ void USER(const string &args, const int &client) {
 		cerr << "Error: USER packet has less than 4 arguments" << "\n";
 		return;
 	}
-	vector<User *> users = server.getUsers();
-	for (const auto &user : users) {
-		if (client == user->getSocket()) {
-			user->setUsername(tokens[0]);
-			user->setRealname(tokens[3]);
-			user->setHostname("localhost");
-			user->addHandshake(U_USER);
+	vector<User> users = server.getUsers();
+	for (auto &user : users) {
+		if (client == user.getSocket()) {
+			user.setUsername(tokens[0]);
+			user.setRealname(tokens[3]);
+			user.setHostname("localhost");
+			user.addHandshake(U_USER);
 		}
-		user->printUser();
+		user.printUser();
 	}
 
 	cout << "User " << tokens[0] << " has connected" << "\n";
@@ -85,10 +85,10 @@ void PASS(const string &args, const int &client) {
 		return;
 	}
 	if (args == server.getPassword()) {
-		vector<User *> users = server.getUsers();
-		for (const auto &user : users) {
-			if (client == user->getSocket()) {
-				user->addHandshake(U_AUTHENTICATED);
+		vector<User> users = server.getUsers();
+		for (auto &user : users) {
+			if (client == user.getSocket()) {
+				user.addHandshake(U_AUTHENTICATED);
 			}
 		}
 

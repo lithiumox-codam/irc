@@ -22,8 +22,8 @@ enum class ServerConfig {
 
 class Server {
    private:
-	vector<Channel *> channels;  // List of channels
-	vector<User *> users;	   // List of users
+	vector<Channel> channels;  // List of channels
+	vector<User> users;	   // List of users
 
 	string password;  // Password for connecting to the server
 	string hostname;  // Hostname of the server
@@ -34,7 +34,6 @@ class Server {
 
    public:
 	Server();
-	Server(const string &password, const string &port);
 	~Server();
 
 	// Getters and Setters
@@ -43,10 +42,20 @@ class Server {
 
 	// Public Methods
 	void bindSocket(const string &portString);
+
 	void start();
 	void stop();
+
 	void sendMessage(int client, const string &message);
-	void addUser(User *user);
-	void removeUser(User *user);
-	[[nodiscard]] auto getUsers() const -> const vector<User *> &;
+
+	auto addUser(unsigned int socket) -> User &;
+	void removeUser(User &user);
+	[[nodiscard]] auto getUsers() const -> const vector<User> &;
+
+	auto addChannel(string &channelName) -> Channel &;
+	void removeChannel(Channel &channel);
+	[[nodiscard]] auto getChannels() -> vector<Channel> &;
+	[[nodiscard]] auto getChannel(const string &name) -> Channel &;
+
+   private:
 };

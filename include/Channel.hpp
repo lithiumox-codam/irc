@@ -26,11 +26,11 @@ class Channel {
 	[[nodiscard]] auto getName() const -> const string&;
 	void setName(const std::string &name);
 
-	void addUser(const User *user);
-	void removeUser(User *user);
-	auto hasUser(User *user) const -> bool;
+	void addUser(const User &user);
+	void removeUser(User &user);
+	auto hasUser(User &user) const -> bool;
 
-	[[nodiscard]] auto getMembers() const -> const vector<ChannelMember> &;
+	[[nodiscard]] auto getMembers() -> vector<ChannelMember> &;
 
 	void setModes(unsigned int modes);
 	[[nodiscard]] auto getModes() const -> unsigned int;
