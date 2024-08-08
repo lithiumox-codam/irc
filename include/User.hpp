@@ -58,8 +58,9 @@ class User {
 	void printHandshake() const;
 	void printUser() const;
 
-	[[nodiscard]] auto checkPacket() const -> bool;
+	[[nodiscard]] auto checkPacket() -> bool;
 
 	auto readFromSocket() -> int;
 	void addToBuffer(const string &data);
+	auto getNextCommand() -> string;
 };
