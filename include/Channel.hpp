@@ -22,11 +22,15 @@ class Channel {
 
    public:
 	Channel(string &name);
+	Channel(Channel &channel) = delete;
+	auto operator=(Channel &channel) -> Channel & = delete;
+	Channel(Channel &&channel) noexcept;
+	auto operator=(Channel &&channel) noexcept -> Channel &;
 
 	[[nodiscard]] auto getName() const -> const string&;
 	void setName(const std::string &name);
 
-	void addUser(const User &user);
+	void addUser(User &&user);
 	void removeUser(User &user);
 	auto hasUser(User &user) const -> bool;
 

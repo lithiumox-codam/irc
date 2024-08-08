@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -13,9 +14,68 @@
 
 extern Server server;
 
-User::User(int socket) : socket(socket), handshake(0) {}
+User::User(int socket) : socket(socket), handshake(0) { cout << "Creating user with socket: " << this->socket << endl; }
 
-User::~User() { close(this->socket); }
+static void	close_socket(int socket) {
+	if (socket == -1) {
+		return;
+	}
+
+	cout << "Closing socket : " << socket << endl;
+
+	if (shutdown(socket, SHUT_RDWR) == -1) {
+		if (errno == ENOTCONN) {
+			cerr << "Error: socket not connected" << "\n";
+		} else if (errno == ENOTSOCK) {
+			cerr << "Error: socket is not a socket" << "\n";
+		} else if (errno == EBADF) {
+			cerr << "Error: socket is not a valid file descriptor" << "\n";
+		} else {
+			cerr << "Error: shutdown failed" << "\n";
+		}
+		cerr << "Error: shutdown failed" << "\n";
+	}
+	if (close(socket) == -1) {
+		cerr << "Error: close failed" << "\n";
+	}
+}
+
+User::User(User &&user) noexcept {
+	cout << "Moving user " << user.nickname << ": " << user.socket << endl;
+
+	this->socket = user.socket;
+	user.socket = -1;
+
+	this->username = std::move(user.username);
+	this->nickname = std::move(user.nickname);
+	this->realname = std::move(user.realname);
+	this->hostname = std::move(user.hostname);
+	this->handshake = user.handshake;
+	this->in_buffer = std::move(user.in_buffer);
+}
+
+auto User::operator=(User &&user) noexcept -> User & {
+	cout << "Moving user " << user.nickname << ": " << user.socket << endl;
+
+	this->socket = user.socket;
+	user.socket = -1;
+
+	this->username = std::move(user.username);
+	this->nickname = std::move(user.nickname);
+	this->realname = std::move(user.realname);
+	this->hostname = std::move(user.hostname);
+	this->handshake = user.handshake;
+	this->in_buffer = std::move(user.in_buffer);
+
+	return *this;
+}
+
+
+User::~User() {
+	cout << "Removing user " << this->nickname << ": " << this->socket << endl;
+
+	close_socket(this->socket);
+}
 
 auto User::getSocket() const -> int { return this->socket; }
 
@@ -91,7 +151,6 @@ auto User::readFromSocket() -> int {
 	}
 
 	if (bytesRead == 0) {
-		server.removeUser(*this);
 		cerr << "Error: client disconnected" << "\n";
 		return 2;
 	}

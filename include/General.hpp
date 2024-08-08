@@ -85,13 +85,14 @@ void JOIN(string &args, const int &client);
  * not be able to find the key in the message.
  */
 
-const std::array<PacketTypeMap, 7> store = {{{"CAP", PacketType::CAP, &CAP},
-											 {"NICK", PacketType::NICK, &NICK},
-											 {"USER", PacketType::USER, &USER},
-											 {"PASS", PacketType::PASS, &PASS},
-											 {"INFO", PacketType::INFO, &INFO},
-											 {"JOIN", PacketType::JOIN, &JOIN},
-											 {"", PacketType::NONE, nullptr}}};
+const std::array<PacketTypeMap, 6> store = {{
+	{"CAP", PacketType::CAP, &CAP},
+	{"NICK", PacketType::NICK, &NICK},
+	{"USER", PacketType::USER, &USER},
+	{"PASS", PacketType::PASS, &PASS},
+	{"INFO", PacketType::INFO, &INFO},
+	{"JOIN", PacketType::JOIN, &JOIN},
+}};
 
 void parse(const string &buffer, const int socket);
 void packetProcessor(unordered_map<PacketType, string> &packet, const int &client);

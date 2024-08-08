@@ -14,7 +14,11 @@ class ChannelMember : public User {
 	unsigned int modes;
 
    public:
-	ChannelMember(const User &user);
+	ChannelMember(User &&user);
+	ChannelMember(ChannelMember &member) = delete;
+	auto operator=(ChannelMember &member) -> ChannelMember & = delete;
+	ChannelMember(ChannelMember &&member) noexcept;
+	auto operator=(ChannelMember &&member) noexcept -> ChannelMember &;
 
 	void setModes(unsigned int modes);
 	[[nodiscard]] auto getModes() const -> unsigned int;

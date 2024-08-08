@@ -75,6 +75,8 @@ static auto createEpoll() -> int {
 static void addUserToEpoll(int epollFD, User &user) {
 	struct epoll_event event = {.events = EPOLLIN, .data = {.ptr = (void *)&user}};
 
+	cout << "Adding user with socket: " << user.getSocket() << " to epoll" << '\n';
+
 	if (epoll_ctl(epollFD, EPOLL_CTL_ADD, user.getSocket(), &event) == -1) {
 		cerr << strerror(errno) << '\n';
 		cerr << "Error: epoll_ctl failed" << '\n';
@@ -95,7 +97,7 @@ static void pollUsers(int epollFD) {
 	for (int i = 0; i < numberOfEvents; i++) {
 		User *user = (User *)events[i].data.ptr;
 
-		cout << "Received message from user with socket: " << user->getSocket() << '\n';
+		cout << "Received message from user:" << user->getUsername() << " with socket: " << user->getSocket() << '\n';
 
 		if (user->readFromSocket() == 2) {
 			epoll_ctl(epollFD, EPOLL_CTL_DEL, user->getSocket(), nullptr);
@@ -135,11 +137,15 @@ void Server::start() {
 			cerr << strerror(errno) << '\n';
 			cerr << "Error: accept failed" << '\n';
 			exit(EXIT_FAILURE);
-		} else {
-			User &newUser = this->addUser(clientSocket);
-			addUserToEpoll(epollFD, newUser);
-			cout << "Connection accepted" << '\n';
 		}
+
+		bool opt = true;
+		setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+		User &newUser = this->addUser(clientSocket);
+
+		cout << "New connection on socket: " << newUser.getSocket() << '\n';
+		addUserToEpoll(epollFD, newUser);
 	}
 }
 
@@ -160,7 +166,7 @@ auto Server::getUser(const int socket) -> User & {
 			return user;
 		}
 	}
-	return this->addUser(socket);
+	throw runtime_error("User not found");
 }
 
 auto Server::addUser(unsigned int socket) -> User & { return this->users.emplace_back(socket); }

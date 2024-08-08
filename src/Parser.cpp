@@ -57,13 +57,13 @@ void parse(const string &buffer, const int socket) {
 	// extract the messages and call the packetProcessor functions directly
 	for (const auto &item : store) {
 		size_t pos = buffer.find(item.key);
-		if (item.key.empty() && pos != string::npos) {
-			string extracted = extract(buffer, (pos + item.key.length()) + 1);
-			cout << item.type << " packet found: " << extracted << "\n";
-			if (item.func != nullptr) {
-				item.func(extracted, socket);
-			}
-		}
+
+		if (pos == string::npos) { continue; }
+	
+		string extracted = extract(buffer, (pos + item.key.length()) + 1);
+		cout << item.type << " packet found: " << extracted << "\n";
+
+		item.func(extracted, socket);
 	}
 	// unordered_map<PacketType, string> parsed;
 

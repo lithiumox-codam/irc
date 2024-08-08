@@ -2,7 +2,15 @@
 
 #include <iostream>
 
-ChannelMember::ChannelMember(const User &user) : User(user), modes(0) {}
+ChannelMember::ChannelMember(User &&user) : User(std::move(user)), modes(0) {}
+
+ChannelMember::ChannelMember(ChannelMember &&member) noexcept : User(std::move(member)), modes(member.modes) {}
+
+auto ChannelMember::operator=(ChannelMember &&member) noexcept -> ChannelMember & {
+	User::operator=(std::move(member));
+	this->modes = member.modes;
+	return *this;
+}
 
 void ChannelMember::setModes(unsigned int modes) { this->modes = modes; }
 

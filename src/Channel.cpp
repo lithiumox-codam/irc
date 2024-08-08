@@ -9,11 +9,27 @@ using namespace std;
 
 Channel::Channel(string &name) : name(std::move(name)), modes(0) {}
 
+Channel::Channel(Channel &&channel) noexcept :
+	members(std::move(channel.members)),
+	name(std::move(channel.name)),
+	password(std::move(channel.password)),
+	topic(std::move(channel.password)),
+	modes(channel.modes) {}
+
+auto Channel::operator=(Channel &&channel) noexcept -> Channel & {
+	this->members = std::move(channel.members);
+	this->name = std::move(channel.name);
+	this->password = std::move(channel.password);
+	this->topic = std::move(channel.topic);
+	this->modes = channel.modes;
+	return *this;
+}
+
 auto Channel::getName() const -> const string & { return this->name; }
 
 void Channel::setName(const string &name) { this->name = name; }
 
-void Channel::addUser(const User &user) { this->members.emplace_back(user); }
+void Channel::addUser(User &&user) { this->members.emplace_back(std::move(user)); }
 
 void Channel::removeUser(User &user) {
 	for (auto it = this->members.begin(); it != this->members.end(); ++it) {

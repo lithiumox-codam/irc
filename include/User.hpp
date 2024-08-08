@@ -36,6 +36,10 @@ class User {
 
    public:
 	User(int socket);
+	User(User &user) = delete;
+	auto operator=(User &user) -> User & = delete;
+	User(User &&user) noexcept;
+	auto operator=(User &&user) noexcept -> User &;
 	virtual ~User();
 
 	[[nodiscard]] auto getSocket() const -> int;
