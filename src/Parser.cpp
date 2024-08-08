@@ -42,10 +42,10 @@ auto operator<<(ostream &outputStream, const PacketType &type) -> ostream & {
  * @param str The message to extract from
  * @param start Where to start extracting from
  * @return string The extracted string
- */
-static auto extract(const string &str, unsigned long start) -> string {
-	return str.substr(start, str.find("\r\n", start) - start);
-}
+//  */
+// static auto extract(const string &str, unsigned long start) -> string {
+// 	return str.substr(start, str.find("\r\n", start) - start);
+// }
 
 /**
  * @brief The parse function takes a message and returns a map of PacketType and the message.
@@ -53,16 +53,19 @@ static auto extract(const string &str, unsigned long start) -> string {
  * @param message The entire message to parse
  * @return unordered_map<PacketType, string> A map of PacketType and the message representing the packet
  */
-void parse(const string &buffer, const int socket) {
+void parse(User &user) {
 	// extract the messages and call the packetProcessor functions directly
-	for (const auto &item : store) {
-		size_t pos = buffer.find(item.key);
-		if (item.key.empty() && pos != string::npos) {
-			string extracted = extract(buffer, (pos + item.key.length()) + 1);
-			cout << item.type << " packet found: " << extracted << "\n";
-			if (item.func != nullptr) {
-				item.func(extracted, socket);
+	// loop until the buffer is empty
+	while (true) {
+		try {
+			string item = user.getNextCommand();
+			for (const auto &packet : store) {
+				if (item.find(packet.key) != string::npos) {
+					packet.func(item, user);
+				}
 			}
+		} catch (const runtime_error &e) {
+			break;
 		}
 	}
 	// unordered_map<PacketType, string> parsed;

@@ -4,6 +4,8 @@
 #include <string>
 #include <unordered_map>
 
+#include "User.hpp"
+
 using namespace std;
 
 /*
@@ -68,16 +70,15 @@ auto operator<<(ostream &outputStream, const PacketType &type) -> ostream &;
 /* A struct that maps a key to a PacketType also used by the PacketProcessor later on. */
 using PacketTypeMap = struct {
 	const string key;
-	PacketType type;
-	void (*func)(string &, const int &);
+	void (*func)(string &, User &);
 };
 
-void CAP(string &args, const int &client);
-void NICK(string &args, const int &client);
-void USER(string &args, const int &client);
-void PASS(string &args, const int &client);
-void INFO(string &args, const int &client);
-void JOIN(string &args, const int &client);
+void CAP(string &args, User &user);
+void NICK(string &args, User &user);
+void USER(string &args, User &user);
+void PASS(string &args, User &user);
+void INFO(string &args, User &user);
+void JOIN(string &args, User &user);
 
 /**
  * @brief The store array is a map of PacketType and the key to look for in a message.
@@ -85,13 +86,13 @@ void JOIN(string &args, const int &client);
  * not be able to find the key in the message.
  */
 
-const std::array<PacketTypeMap, 7> store = {{{"CAP", PacketType::CAP, &CAP},
-											 {"NICK", PacketType::NICK, &NICK},
-											 {"USER", PacketType::USER, &USER},
-											 {"PASS", PacketType::PASS, &PASS},
-											 {"INFO", PacketType::INFO, &INFO},
-											 {"JOIN", PacketType::JOIN, &JOIN},
-											 {"", PacketType::NONE, nullptr}}};
+const std::array<PacketTypeMap, 7> store = {{
+	{"CAP", &CAP},
+	{"NICK", &NICK},
+	{"USER", &USER},
+	{"PASS", &PASS},
+	{"INFO", &INFO},
+	{"JOIN", &JOIN},
+}};
 
-void parse(const string &buffer, const int socket);
-void packetProcessor(unordered_map<PacketType, string> &packet, const int &client);
+void parse(User &user);

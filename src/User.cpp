@@ -50,7 +50,8 @@ void User::printHandshake() const {
 	if (this->hasHandshake(U_WELCOME)) {
 		cout << "U_WELCOME ";
 	}
-	cout << "]" << "\n";
+	cout << "]"
+		 << "\n";
 }
 
 auto User::getHandshake() const -> unsigned int { return this->handshake; }
@@ -58,41 +59,44 @@ auto User::getHandshake() const -> unsigned int { return this->handshake; }
 auto User::hasHandshake(unsigned int handshake) const -> bool { return (this->handshake & handshake) == handshake; }
 
 void User::printUser() const {
-	cout << "======================" << "\n";
+	cout << "======================"
+		 << "\n";
 	cout << setw(10) << left << "Username:" << this->username << "\n";
 	cout << setw(10) << left << "Nickname:" << this->nickname << "\n";
 	cout << setw(10) << left << "Realname:" << this->realname << "\n";
 	cout << setw(10) << left << "Hostname:" << this->hostname << "\n";
 	cout << setw(10) << left << "Socket:" << this->socket << "\n";
 	this->printHandshake();
-	cout << "======================" << "\n";
+	cout << "======================"
+		 << "\n";
 }
 
-auto User::checkPacket() const -> bool {
-	if (this->in_buffer.empty()) {
-		return false;
-	}
-	if (!this->in_buffer.ends_with("\r\n")) {
-		return false;
-	}
+// auto User::checkPacket() -> bool {
+// 	if (this->in_buffer.empty()) {
+// 		return false;
+// 	}
+// 	if (!this->in_buffer.ends_with("\r\n")) {
+// 		return false;
+// 	}
 
-	parse(this->in_buffer, this->socket);
+// 	parse(*this);
 
-	return true;
-}
+// 	return true;
+// }
 
 auto User::readFromSocket() -> int {
 	vector<char> buffer(UserConfig::BUFFER_SIZE);
 	int bytesRead = recv(this->socket, buffer.data(), buffer.size(), 0);
 
 	if (bytesRead == -1) {
-		cerr << "Error: recv failed" << "\n";
+		cerr << "Error: recv failed"
+			 << "\n";
 		return 1;
 	}
 
 	if (bytesRead == 0) {
-		server.removeUser(*this);
-		cerr << "Error: client disconnected" << "\n";
+		cerr << "Error: client disconnected"
+			 << "\n";
 		return 2;
 	}
 
@@ -102,9 +106,15 @@ auto User::readFromSocket() -> int {
 
 	cout << "Buffer for socket " << this->socket << ": " << this->in_buffer << "\n";
 
-	// This needs to only clear unti /r/n
-	if (this->checkPacket()) {
-		this->in_buffer.clear();
-	}
+	parse(*this);
 	return 0;
+}
+
+auto User::getNextCommand() -> string {
+	if (this->in_buffer.empty()) {
+		throw runtime_error("Buffer is empty");
+	}
+	string command = this->in_buffer.substr(0, this->in_buffer.find("\r\n"));
+	this->in_buffer.erase(0, this->in_buffer.find("\r\n") + 2);
+	return command;
 }
