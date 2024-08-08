@@ -85,7 +85,7 @@ static void addUserToEpoll(int epollFD, User &user) {
 	}
 }
 
-static void handleEvent(int epollFD, struct epoll_event &event) {
+static void handleEvent(struct epoll_event &event) {
 	User *user = (User *)event.data.ptr;
 
 	if (event.events & EPOLLERR) { // Error on the socket
@@ -181,7 +181,7 @@ void Server::start() {
 		User &newUser = this->addUser(clientSocket);
 
 		cout << "New connection from " << newUser << '\n';
-		addUserToEpoll(epollFD, newUser);
+		addUserToEpoll(newUser);
 	}
 }
 
