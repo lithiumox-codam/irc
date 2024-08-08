@@ -28,7 +28,7 @@ using namespace std;
 /*
  * Parser related definitions.
  */
- // NOLINTNEXTLINE
+// NOLINTNEXTLINE
 enum class PacketType {
 	NONE = -1,
 	CAP,
@@ -69,15 +69,15 @@ auto operator<<(ostream &outputStream, const PacketType &type) -> ostream &;
 using PacketTypeMap = struct {
 	const string key;
 	PacketType type;
-	void (*func)(const string &, const int &);
+	void (*func)(string &, const int &);
 };
 
-void CAP(const string &args, const int &client);
-void NICK(const string &args, const int &client);
-void USER(const string &args, const int &client);
-void PASS(const string &args, const int &client);
-void INFO(const string &args, const int &client);
-void JOIN(const string &args, const int &client);
+void CAP(string &args, const int &client);
+void NICK(string &args, const int &client);
+void USER(string &args, const int &client);
+void PASS(string &args, const int &client);
+void INFO(string &args, const int &client);
+void JOIN(string &args, const int &client);
 
 /**
  * @brief The store array is a map of PacketType and the key to look for in a message.
@@ -93,5 +93,5 @@ const std::array<PacketTypeMap, 7> store = {{{"CAP", PacketType::CAP, &CAP},
 											 {"JOIN", PacketType::JOIN, &JOIN},
 											 {"", PacketType::NONE, nullptr}}};
 
-auto parse(const string &message) -> unordered_map<PacketType, string>;
-void packetProcessor(const unordered_map<PacketType, string> &packet, const int &client);
+void parse(const string &buffer, const int socket);
+void packetProcessor(unordered_map<PacketType, string> &packet, const int &client);

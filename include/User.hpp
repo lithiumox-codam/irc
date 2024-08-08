@@ -6,7 +6,7 @@
 using namespace std;
 
 enum UserConfig : uint16_t {
-	BUFFER_SIZE = 1024 // The size of the buffer that will be used to read from the socket.
+	BUFFER_SIZE = 1024	// The size of the buffer that will be used to read from the socket.
 };
 /** Determines if the user has sent the INFO command. */
 unsigned int const U_INFO = 1 << 1;
@@ -31,7 +31,8 @@ class User {
 	int socket;
 	unsigned int handshake;
 
-	string context;
+	string in_buffer;
+	string out_buffer;
 
    public:
 	User(int socket);
@@ -41,10 +42,10 @@ class User {
 
 	[[nodiscard]] auto getUsername() const -> const string &;
 	[[nodiscard]] auto getNickname() const -> const string &;
-	void setNickname(const string &nickname);
-	void setUsername(const string &username);
-	void setRealname(const string &realname);
-	void setHostname(const string &hostname);
+	void setNickname(string &nickname);
+	void setUsername(string &username);
+	void setRealname(string &realname);
+	void setHostname(string &hostname);
 
 	void addHandshake(unsigned int handshake);
 	[[nodiscard]] auto hasHandshake(unsigned int handshake) const -> bool;
@@ -56,4 +57,5 @@ class User {
 	[[nodiscard]] auto checkPacket() const -> bool;
 
 	auto readFromSocket() -> int;
+	void addToBuffer(const string &data);
 };

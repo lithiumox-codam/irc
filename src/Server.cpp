@@ -15,13 +15,12 @@
 extern Server server;
 
 Server::Server() : socket(0), port(0), running(false) {
-	string hostname((int) ServerConfig::BUFFER_SIZE, '\0');
+	string hostname((int)ServerConfig::BUFFER_SIZE, '\0');
 
 	try {
 		gethostname(hostname.data(), hostname.size());
 		this->hostname = hostname;
-	}
-	catch (const exception &e) {
+	} catch (const exception &e) {
 		cerr << "Error: " << e.what() << '\n';
 	}
 }
@@ -74,7 +73,7 @@ static auto createEpoll() -> int {
 }
 
 static void addUserToEpoll(int epollFD, User &user) {
-	struct epoll_event event = {.events = EPOLLIN, .data = {.ptr = (void *) &user}};
+	struct epoll_event event = {.events = EPOLLIN, .data = {.ptr = (void *)&user}};
 
 	if (epoll_ctl(epollFD, EPOLL_CTL_ADD, user.getSocket(), &event) == -1) {
 		cerr << strerror(errno) << '\n';
@@ -86,7 +85,7 @@ static void addUserToEpoll(int epollFD, User &user) {
 static void pollUsers(int epollFD) {
 	const int maxEvents = 10;
 	array<struct epoll_event, maxEvents> events;
-	int numberOfEvents = epoll_wait(epollFD, events.data(), (int) ServerConfig::MAX_EVENTS, 0);
+	int numberOfEvents = epoll_wait(epollFD, events.data(), (int)ServerConfig::MAX_EVENTS, 0);
 	if (numberOfEvents == -1) {
 		cerr << strerror(errno) << '\n';
 		cerr << "Error: epoll_wait failed" << '\n';
@@ -108,7 +107,7 @@ static void pollUsers(int epollFD) {
 
 void Server::start() {
 	// Listen for incoming connections, with a backlog of 10 pending connections
-	if (listen(this->socket, (int) ServerConfig::BACKLOG) != -1) {
+	if (listen(this->socket, (int)ServerConfig::BACKLOG) != -1) {
 		cout << "Server started on socket fd " << this->socket << '\n';
 		cout << "Press Ctrl+C to stop the server" << '\n';
 		cout << "Password: " << this->password << '\n';
@@ -129,13 +128,14 @@ void Server::start() {
 		const int clientSocket = accept(this->socket, nullptr, nullptr);
 
 		if (clientSocket == -1) {
-			if (errno == EWOULDBLOCK) { continue; }
+			if (errno == EWOULDBLOCK) {
+				continue;
+			}
 
 			cerr << strerror(errno) << '\n';
 			cerr << "Error: accept failed" << '\n';
 			exit(EXIT_FAILURE);
-		}
-		else {
+		} else {
 			User &newUser = this->addUser(clientSocket);
 			addUserToEpoll(epollFD, newUser);
 			cout << "Connection accepted" << '\n';
@@ -144,7 +144,9 @@ void Server::start() {
 }
 
 void Server::stop() {
-	if (!this->running) { return; }
+	if (!this->running) {
+		return;
+	}
 	cout << "\rServer stopped" << '\n';
 	close(this->socket);
 	this->running = false;
@@ -152,9 +154,16 @@ void Server::stop() {
 
 auto Server::getUsers() const -> const vector<User> & { return this->users; }
 
-auto Server::addUser(unsigned int socket) -> User & {
-	return this->users.emplace_back(socket);
+auto Server::getUser(const int socket) -> User & {
+	for (auto &user : this->users) {
+		if (user.getSocket() == socket) {
+			return user;
+		}
+	}
+	return this->addUser(socket);
 }
+
+auto Server::addUser(unsigned int socket) -> User & { return this->users.emplace_back(socket); }
 
 void Server::removeUser(User &user) {
 	for (auto it = this->users.begin(); it != this->users.end(); ++it) {
@@ -180,9 +189,9 @@ auto Server::getChannels() -> vector<Channel> & { return this->channels; }
 
 auto Server::getChannel(const string &name) -> Channel & {
 	for (auto &channel : this->channels) {
-		if (channel.getName() == name) { return channel; }
+		if (channel.getName() == name) {
+			return channel;
+		}
 	}
 	throw runtime_error("Channel not found");
 }
-
-

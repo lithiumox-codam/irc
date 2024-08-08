@@ -53,14 +53,25 @@ static auto extract(const string &str, unsigned long start) -> string {
  * @param message The entire message to parse
  * @return unordered_map<PacketType, string> A map of PacketType and the message representing the packet
  */
-auto parse(const string &message) -> unordered_map<PacketType, string> {
-	unordered_map<PacketType, string> parsed;
-
+void parse(const string &buffer, const int socket) {
+	// extract the messages and call the packetProcessor functions directly
 	for (const auto &item : store) {
-		unsigned long pos = message.find(item.key);
-		if (item.type != PacketType::NONE && pos != string::npos) {
-			parsed.insert({item.type, extract(message, (pos + item.key.length()) + 1)});
+		size_t pos = buffer.find(item.key);
+		if (item.key.empty() && pos != string::npos) {
+			string extracted = extract(buffer, (pos + item.key.length()) + 1);
+			cout << item.type << " packet found: " << extracted << "\n";
+			if (item.func != nullptr) {
+				item.func(extracted, socket);
+			}
 		}
 	}
-	return parsed;
+	// unordered_map<PacketType, string> parsed;
+
+	// for (const auto &item : store) {
+	// 	unsigned long pos = message.find(item.key);
+	// 	if (item.type != PacketType::NONE && pos != string::npos) {
+	// 		parsed.insert({item.type, extract(message, (pos + item.key.length()) + 1)});
+	// 	}
+	// }
+	// return parsed;
 }

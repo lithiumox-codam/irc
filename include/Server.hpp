@@ -15,15 +15,15 @@ using namespace std;
 
 // NOLINTNEXTLINE
 enum class ServerConfig {
-   BACKLOG = 10,
-   MAX_EVENTS = 10,
-   BUFFER_SIZE = 1024,
+	BACKLOG = 10,
+	MAX_EVENTS = 10,
+	BUFFER_SIZE = 1024,
 };
 
 class Server {
    private:
 	vector<Channel> channels;  // List of channels
-	vector<User> users;	   // List of users
+	vector<User> users;		   // List of users
 
 	string password;  // Password for connecting to the server
 	string hostname;  // Hostname of the server
@@ -49,6 +49,7 @@ class Server {
 	void sendMessage(int client, const string &message);
 
 	auto addUser(unsigned int socket) -> User &;
+	auto getUser(int socket) -> User &;
 	void removeUser(User &user);
 	[[nodiscard]] auto getUsers() const -> const vector<User> &;
 

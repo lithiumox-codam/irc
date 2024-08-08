@@ -9,6 +9,9 @@
 #include <vector>
 
 #include "General.hpp"
+#include "Server.hpp"
+
+extern Server server;
 
 User::User(int socket) : socket(socket), handshake(0) {}
 
@@ -20,13 +23,13 @@ auto User::getUsername() const -> const string & { return this->username; };
 
 auto User::getNickname() const -> const string & { return this->nickname; }
 
-void User::setNickname(const string &nickname) { this->nickname = nickname; }
+void User::setNickname(string &nickname) { this->nickname = std::move(nickname); }
 
-void User::setUsername(const string &username) { this->username = username; }
+void User::setUsername(string &username) { this->username = std::move(username); }
 
-void User::setRealname(const string &realname) { this->realname = realname; }
+void User::setRealname(string &realname) { this->realname = std::move(realname); }
 
-void User::setHostname(const string &hostname) { this->hostname = hostname; }
+void User::setHostname(string &hostname) { this->hostname = std::move(hostname); }
 
 void User::addHandshake(unsigned int handshake) { this->handshake |= handshake; }
 
@@ -40,6 +43,9 @@ void User::printHandshake() const {
 	}
 	if (this->hasHandshake(U_AUTHENTICATED)) {
 		cout << "U_AUTHENTICATED ";
+	}
+	if (this->hasHandshake(U_INFO)) {
+		cout << "U_INFO ";
 	}
 	if (this->hasHandshake(U_WELCOME)) {
 		cout << "U_WELCOME ";
@@ -63,20 +69,14 @@ void User::printUser() const {
 }
 
 auto User::checkPacket() const -> bool {
-	if (this->context.empty()) {
+	if (this->in_buffer.empty()) {
 		return false;
 	}
-	if (!this->context.ends_with("\r\n")) {
+	if (!this->in_buffer.ends_with("\r\n")) {
 		return false;
 	}
 
-	unordered_map<PacketType, string> packet = parse(this->context);
-
-	for (auto &pair : packet) {
-		cout << pair.first << "\t" << pair.second << "\n";
-	}
-
-	packetProcessor(packet, this->socket);
+	parse(this->in_buffer, this->socket);
 
 	return true;
 }
@@ -91,19 +91,20 @@ auto User::readFromSocket() -> int {
 	}
 
 	if (bytesRead == 0) {
+		server.removeUser(*this);
 		cerr << "Error: client disconnected" << "\n";
 		return 2;
 	}
 
 	buffer.push_back('\0');
 
-	this->context.append(buffer.data());
+	this->in_buffer.append(buffer.data());
 
-	cout << "Buffer for socket " << this->socket << ": " << this->context << "\n";
+	cout << "Buffer for socket " << this->socket << ": " << this->in_buffer << "\n";
 
 	// This needs to only clear unti /r/n
 	if (this->checkPacket()) {
-		this->context.clear();
+		this->in_buffer.clear();
 	}
 	return 0;
 }

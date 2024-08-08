@@ -30,16 +30,20 @@ static auto split(const string &str, const char &delim) -> vector<string> {
  * processing from there. Maybe even the ChannelMember class while we are at it.
  */
 
-void CAP(const string &args, const int &client) {
-	(void)client;
-
+void CAP(string &args, const int &client) {
 	if (args.empty()) {
 		cerr << "Error: CAP command is invalid" << "\n";
 		return;
 	}
+	try {
+		User &user = server.getUser(client);
+		user.addHandshake(U_INFO);
+	} catch (const runtime_error &e) {
+		cerr << "Error: " << e.what() << "\n";
+	}
 }
 
-void NICK(const string &args, const int &client) {
+void NICK(string &args, const int &client) {
 	if (args.empty()) {
 		cerr << "Error: NICK packet has no argument" << "\n";
 		return;
@@ -48,48 +52,47 @@ void NICK(const string &args, const int &client) {
 		cerr << "Error: NICK packet has a space in the argument" << "\n";
 		return;
 	}
-	vector<User> users = server.getUsers();
-	for (auto &user : users) {
-		if (client == user.getSocket()) {
-			user.setNickname(args);
-			user.addHandshake(U_NICK);
-		}
-		user.printUser();
+	try {
+		User &user = server.getUser(client);
+		user.setNickname(args);
+		user.addHandshake(U_NICK);
+	} catch (const runtime_error &e) {
+		cerr << "Error: " << e.what() << "\n";
 	}
 }
 
-void USER(const string &args, const int &client) {
+void USER(string &args, const int &client) {
 	(void)client;
 	vector<string> tokens = split(args, ' ');
 	if (tokens.size() < 4) {
 		cerr << "Error: USER packet has less than 4 arguments" << "\n";
 		return;
 	}
-	vector<User> users = server.getUsers();
-	for (auto &user : users) {
-		if (client == user.getSocket()) {
-			user.setUsername(tokens[0]);
-			user.setRealname(tokens[3]);
-			user.setHostname("localhost");
-			user.addHandshake(U_USER);
-		}
-		user.printUser();
+
+	try {
+		User &user = server.getUser(client);
+		user.setUsername(tokens[0]);
+		user.setRealname(tokens[3]);
+		user.setHostname(tokens[2]);
+		user.addHandshake(U_USER);
+	} catch (const runtime_error &e) {
+		cerr << "Error: " << e.what() << "\n";
 	}
 
 	cout << "User " << tokens[0] << " has connected" << "\n";
 }
 
-void PASS(const string &args, const int &client) {
+void PASS(string &args, const int &client) {
 	if (args.empty()) {
 		cerr << "Error: PASS packet has less than 1 argument" << "\n";
 		return;
 	}
 	if (args == server.getPassword()) {
-		vector<User> users = server.getUsers();
-		for (auto &user : users) {
-			if (client == user.getSocket()) {
-				user.addHandshake(U_AUTHENTICATED);
-			}
+		try {
+			User &user = server.getUser(client);
+			user.addHandshake(U_AUTHENTICATED);
+		} catch (const runtime_error &e) {
+			cerr << "Error: " << e.what() << "\n";
 		}
 
 	} else {
@@ -98,7 +101,7 @@ void PASS(const string &args, const int &client) {
 	}
 }
 
-void INFO(const string &args, const int &client) {
+void INFO(string &args, const int &client) {
 	(void)client;
 	if (args.empty()) {
 		cerr << "Error: INFO packet has less than 1 argument" << "\n";
@@ -106,7 +109,7 @@ void INFO(const string &args, const int &client) {
 	}
 }
 
-void JOIN(const string &args, const int &client) {
+void JOIN(string &args, const int &client) {
 	(void)client;
 
 	if (args.empty()) {
@@ -115,9 +118,9 @@ void JOIN(const string &args, const int &client) {
 	}
 }
 
-void packetProcessor(const unordered_map<PacketType, string> &packet, const int &client) {
-	for (const auto &single : packet) {
-		for (const auto &singlePacket : store) {
+void packetProcessor(unordered_map<PacketType, string> &packet, const int &client) {
+	for (auto &single : packet) {
+		for (auto &singlePacket : store) {
 			if (single.first == singlePacket.type) {
 				singlePacket.func(single.second, client);
 			}
