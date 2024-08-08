@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <array>
+#include <cerrno>
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -84,6 +85,49 @@ static void addUserToEpoll(int epollFD, User &user) {
 	}
 }
 
+static void handleEvent(int epollFD, struct epoll_event &event) {
+	User *user = (User *)event.data.ptr;
+
+	if (event.events & EPOLLERR) { // Error on the socket
+		cerr << "Error: EPOLLERR" << '\n';
+
+		socklen_t len = sizeof(errno);
+		getsockopt(user->getSocket(), SOL_SOCKET, SO_ERROR, &errno, &len);
+		cerr << strerror(errno) << '\n';
+
+		server.removeUser(*user);
+
+	}
+	if (event.events & EPOLLHUP) {
+		cerr << "Error: EPOLLHUP" << '\n';
+		server.removeUser(*user);
+	}
+	if (event.events & EPOLLRDHUP) {
+		cerr << "Error: EPOLLRDHUP" << '\n';
+		server.removeUser(*user);
+	}
+
+	if (event.events & EPOLLIN) {
+		int ret = user->readFromSocket();
+
+		if (ret > 0) {
+			cout << "Received message from " << *user << '\n';
+		}
+		if (ret == 0) {
+			server.removeUser(*user);
+		}
+		if (ret == -1) {
+			cerr << "Error: recv failed" << '\n';
+
+			if (errno == EWOULDBLOCK || errno == EAGAIN) {
+				return;
+			}
+
+			server.removeUser(*user);
+		}
+	}
+}
+
 static void pollUsers(int epollFD) {
 	const int maxEvents = 10;
 	array<struct epoll_event, maxEvents> events;
@@ -95,15 +139,7 @@ static void pollUsers(int epollFD) {
 	}
 
 	for (int i = 0; i < numberOfEvents; i++) {
-		User *user = (User *)events[i].data.ptr;
-
-		cout << "Received message from user:" << user->getUsername() << " with socket: " << user->getSocket() << '\n';
-
-		if (user->readFromSocket() == 2) {
-			epoll_ctl(epollFD, EPOLL_CTL_DEL, user->getSocket(), nullptr);
-			server.removeUser(*user);
-			continue;
-		}
+		handleEvent(epollFD, events[i]);
 	}
 }
 
@@ -144,7 +180,7 @@ void Server::start() {
 
 		User &newUser = this->addUser(clientSocket);
 
-		cout << "New connection on socket: " << newUser.getSocket() << '\n';
+		cout << "New connection from " << newUser << '\n';
 		addUserToEpoll(epollFD, newUser);
 	}
 }

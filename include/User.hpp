@@ -64,3 +64,5 @@ class User {
 	void addToBuffer(const string &data);
 	auto getNextCommand() -> string;
 };
+
+auto operator<<(ostream &os, const User &user) -> ostream &;
