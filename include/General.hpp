@@ -86,7 +86,7 @@ void JOIN(string &args, User &user);
  * not be able to find the key in the message.
  */
 
-const std::array<PacketTypeMap, 7> store = {{
+const std::array<PacketTypeMap, 6> store = {{
 	{"CAP", &CAP},
 	{"NICK", &NICK},
 	{"USER", &USER},
