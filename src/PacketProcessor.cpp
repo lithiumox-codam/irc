@@ -46,7 +46,7 @@ static auto split(const string &str, const char &delim) -> vector<string> {
 		server: 421 [NICK] CAP :Unknown command
 */
 void CAP(string &args, User &user) {
-	cout << PacketType::CAP << " with args: " << args << "\n";
+	cout << PacketType::CAP << " " << args << "\n";
 
 	if (args.empty()) {
 		cerr << "Error: CAP command is invalid"
@@ -80,7 +80,7 @@ void CAP(string &args, User &user) {
 }
 
 void NICK(string &args, User &user) {
-	cout << PacketType::NICK << " with args: " << args << "\n";
+	cout << PacketType::NICK << " " << args << "\n";
 
 	if (args.empty()) {
 		cerr << "Error: NICK packet has no argument"
@@ -115,7 +115,7 @@ void USER(string &args, User &user) {
 }
 
 void PASS(string &args, User &user) {
-	cout << PacketType::PASS << " with args: " << args << "\n";
+	cout << PacketType::PASS << " " << args << "\n";
 
 	if (args.empty()) {
 		cerr << "Error: PASS packet has less than 1 argument"
@@ -141,7 +141,7 @@ void PASS(string &args, User &user) {
 }
 
 void INFO(string &args, User &user) {
-	cout << PacketType::INFO << " with args: " << args << "\n";
+	cout << PacketType::INFO << " " << args << "\n";
 
 	user.printUser();
 
@@ -153,7 +153,7 @@ void INFO(string &args, User &user) {
 }
 
 void JOIN(string &args, User &user) {
-	cout << PacketType::JOIN << " with args: " << args << "\n";
+	cout << PacketType::JOIN << " " << args << "\n";
 
 	if (args.empty()) {
 		cerr << "Error: JOIN packet has less than 1 argument"
@@ -164,7 +164,7 @@ void JOIN(string &args, User &user) {
 }
 
 void PING(string &args, User &user) {
-	cout << PacketType::PING << " with args: " << args << "\n";
+	cout << PacketType::PING << args << "\n";
 
 	if (args.empty()) {
 		cerr << "Error: PING packet has less than 1 argument"

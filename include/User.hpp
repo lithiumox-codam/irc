@@ -47,8 +47,11 @@ class User {
 	void closeSocket();
 	[[nodiscard]] auto getSocket() const -> int;
 
-	[[nodiscard]] auto getUsername() const -> const string &;
 	[[nodiscard]] auto getNickname() const -> const string &;
+	[[nodiscard]] auto getUsername() const -> const string &;
+	[[nodiscard]] auto getRealname() const -> const string &;
+	[[nodiscard]] auto getHostname() const -> const string &;
+
 	void setNickname(string &nickname);
 	void setUsername(string &username);
 	void setRealname(string &realname);
@@ -64,13 +67,13 @@ class User {
 	[[nodiscard]] auto checkPacket() -> bool;
 
 	auto readFromSocket() -> int;
+	auto sendToSocket() -> int;
 	void addToBuffer(const string &data);
-	void sendOutBuffer();
 
 	[[nodiscard]] auto getInBuffer() -> string &;
 	[[nodiscard]] auto getOutBuffer() -> string &;
 
-	auto getNextCommand() -> string;
+	[[nodiscard]] static auto getNextCommand(string &buffer) -> string;
 };
 
 auto operator<<(ostream &os, const User &user) -> ostream &;

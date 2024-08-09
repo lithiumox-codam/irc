@@ -72,9 +72,13 @@ void User::closeSocket() {
 
 auto User::getSocket() const -> int { return this->socket; }
 
+auto User::getNickname() const -> const string & { return this->nickname; }
+
 auto User::getUsername() const -> const string & { return this->username; };
 
-auto User::getNickname() const -> const string & { return this->nickname; }
+auto User::getRealname() const -> const string & { return this->realname; }
+
+auto User::getHostname() const -> const string & { return this->hostname; }
 
 void User::setNickname(string &nickname) { this->nickname = std::move(nickname); }
 
@@ -137,19 +141,20 @@ auto User::readFromSocket() -> int {
 	this->in_buffer.append(buffer.data());
 
 	parse(*this);
+
 	return bytesRead;
 }
 
-auto User::getNextCommand() -> string {
-	if (this->in_buffer.empty()) {
+auto User::getNextCommand(string &buffer) -> string {
+	if (buffer.empty()) {
 		throw runtime_error("Buffer is empty");
 	}
-	if (this->in_buffer.find("\r\n") == string::npos) {
+	if (buffer.find("\r\n") == string::npos) {
 		throw runtime_error("No command found");
 	}
 
-	string command = this->in_buffer.substr(0, this->in_buffer.find("\r\n"));
-	this->in_buffer.erase(0, command.size() + 2);
+	string command = buffer.substr(0, buffer.find("\r\n") + 2);
+	buffer.erase(0, command.size());
 	return command;
 }
 
@@ -160,14 +165,18 @@ auto operator<<(std::ostream &stream, const User &user) -> std::ostream & {
 	return stream;
 }
 
-void User::sendOutBuffer() {
-	if (this->out_buffer.empty()) {
-		return;
-	}
+auto User::sendToSocket() -> int {
+	try {
+		string command = this->getNextCommand(this->out_buffer);
 
-	cout << "Sending to socket " << this->socket << ": " << this->out_buffer << "\n";
-	send(this->socket, this->out_buffer.c_str(), this->out_buffer.size(), 0);
-	this->out_buffer.clear();
+		cout << "Sending to socket " << this->socket << ": " << command << "\n";
+
+		int bytesRead = send(this->socket, command.data(), command.size(), 0);
+		return bytesRead; // handle not being sent before this?
+	} catch (const runtime_error &e) {
+		errno = EAGAIN;
+		return -1;
+	}
 }
 
 auto User::checkPacket() -> bool { return this->in_buffer.find("\r\n") != string::npos; }

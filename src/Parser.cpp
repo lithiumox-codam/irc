@@ -54,7 +54,7 @@ static void trim(string &str) {
  */
 void parse(User &user) {
 	try {
-		string command = user.getNextCommand();
+		string command = user.getNextCommand(user.getInBuffer());
 		trim(command);
 
 		string key = command.substr(0, command.find(' '));
@@ -71,9 +71,7 @@ void parse(User &user) {
 			return;
 		}
 		iter->func(arguments, user);
-
 	} catch (const runtime_error &e) {
 		return;
 	}
-	user.sendOutBuffer(); // need to poll
 }

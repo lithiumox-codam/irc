@@ -32,6 +32,8 @@ class Server {
 	int port;	   // Port number
 	bool running;  // Server running status
 
+	int epoll_fd;  // File descriptor for epoll
+
    public:
 	Server();
 	~Server();
@@ -46,11 +48,16 @@ class Server {
 	void start();
 	void stop();
 
-	void sendMessage(int client, const string &message);
+	void epollCreate();
+	void epollAdd(int socket);
+	void epollRemove(int socket);
+	void epollChange(int socket, uint32_t events);
+	void epollEvent(struct epoll_event &event);
+	void epollWait();
 
-	auto addUser(unsigned int socket) -> User &;
-	auto getUser(int socket) -> User &;
+	void addUser(unsigned int socket);
 	void removeUser(User &user);
+	[[nodiscard]] auto getUser(int socket) -> User &;
 	[[nodiscard]] auto getUsers() const -> const vector<User> &;
 
 	auto addChannel(string &channelName) -> Channel &;
