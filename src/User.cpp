@@ -51,8 +51,6 @@ void User::closeSocket() {
 		return;
 	}
 
-	cout << "Closing socket : " << this->socket << endl;
-
 	if (shutdown(this->socket, SHUT_RDWR) == -1) {
 		if (errno == ENOTCONN) {
 			cerr << "Error: socket not connected" << "\n";
@@ -130,13 +128,15 @@ auto User::readFromSocket() -> int {
 	vector<char> buffer(UserConfig::BUFFER_SIZE);
 	int bytesRead = recv(this->socket, buffer.data(), buffer.size(), 0);
 
-	if (bytesRead <= 0) return bytesRead;
+	if (bytesRead <= 0) {
+		return bytesRead;
+	}
 
 	buffer.push_back('\0');
 
 	this->in_buffer.append(buffer.data());
 
-	cout << "Buffer for socket " << this->socket << ": " << this->in_buffer << "\n";
+	cout << "Buffer for socket " << this->socket << ": [" << this->in_buffer << "]\n";
 
 	parse(*this);
 	return bytesRead;
@@ -162,6 +162,7 @@ void User::sendOutBuffer() {
 	if (this->out_buffer.empty()) {
 		return;
 	}
+
 	cout << "Sending to socket " << this->socket << ": " << this->out_buffer << "\n";
 	send(this->socket, this->out_buffer.c_str(), this->out_buffer.size(), 0);
 	this->out_buffer.clear();

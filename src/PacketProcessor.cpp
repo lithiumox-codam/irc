@@ -38,7 +38,7 @@ void CAP(string &args, User &user) {
 	}
 	try {
 		user.addHandshake(U_INFO);
-		user.printUser();
+		// user.printUser();
 	} catch (const runtime_error &e) {
 		cerr << "Error: " << e.what() << "\n";
 	}
@@ -58,7 +58,7 @@ void NICK(string &args, User &user) {
 	}
 	user.setNickname(args);
 	user.addHandshake(U_NICK);
-	user.printUser();
+	// user.printUser();
 	user.addToBuffer(":" + user.getNickname() + " NICK " + user.getNickname() + "\r\n");
 }
 
@@ -74,7 +74,7 @@ void USER(string &args, User &user) {
 	user.setRealname(tokens[3]);
 	user.setHostname(tokens[2]);
 	user.addHandshake(U_USER);
-	user.printUser();
+	// user.printUser();
 
 	cout << "User " << tokens[0] << " has connected"
 		 << "\n";
@@ -89,7 +89,7 @@ void PASS(string &args, User &user) {
 	if (args == server.getPassword()) {
 		try {
 			user.addHandshake(U_AUTHENTICATED);
-			user.printUser();
+			// user.printUser();
 		} catch (const runtime_error &e) {
 			cerr << "Error: " << e.what() << "\n";
 		}
@@ -116,7 +116,7 @@ void INFO(string &args, User &user) {
 }
 
 void JOIN(string &args, User &user) {
-	user.printUser();
+	// user.printUser();
 
 	if (args.empty()) {
 		cerr << "Error: JOIN packet has less than 1 argument"
@@ -127,7 +127,7 @@ void JOIN(string &args, User &user) {
 }
 
 void PING(string &args, User &user) {
-	user.printUser();
+	// user.printUser();
 
 	if (args.empty()) {
 		cerr << "Error: PING packet has less than 1 argument"

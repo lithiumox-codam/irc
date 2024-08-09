@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "User.hpp"
+#include "General.hpp"
 
 extern Server server;
 
@@ -76,8 +77,6 @@ static auto createEpoll() -> int {
 static void addToEpoll(int epollFD, int socketFD) {
 	struct epoll_event event = {.events = EPOLLIN, .data = {.fd = socketFD}};
 
-	cout << "Adding user with socket: " << socketFD << " to epoll" << '\n';
-
 	if (epoll_ctl(epollFD, EPOLL_CTL_ADD, socketFD, &event) == -1) {
 		cerr << strerror(errno) << '\n';
 		cerr << "Error: epoll_ctl failed" << '\n';
@@ -113,9 +112,6 @@ static void handleEvent(int epollFD, struct epoll_event &event) {
 	if (event.events & EPOLLIN) {
 		int ret = user.readFromSocket();
 
-		if (ret > 0) {
-			cout << "Received message from " << user << '\n';
-		}
 		if (ret == 0) {
 			cout << "User " << user << " gracefully disconnected" << '\n';
 			epoll_ctl(epollFD, EPOLL_CTL_DEL, socketFD, nullptr);
@@ -186,6 +182,8 @@ void Server::start() {
 
 		this->addUser(clientSocket);
 		addToEpoll(epollFD, clientSocket);
+
+		cout << GREEN << "New connection on socket " << clientSocket << RESET << '\n';
 	}
 }
 
@@ -193,9 +191,10 @@ void Server::stop() {
 	if (!this->running) {
 		return;
 	}
-	cout << "\rServer stopped" << '\n';
 	close(this->socket);
 	this->running = false;
+
+	cout << RED << "\rServer stopped" << RESET << '\n';
 }
 
 auto Server::getUsers() const -> const vector<User> & { return this->users; }
