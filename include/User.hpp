@@ -40,8 +40,11 @@ class User {
 	auto operator=(User &user) -> User & = delete;
 	User(User &&user) noexcept;
 	auto operator=(User &&user) noexcept -> User &;
-	virtual ~User();
+	virtual ~User() = default;
 
+
+
+	void closeSocket();
 	[[nodiscard]] auto getSocket() const -> int;
 
 	[[nodiscard]] auto getUsername() const -> const string &;

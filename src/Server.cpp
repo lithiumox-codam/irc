@@ -73,47 +73,53 @@ static auto createEpoll() -> int {
 	return epollFd;
 }
 
-static void addUserToEpoll(int epollFD, User &user) {
-	struct epoll_event event = {.events = EPOLLIN, .data = {.ptr = (void *)&user}};
+static void addToEpoll(int epollFD, int socketFD) {
+	struct epoll_event event = {.events = EPOLLIN, .data = {.fd = socketFD}};
 
-	cout << "Adding user with socket: " << user.getSocket() << " to epoll" << '\n';
+	cout << "Adding user with socket: " << socketFD << " to epoll" << '\n';
 
-	if (epoll_ctl(epollFD, EPOLL_CTL_ADD, user.getSocket(), &event) == -1) {
+	if (epoll_ctl(epollFD, EPOLL_CTL_ADD, socketFD, &event) == -1) {
 		cerr << strerror(errno) << '\n';
 		cerr << "Error: epoll_ctl failed" << '\n';
 		exit(EXIT_FAILURE);
 	}
 }
 
-static void handleEvent(struct epoll_event &event) {
-	User *user = (User *)event.data.ptr;
+static void handleEvent(int epollFD, struct epoll_event &event) {
+	int		socketFD = event.data.fd;
+	User	&user = server.getUser(socketFD);
 
 	if (event.events & EPOLLERR) {	// Error on the socket
 		cerr << "Error: EPOLLERR" << '\n';
 
 		socklen_t len = sizeof(errno);
-		getsockopt(user->getSocket(), SOL_SOCKET, SO_ERROR, &errno, &len);
+		getsockopt(socketFD, SOL_SOCKET, SO_ERROR, &errno, &len);
 		cerr << strerror(errno) << '\n';
 
-		server.removeUser(*user);
+		epoll_ctl(epollFD, EPOLL_CTL_DEL, socketFD, nullptr);
+		server.removeUser(user);
 	}
 	if (event.events & EPOLLHUP) {
 		cerr << "Error: EPOLLHUP" << '\n';
-		server.removeUser(*user);
+		epoll_ctl(epollFD, EPOLL_CTL_DEL, socketFD, nullptr);
+		server.removeUser(user);
 	}
 	if (event.events & EPOLLRDHUP) {
 		cerr << "Error: EPOLLRDHUP" << '\n';
-		server.removeUser(*user);
+		epoll_ctl(epollFD, EPOLL_CTL_DEL, socketFD, nullptr);
+		server.removeUser(user);
 	}
 
 	if (event.events & EPOLLIN) {
-		int ret = user->readFromSocket();
+		int ret = user.readFromSocket();
 
 		if (ret > 0) {
-			cout << "Received message from " << *user << '\n';
+			cout << "Received message from " << user << '\n';
 		}
 		if (ret == 0) {
-			server.removeUser(*user);
+			cout << "User " << user << " gracefully disconnected" << '\n';
+			epoll_ctl(epollFD, EPOLL_CTL_DEL, socketFD, nullptr);
+			server.removeUser(user);
 		}
 		if (ret == -1) {
 			cerr << "Error: recv failed" << '\n';
@@ -122,7 +128,8 @@ static void handleEvent(struct epoll_event &event) {
 				return;
 			}
 
-			server.removeUser(*user);
+			epoll_ctl(epollFD, EPOLL_CTL_DEL, socketFD, nullptr);
+			server.removeUser(user);
 		}
 	}
 }
@@ -138,7 +145,7 @@ static void pollUsers(int epollFD) {
 	}
 
 	for (int i = 0; i < numberOfEvents; i++) {
-		handleEvent(events[i]);
+		handleEvent(epollFD, events[i]);
 	}
 }
 
@@ -177,10 +184,8 @@ void Server::start() {
 		bool opt = true;
 		setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-		User &newUser = this->addUser(clientSocket);
-
-		cout << "New connection from " << newUser << '\n';
-		addUserToEpoll(epollFD, newUser);
+		this->addUser(clientSocket);
+		addToEpoll(epollFD, clientSocket);
 	}
 }
 
@@ -209,6 +214,7 @@ auto Server::addUser(unsigned int socket) -> User & { return this->users.emplace
 void Server::removeUser(User &user) {
 	for (auto it = this->users.begin(); it != this->users.end(); ++it) {
 		if (it->getSocket() == user.getSocket()) {
+			user.closeSocket();
 			this->users.erase(it);
 			break;
 		}

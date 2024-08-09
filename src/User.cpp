@@ -16,30 +16,6 @@ extern Server server;
 
 User::User(int socket) : socket(socket), handshake(0) { cout << "Creating user with socket: " << this->socket << endl; }
 
-static void closeSocket(int socket) {
-	if (socket == -1) {
-		return;
-	}
-
-	cout << "Closing socket : " << socket << endl;
-
-	if (shutdown(socket, SHUT_RDWR) == -1) {
-		if (errno == ENOTCONN) {
-			cerr << "Error: socket not connected" << "\n";
-		} else if (errno == ENOTSOCK) {
-			cerr << "Error: socket is not a socket" << "\n";
-		} else if (errno == EBADF) {
-			cerr << "Error: socket is not a valid file descriptor" << "\n";
-		} else {
-			cerr << "Error: shutdown failed" << "\n";
-		}
-		cerr << "Error: shutdown failed" << "\n";
-	}
-	if (close(socket) == -1) {
-		cerr << "Error: close failed" << "\n";
-	}
-}
-
 User::User(User &&user) noexcept {
 	cout << "Moving user " << user.nickname << ": " << user.socket << endl;
 
@@ -70,10 +46,30 @@ auto User::operator=(User &&user) noexcept -> User & {
 	return *this;
 }
 
-User::~User() {
-	cout << "Removing user " << this->nickname << ": " << this->socket << endl;
+void User::closeSocket() {
+	if (this->socket == -1) {
+		return;
+	}
 
-	closeSocket(this->socket);
+	cout << "Closing socket : " << this->socket << endl;
+
+	if (shutdown(this->socket, SHUT_RDWR) == -1) {
+		if (errno == ENOTCONN) {
+			cerr << "Error: socket not connected" << "\n";
+		} else if (errno == ENOTSOCK) {
+			cerr << "Error: socket is not a socket" << "\n";
+		} else if (errno == EBADF) {
+			cerr << "Error: socket is not a valid file descriptor" << "\n";
+		} else {
+			cerr << "Error: shutdown failed" << "\n";
+		}
+		cerr << "Error: shutdown failed" << "\n";
+	}
+	if (close(this->socket) == -1) {
+		cerr << "Error: close failed" << "\n";
+	}
+
+	this->socket = -1;
 }
 
 auto User::getSocket() const -> int { return this->socket; }
@@ -158,7 +154,7 @@ auto User::getNextCommand() -> string {
 void User::addToBuffer(const string &data) { this->out_buffer.append(data); };
 
 auto operator<<(std::ostream &stream, const User &user) -> std::ostream & {
-	stream << "Username: [" << user.getNickname() << "]  socket: [" << user.getSocket() << "]" << '\n';
+	stream << "Username: [" << user.getNickname() << "]  socket: [" << user.getSocket() << "]";
 	return stream;
 }
 
