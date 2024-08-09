@@ -79,6 +79,7 @@ void USER(string &args, User &user);
 void PASS(string &args, User &user);
 void INFO(string &args, User &user);
 void JOIN(string &args, User &user);
+void PING(string &args, User &user);
 
 /**
  * @brief The store array is a map of PacketType and the key to look for in a message.
@@ -86,7 +87,8 @@ void JOIN(string &args, User &user);
  * not be able to find the key in the message.
  */
 
-const std::array<PacketTypeMap, 6> store = {{
+const std::array<PacketTypeMap, 7> store = {{
+	{"PING", &PING},
 	{"CAP", &CAP},
 	{"NICK", &NICK},
 	{"USER", &USER},

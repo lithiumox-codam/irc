@@ -16,7 +16,7 @@ extern Server server;
 
 User::User(int socket) : socket(socket), handshake(0) { cout << "Creating user with socket: " << this->socket << endl; }
 
-static void	closeSocket(int socket) {
+static void closeSocket(int socket) {
 	if (socket == -1) {
 		return;
 	}
@@ -69,7 +69,6 @@ auto User::operator=(User &&user) noexcept -> User & {
 
 	return *this;
 }
-
 
 User::~User() {
 	cout << "Removing user " << this->nickname << ": " << this->socket << endl;
@@ -135,8 +134,7 @@ auto User::readFromSocket() -> int {
 	vector<char> buffer(UserConfig::BUFFER_SIZE);
 	int bytesRead = recv(this->socket, buffer.data(), buffer.size(), 0);
 
-	if (bytesRead <= 0)
-		return bytesRead;
+	if (bytesRead <= 0) return bytesRead;
 
 	buffer.push_back('\0');
 
@@ -157,7 +155,24 @@ auto User::getNextCommand() -> string {
 	return command;
 }
 
-auto operator<<(std::ostream &os, const User &user) -> std::ostream & {
-	os << "Username: [" << user.getNickname() << "]  socket: [" << user.getSocket() << "]" << endl;
-	return os;
+void User::addToBuffer(const string &data) { this->out_buffer.append(data); };
+
+auto operator<<(std::ostream &stream, const User &user) -> std::ostream & {
+	stream << "Username: [" << user.getNickname() << "]  socket: [" << user.getSocket() << "]" << '\n';
+	return stream;
 }
+
+void User::sendOutBuffer() {
+	if (this->out_buffer.empty()) {
+		return;
+	}
+	cout << "Sending to socket " << this->socket << ": " << this->out_buffer << "\n";
+	send(this->socket, this->out_buffer.c_str(), this->out_buffer.size(), 0);
+	this->out_buffer.clear();
+}
+
+auto User::checkPacket() -> bool { return this->in_buffer.find("\r\n") != string::npos; }
+
+auto User::getInBuffer() -> string & { return this->in_buffer; }
+
+auto User::getOutBuffer() -> string & { return this->out_buffer; }

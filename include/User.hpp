@@ -62,6 +62,11 @@ class User {
 
 	auto readFromSocket() -> int;
 	void addToBuffer(const string &data);
+	void sendOutBuffer();
+
+	[[nodiscard]] auto getInBuffer() -> string &;
+	[[nodiscard]] auto getOutBuffer() -> string &;
+
 	auto getNextCommand() -> string;
 };
 

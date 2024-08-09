@@ -88,7 +88,7 @@ static void addUserToEpoll(int epollFD, User &user) {
 static void handleEvent(struct epoll_event &event) {
 	User *user = (User *)event.data.ptr;
 
-	if (event.events & EPOLLERR) { // Error on the socket
+	if (event.events & EPOLLERR) {	// Error on the socket
 		cerr << "Error: EPOLLERR" << '\n';
 
 		socklen_t len = sizeof(errno);
@@ -96,7 +96,6 @@ static void handleEvent(struct epoll_event &event) {
 		cerr << strerror(errno) << '\n';
 
 		server.removeUser(*user);
-
 	}
 	if (event.events & EPOLLHUP) {
 		cerr << "Error: EPOLLHUP" << '\n';
@@ -139,7 +138,7 @@ static void pollUsers(int epollFD) {
 	}
 
 	for (int i = 0; i < numberOfEvents; i++) {
-		handleEvent(epollFD, events[i]);
+		handleEvent(events[i]);
 	}
 }
 
@@ -181,7 +180,7 @@ void Server::start() {
 		User &newUser = this->addUser(clientSocket);
 
 		cout << "New connection from " << newUser << '\n';
-		addUserToEpoll(newUser);
+		addUserToEpoll(epollFD, newUser);
 	}
 }
 

@@ -42,6 +42,7 @@ void CAP(string &args, User &user) {
 	} catch (const runtime_error &e) {
 		cerr << "Error: " << e.what() << "\n";
 	}
+	user.addToBuffer(":" + user.getNickname() + " CAP " + args + "\r\n");
 }
 
 void NICK(string &args, User &user) {
@@ -58,6 +59,7 @@ void NICK(string &args, User &user) {
 	user.setNickname(args);
 	user.addHandshake(U_NICK);
 	user.printUser();
+	user.addToBuffer(":" + user.getNickname() + " NICK " + user.getNickname() + "\r\n");
 }
 
 void USER(string &args, User &user) {
@@ -97,6 +99,10 @@ void PASS(string &args, User &user) {
 			 << "\""
 			 << "\n";
 	}
+	std::string welcomeMessage =
+		":" + std::string("temp") + " 001 " + user.getNickname() + " :Welcome to the Internet Relay Network ";
+	user.addToBuffer(welcomeMessage);
+	user.addHandshake(U_WELCOME);
 }
 
 void INFO(string &args, User &user) {
@@ -117,4 +123,16 @@ void JOIN(string &args, User &user) {
 			 << "\n";
 		return;
 	}
+	user.addToBuffer(":" + user.getNickname() + " JOIN " + args + "\r\n");
+}
+
+void PING(string &args, User &user) {
+	user.printUser();
+
+	if (args.empty()) {
+		cerr << "Error: PING packet has less than 1 argument"
+			 << "\n";
+		return;
+	}
+	user.addToBuffer("PONG :" + args + "\r\n");
 }

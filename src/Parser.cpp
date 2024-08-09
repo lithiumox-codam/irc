@@ -42,10 +42,12 @@ auto operator<<(ostream &outputStream, const PacketType &type) -> ostream & {
  * @param str The message to extract from
  * @param start Where to start extracting from
  * @return string The extracted string
-//  */
-// static auto extract(const string &str, unsigned long start) -> string {
-// 	return str.substr(start, str.find("\r\n", start) - start);
-// }
+ */
+static auto extract(const string &str, unsigned long start) -> string & {
+	static string extracted;
+	extracted = str.substr(start, str.find("\r\n", start) - start);
+	return extracted;
+}
 
 /**
  * @brief The parse function takes a message and returns a map of PacketType and the message.
@@ -60,14 +62,17 @@ void parse(User &user) {
 		try {
 			string item = user.getNextCommand();
 			for (const auto &packet : store) {
-				if (item.find(packet.key) != string::npos) {
-					packet.func(item, user);
+				size_t pos = item.find(packet.key);
+				if (pos != string::npos) {
+					packet.func(extract(item, (pos + packet.key.length()) + 1), user);
 				}
 			}
 		} catch (const runtime_error &e) {
 			break;
 		}
 	}
+	user.sendOutBuffer();
+
 	// unordered_map<PacketType, string> parsed;
 
 	// for (const auto &item : store) {
