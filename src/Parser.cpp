@@ -4,6 +4,8 @@
 
 #include "General.hpp"
 
+#include <algorithm>
+
 /**
  * @brief The PacketType enum is used to determine the type of packet.
  *
@@ -29,6 +31,9 @@ auto operator<<(ostream &outputStream, const PacketType &type) -> ostream & {
 		case PacketType::JOIN:
 			outputStream << RED << "JOIN" << RESET;
 			break;
+		case PacketType::PING:
+			outputStream << RED << "PING" << RESET;
+			break;
 		default:
 			outputStream << "Unknown packet type";
 			break;
@@ -36,17 +41,9 @@ auto operator<<(ostream &outputStream, const PacketType &type) -> ostream & {
 	return outputStream;
 }
 
-/**
- * @brief A super simple function to extract the parameters from a message.
- *
- * @param str The message to extract from
- * @param start Where to start extracting from
- * @return string The extracted string
- */
-static auto extract(const string &str, unsigned long start) -> string & {
-	static string extracted;
-	extracted = str.substr(start, str.find("\r\n", start) - start);
-	return extracted;
+static void trim(string &str) {
+	str.erase(0, str.find_first_not_of(" \t\r\n"));
+	str.erase(str.find_last_not_of(" \t\r\n") + 1);
 }
 
 /**
@@ -56,30 +53,27 @@ static auto extract(const string &str, unsigned long start) -> string & {
  * @return unordered_map<PacketType, string> A map of PacketType and the message representing the packet
  */
 void parse(User &user) {
-	// extract the messages and call the packetProcessor functions directly
-	// loop until the buffer is empty
-	while (true) {
-		try {
-			string item = user.getNextCommand();
-			for (const auto &packet : store) {
-				size_t pos = item.find(packet.key);
-				if (pos != string::npos) {
-					packet.func(extract(item, (pos + packet.key.length()) + 1), user);
-				}
-			}
-		} catch (const runtime_error &e) {
-			break;
+	try {
+		string command = user.getNextCommand();
+		trim(command);
+
+		string key = command.substr(0, command.find(' '));
+		string arguments = command.substr(command.find(' ') + 1);
+
+		cout << "Command: " << command << '\n';
+
+		auto iter = std::find_if(store.begin(), store.end(), \
+		[&key](const auto &packet) {
+			return packet.key == key;
+		});
+		if (iter == store.end()) {
+			// unknown command
+			return;
 		}
+		iter->func(arguments, user);
+
+	} catch (const runtime_error &e) {
+		return;
 	}
-	user.sendOutBuffer();
-
-	// unordered_map<PacketType, string> parsed;
-
-	// for (const auto &item : store) {
-	// 	unsigned long pos = message.find(item.key);
-	// 	if (item.type != PacketType::NONE && pos != string::npos) {
-	// 		parsed.insert({item.type, extract(message, (pos + item.key.length()) + 1)});
-	// 	}
-	// }
-	// return parsed;
+	user.sendOutBuffer(); // need to poll
 }

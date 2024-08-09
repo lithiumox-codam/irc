@@ -26,11 +26,28 @@ static auto split(const string &str, const char &delim) -> vector<string> {
 }
 
 /*
- * !TODO: instead of getting a user here we should get a user that is associated with the user and then do all the
- * processing from there. Maybe even the ChannelMember class while we are at it.
- */
+	CAP LS: List supported capabilities.
+		client: CAP LS [VERSION]
+		server: CAP * LS :[CAPABILITIES]
 
+	CAP REQ: Request to enable specific capabilities.
+		client: CAP REQ :[CAPABILITIES]
+		server: CAP * ACK :[CAPABILITIES]
+
+	CAP ACK/NAK: Acknowledge or deny the capability request.
+		server: CAP * ACK :[CAPABILITIES]
+		server: CAP * NAK :[CAPABILITIES]
+
+	CAP END: End the capability negotiation phase.
+		client: CAP END
+		server: 
+
+	CAP [UNKNOWN COMMAND]: Unknown command.
+		server: 421 [NICK] CAP :Unknown command
+*/
 void CAP(string &args, User &user) {
+	cout << PacketType::CAP << " with args: " << args << "\n";
+
 	if (args.empty()) {
 		cerr << "Error: CAP command is invalid"
 			 << "\n";
@@ -38,14 +55,33 @@ void CAP(string &args, User &user) {
 	}
 	try {
 		user.addHandshake(U_INFO);
-		// user.printUser();
 	} catch (const runtime_error &e) {
 		cerr << "Error: " << e.what() << "\n";
 	}
-	user.addToBuffer(":" + user.getNickname() + " CAP " + args + "\r\n");
+
+	vector<string> tokens = split(args, ' ');
+
+	string command = tokens[0];
+	tokens.erase(tokens.begin());
+
+	if (command == "LS") {
+		user.addToBuffer(":localhost CAP * LS\r\n");
+	} else if (command == "REQ") {
+		user.addToBuffer(":localhost CAP * NAK ");
+		for (const string &token : tokens) {
+			user.addToBuffer(token + " ");
+		}
+		user.addToBuffer("\r\n");
+	} else if (command == "END") {
+		return ;
+	} else {
+		user.addToBuffer(":localhost 421 " + user.getNickname() + " CAP :Unknown command\r\n");
+	}
 }
 
 void NICK(string &args, User &user) {
+	cout << PacketType::NICK << " with args: " << args << "\n";
+
 	if (args.empty()) {
 		cerr << "Error: NICK packet has no argument"
 			 << "\n";
@@ -58,7 +94,6 @@ void NICK(string &args, User &user) {
 	}
 	user.setNickname(args);
 	user.addHandshake(U_NICK);
-	// user.printUser();
 	user.addToBuffer(":" + user.getNickname() + " NICK " + user.getNickname() + "\r\n");
 }
 
@@ -74,13 +109,14 @@ void USER(string &args, User &user) {
 	user.setRealname(tokens[3]);
 	user.setHostname(tokens[2]);
 	user.addHandshake(U_USER);
-	// user.printUser();
 
 	cout << "User " << tokens[0] << " has connected"
 		 << "\n";
 }
 
 void PASS(string &args, User &user) {
+	cout << PacketType::PASS << " with args: " << args << "\n";
+
 	if (args.empty()) {
 		cerr << "Error: PASS packet has less than 1 argument"
 			 << "\n";
@@ -89,7 +125,6 @@ void PASS(string &args, User &user) {
 	if (args == server.getPassword()) {
 		try {
 			user.addHandshake(U_AUTHENTICATED);
-			// user.printUser();
 		} catch (const runtime_error &e) {
 			cerr << "Error: " << e.what() << "\n";
 		}
@@ -106,6 +141,8 @@ void PASS(string &args, User &user) {
 }
 
 void INFO(string &args, User &user) {
+	cout << PacketType::INFO << " with args: " << args << "\n";
+
 	user.printUser();
 
 	if (args.empty()) {
@@ -116,7 +153,7 @@ void INFO(string &args, User &user) {
 }
 
 void JOIN(string &args, User &user) {
-	// user.printUser();
+	cout << PacketType::JOIN << " with args: " << args << "\n";
 
 	if (args.empty()) {
 		cerr << "Error: JOIN packet has less than 1 argument"
@@ -127,7 +164,7 @@ void JOIN(string &args, User &user) {
 }
 
 void PING(string &args, User &user) {
-	// user.printUser();
+	cout << PacketType::PING << " with args: " << args << "\n";
 
 	if (args.empty()) {
 		cerr << "Error: PING packet has less than 1 argument"

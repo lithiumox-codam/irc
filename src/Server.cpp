@@ -113,7 +113,7 @@ static void handleEvent(int epollFD, struct epoll_event &event) {
 		int ret = user.readFromSocket();
 
 		if (ret == 0) {
-			cout << "User " << user << " gracefully disconnected" << '\n';
+			cout << user << " gracefully disconnected" << '\n';
 			epoll_ctl(epollFD, EPOLL_CTL_DEL, socketFD, nullptr);
 			server.removeUser(user);
 		}

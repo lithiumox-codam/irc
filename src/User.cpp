@@ -136,8 +136,6 @@ auto User::readFromSocket() -> int {
 
 	this->in_buffer.append(buffer.data());
 
-	cout << "Buffer for socket " << this->socket << ": [" << this->in_buffer << "]\n";
-
 	parse(*this);
 	return bytesRead;
 }
@@ -146,8 +144,12 @@ auto User::getNextCommand() -> string {
 	if (this->in_buffer.empty()) {
 		throw runtime_error("Buffer is empty");
 	}
+	if (this->in_buffer.find("\r\n") == string::npos) {
+		throw runtime_error("No command found");
+	}
+
 	string command = this->in_buffer.substr(0, this->in_buffer.find("\r\n"));
-	this->in_buffer.erase(0, this->in_buffer.find("\r\n") + 2);
+	this->in_buffer.erase(0, command.size() + 2);
 	return command;
 }
 
