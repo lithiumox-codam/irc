@@ -14,13 +14,13 @@ auto ChannelMember::operator=(ChannelMember &&member) noexcept -> ChannelMember 
 
 void ChannelMember::setModes(unsigned int modes) { this->modes = modes; }
 
-auto ChannelMember::getModes() const -> unsigned int { return this->modes; }
+unsigned int ChannelMember::getModes() const { return this->modes; }
 
 void ChannelMember::addModes(unsigned int modes) { this->modes |= modes; }
 
 void ChannelMember::removeModes(unsigned int modes) { this->modes &= ~modes; }
 
-auto ChannelMember::hasModes(unsigned int modes) const -> bool { return (this->modes & modes) == modes; }
+bool ChannelMember::hasModes(unsigned int modes) const { return (this->modes & modes) == modes; }
 
 void ChannelMember::printModes() const {
 	cout << "Modes for " << this->getUsername() << ":" << "\n";

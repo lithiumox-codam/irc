@@ -21,10 +21,10 @@ class ChannelMember : public User {
 	auto operator=(ChannelMember &&member) noexcept -> ChannelMember &;
 
 	void setModes(unsigned int modes);
-	[[nodiscard]] auto getModes() const -> unsigned int;
+	[[nodiscard]] unsigned int getModes() const;
 	void addModes(unsigned int modes);
 	void removeModes(unsigned int modes);
-	[[nodiscard]] auto hasModes(unsigned int modes) const -> bool;
+	[[nodiscard]] bool hasModes(unsigned int modes) const;
 	void printModes() const;
 	void clearModes();
 };

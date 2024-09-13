@@ -23,7 +23,7 @@ void signalHandler(int signum) {
 	exit(signum);
 }
 
-auto main(int argc, char **argv) -> int {
+int main(int argc, char **argv) {
 	signal(SIGINT, signalHandler);
 	signal(SIGTERM, signalHandler);
 	if (argc != 3) {

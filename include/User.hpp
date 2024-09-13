@@ -42,15 +42,13 @@ class User {
 	auto operator=(User &&user) noexcept -> User &;
 	virtual ~User() = default;
 
-
-
 	void closeSocket();
-	[[nodiscard]] auto getSocket() const -> int;
+	[[nodiscard]] int getSocket() const;
 
-	[[nodiscard]] auto getNickname() const -> const string &;
-	[[nodiscard]] auto getUsername() const -> const string &;
-	[[nodiscard]] auto getRealname() const -> const string &;
-	[[nodiscard]] auto getHostname() const -> const string &;
+	[[nodiscard]] const string & getNickname() const;
+	[[nodiscard]] const string & getUsername() const;
+	[[nodiscard]] const string & getRealname() const;
+	[[nodiscard]] const string & getHostname() const;
 
 	void setNickname(string &nickname);
 	void setUsername(string &username);
@@ -58,22 +56,22 @@ class User {
 	void setHostname(string &hostname);
 
 	void addHandshake(unsigned int handshake);
-	[[nodiscard]] auto hasHandshake(unsigned int handshake) const -> bool;
-	[[nodiscard]] auto getHandshake() const -> unsigned int;
+	[[nodiscard]] bool hasHandshake(unsigned int handshake) const;
+	[[nodiscard]] unsigned int getHandshake() const;
 
 	void printHandshake() const;
 	void printUser() const;
 
-	[[nodiscard]] auto checkPacket() -> bool;
+	[[nodiscard]] bool checkPacket() ;
 
-	auto readFromSocket() -> int;
-	auto sendToSocket() -> int;
+	int readFromSocket() ;
+	int sendToSocket() ;
 	void addToBuffer(const string &data);
 
-	[[nodiscard]] auto getInBuffer() -> string &;
-	[[nodiscard]] auto getOutBuffer() -> string &;
+	[[nodiscard]] string & getInBuffer() ;
+	[[nodiscard]] string & getOutBuffer() ;
 
-	[[nodiscard]] static auto getNextCommand(string &buffer) -> string;
+	[[nodiscard]] static string getNextCommand(string &buffer) ;
 };
 
 auto operator<<(ostream &os, const User &user) -> ostream &;

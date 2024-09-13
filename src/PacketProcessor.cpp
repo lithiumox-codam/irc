@@ -10,7 +10,7 @@
 
 extern Server server;
 
-static auto split(const string &str, const char &delim) -> vector<string> {
+static vector<string> split(const string &str, const char &delim) {
 	vector<string> tokens;
 	string token;
 	for (const char &character : str) {
@@ -40,7 +40,7 @@ static auto split(const string &str, const char &delim) -> vector<string> {
 
 	CAP END: End the capability negotiation phase.
 		client: CAP END
-		server: 
+		server:
 
 	CAP [UNKNOWN COMMAND]: Unknown command.
 		server: 421 [NICK] CAP :Unknown command
@@ -73,7 +73,7 @@ void CAP(string &args, User &user) {
 		}
 		user.addToBuffer("\r\n");
 	} else if (command == "END") {
-		return ;
+		return;
 	} else {
 		user.addToBuffer(":localhost 421 " + user.getNickname() + " CAP :Unknown command\r\n");
 	}

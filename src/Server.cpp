@@ -11,8 +11,8 @@
 #include <string>
 #include <vector>
 
-#include "User.hpp"
 #include "General.hpp"
+#include "User.hpp"
 
 extern Server server;
 
@@ -31,7 +31,7 @@ Server::~Server() { this->stop(); }
 
 void Server::setPassword(const string &password) { this->password = password; }
 
-auto Server::getPassword() const -> const string & { return this->password; }
+const string &Server::getPassword() const { return this->password; }
 
 void Server::bindSocket(const string &portString) {
 	// Set the port
@@ -84,8 +84,8 @@ void Server::epollAdd(int socket_fd) {
 }
 
 void Server::epollEvent(struct epoll_event &event) {
-	int		socket_fd = event.data.fd;
-	User	&user = server.getUser(socket_fd);
+	int socket_fd = event.data.fd;
+	User &user = server.getUser(socket_fd);
 
 	if (event.events & EPOLLERR) {	// Error on the socket
 		cerr << "Error: EPOLLERR" << '\n';
@@ -110,7 +110,7 @@ void Server::epollEvent(struct epoll_event &event) {
 
 		if (ret > 0) {
 			this->epollChange(socket_fd, EPOLLIN | EPOLLOUT);
-			return ;
+			return;
 		}
 		if (ret == 0) {
 			cout << user << " gracefully disconnected" << '\n';
@@ -229,9 +229,9 @@ void Server::stop() {
 	cout << RED << "\rServer stopped" << RESET << '\n';
 }
 
-auto Server::getUsers() const -> const vector<User> & { return this->users; }
+const vector<User> &Server::getUsers() const { return this->users; }
 
-auto Server::getUser(const int socket) -> User & {
+User &Server::getUser(const int socket) {
 	for (auto &user : this->users) {
 		if (user.getSocket() == socket) {
 			return user;
@@ -256,7 +256,7 @@ void Server::removeUser(User &user) {
 	}
 }
 
-auto Server::addChannel(string &channelName) -> Channel & { return this->channels.emplace_back(channelName); }
+Channel &Server::addChannel(string &channelName) { return this->channels.emplace_back(channelName); }
 
 void Server::removeChannel(Channel &channel) {
 	for (auto it = this->channels.begin(); it != this->channels.end(); ++it) {
@@ -267,9 +267,9 @@ void Server::removeChannel(Channel &channel) {
 	}
 }
 
-auto Server::getChannels() -> vector<Channel> & { return this->channels; }
+vector<Channel> &Server::getChannels() { return this->channels; }
 
-auto Server::getChannel(const string &name) -> Channel & {
+Channel &Server::getChannel(const string &name) {
 	for (auto &channel : this->channels) {
 		if (channel.getName() == name) {
 			return channel;

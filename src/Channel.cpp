@@ -9,12 +9,12 @@ using namespace std;
 
 Channel::Channel(string &name) : name(std::move(name)), modes(0) {}
 
-Channel::Channel(Channel &&channel) noexcept :
-	members(std::move(channel.members)),
-	name(std::move(channel.name)),
-	password(std::move(channel.password)),
-	topic(std::move(channel.password)),
-	modes(channel.modes) {}
+Channel::Channel(Channel &&channel) noexcept
+	: members(std::move(channel.members)),
+	  name(std::move(channel.name)),
+	  password(std::move(channel.password)),
+	  topic(std::move(channel.password)),
+	  modes(channel.modes) {}
 
 auto Channel::operator=(Channel &&channel) noexcept -> Channel & {
 	this->members = std::move(channel.members);
@@ -25,7 +25,7 @@ auto Channel::operator=(Channel &&channel) noexcept -> Channel & {
 	return *this;
 }
 
-auto Channel::getName() const -> const string & { return this->name; }
+const string &Channel::getName() const { return this->name; }
 
 void Channel::setName(const string &name) { this->name = name; }
 
@@ -40,8 +40,8 @@ void Channel::removeUser(User &user) {
 	}
 }
 
-auto Channel::hasUser(User &user) const -> bool {
-	for (auto & member : this->members) {
+bool Channel::hasUser(User &user) const {
+	for (auto &member : this->members) {
 		if (member.getSocket() == user.getSocket()) {
 			return true;
 		}
@@ -49,17 +49,17 @@ auto Channel::hasUser(User &user) const -> bool {
 	return false;
 }
 
-auto Channel::getMembers() -> std::vector<ChannelMember> & { return this->members; }
+std::vector<ChannelMember> &Channel::getMembers() { return this->members; }
 
 void Channel::setModes(unsigned int modes) { this->modes = modes; }
 
-auto Channel::getModes() const -> unsigned int { return this->modes; }
+unsigned int Channel::getModes() const { return this->modes; }
 
 void Channel::addModes(unsigned int modes) { this->modes |= modes; }
 
 void Channel::removeModes(unsigned int modes) { this->modes &= ~modes; }
 
-auto Channel::hasModes(unsigned int modes) const -> bool { return (this->modes & modes) == modes; }
+bool Channel::hasModes(unsigned int modes) const { return (this->modes & modes) == modes; }
 
 void Channel::printModes() const {
 	cout << "Modes for " << this->getName() << ":" << "\n";

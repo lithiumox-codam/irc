@@ -1,10 +1,9 @@
+#include <algorithm>
 #include <iostream>
 #include <ostream>
 #include <string>
 
 #include "General.hpp"
-
-#include <algorithm>
 
 /**
  * @brief The PacketType enum is used to determine the type of packet.
@@ -62,10 +61,7 @@ void parse(User &user) {
 
 		cout << "Command: " << command << '\n';
 
-		auto iter = std::find_if(store.begin(), store.end(), \
-		[&key](const auto &packet) {
-			return packet.key == key;
-		});
+		auto iter = std::find_if(store.begin(), store.end(), [&key](const auto &packet) { return packet.key == key; });
 		if (iter == store.end()) {
 			// unknown command
 			return;

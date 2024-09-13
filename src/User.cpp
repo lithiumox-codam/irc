@@ -70,15 +70,15 @@ void User::closeSocket() {
 	this->socket = -1;
 }
 
-auto User::getSocket() const -> int { return this->socket; }
+int User::getSocket() const { return this->socket; }
 
-auto User::getNickname() const -> const string & { return this->nickname; }
+const string &User::getNickname() const { return this->nickname; }
 
-auto User::getUsername() const -> const string & { return this->username; };
+const string &User::getUsername() const { return this->username; };
 
-auto User::getRealname() const -> const string & { return this->realname; }
+const string &User::getRealname() const { return this->realname; }
 
-auto User::getHostname() const -> const string & { return this->hostname; }
+const string &User::getHostname() const { return this->hostname; }
 
 void User::setNickname(string &nickname) { this->nickname = std::move(nickname); }
 
@@ -111,9 +111,9 @@ void User::printHandshake() const {
 		 << "\n";
 }
 
-auto User::getHandshake() const -> unsigned int { return this->handshake; }
+unsigned int User::getHandshake() const { return this->handshake; }
 
-auto User::hasHandshake(unsigned int handshake) const -> bool { return (this->handshake & handshake) == handshake; }
+bool User::hasHandshake(unsigned int handshake) const { return (this->handshake & handshake) == handshake; }
 
 void User::printUser() const {
 	cout << "======================"
@@ -128,7 +128,7 @@ void User::printUser() const {
 		 << "\n";
 }
 
-auto User::readFromSocket() -> int {
+int User::readFromSocket() {
 	vector<char> buffer(UserConfig::BUFFER_SIZE);
 	int bytesRead = recv(this->socket, buffer.data(), buffer.size(), 0);
 
@@ -145,7 +145,7 @@ auto User::readFromSocket() -> int {
 	return bytesRead;
 }
 
-auto User::getNextCommand(string &buffer) -> string {
+string User::getNextCommand(string &buffer) {
 	if (buffer.empty()) {
 		throw runtime_error("Buffer is empty");
 	}
@@ -165,22 +165,22 @@ auto operator<<(std::ostream &stream, const User &user) -> std::ostream & {
 	return stream;
 }
 
-auto User::sendToSocket() -> int {
+int User::sendToSocket() {
 	try {
 		string command = this->getNextCommand(this->out_buffer);
 
 		cout << "Sending to socket " << this->socket << ": " << command << "\n";
 
 		int bytesRead = send(this->socket, command.data(), command.size(), 0);
-		return bytesRead; // handle not being sent before this?
+		return bytesRead;  // handle not being sent before this?
 	} catch (const runtime_error &e) {
 		errno = EAGAIN;
 		return -1;
 	}
 }
 
-auto User::checkPacket() -> bool { return this->in_buffer.find("\r\n") != string::npos; }
+bool User::checkPacket() { return this->in_buffer.find("\r\n") != string::npos; }
 
-auto User::getInBuffer() -> string & { return this->in_buffer; }
+string &User::getInBuffer() { return this->in_buffer; }
 
-auto User::getOutBuffer() -> string & { return this->out_buffer; }
+string &User::getOutBuffer() { return this->out_buffer; }
