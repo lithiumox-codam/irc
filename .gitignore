@@ -38,6 +38,6 @@
 .cache
 compile_commands.json
 ircserv
-
+.env
 # Subject File
 subject.pdf
