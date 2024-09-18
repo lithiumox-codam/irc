@@ -1,8 +1,9 @@
 #pragma once
 
+#include <map>
 #include <sstream>
 #include <string>
-#include <map>
+#include <vector>
 
 #include "User.hpp"
 
@@ -27,19 +28,16 @@ using namespace std;
 #define CYAN "\033[36m"
 #define WHITE "\033[37m"
 
-/* A struct that maps a key to a PacketType also used by the PacketProcessor later on. */
-using PacketTypeMap = struct {
-	const string key;
-	void (*func)(string&, User&);
-};
+/* Utils */
+vector<string> split(const string& str, const char& delim);
 
-bool CAP(std::stringstream& stream, string& args, User& user);
-bool NICK(std::stringstream& stream, string& args, User& user);
-bool USER(std::stringstream& stream, string& args, User& user);
-bool PASS(std::stringstream& stream, string& args, User& user);
-bool INFO(std::stringstream& stream, string& args, User& user);
-bool JOIN(std::stringstream& stream, string& args, User& user);
-bool PING(std::stringstream& stream, string& args, User& user);
+bool CAP(stringstream& stream, string& args, User& user);
+bool NICK(stringstream& stream, string& args, User& user);
+bool USER(stringstream& stream, string& args, User& user);
+bool PASS(stringstream& stream, string& args, User& user);
+bool INFO(stringstream& stream, string& args, User& user);
+bool JOIN(stringstream& stream, string& args, User& user);
+bool PING(stringstream& stream, string& args, User& user);
 
 /**
  * @brief The store array is a map of PacketType and the key to look for in a message.
@@ -47,7 +45,7 @@ bool PING(std::stringstream& stream, string& args, User& user);
  * not be able to find the key in the message.
  */
 // have a function poitner to the function that will be called
-const std::map<string, bool (*)(std::stringstream&, string&, User&)> store = {
+const std::map<string, bool (*)(stringstream&, string&, User&)> store = {
 	{"CAP", CAP}, {"NICK", NICK}, {"USER", USER}, {"PASS", PASS}, {"INFO", INFO}, {"JOIN", JOIN}, {"PING", PING}};
 
 bool parse(User& user);

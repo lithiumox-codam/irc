@@ -41,7 +41,7 @@ void Channel::removeUser(User &user) {
 }
 
 bool Channel::hasUser(User &user) const {
-	for (auto &member : this->members) {
+	for (const auto &member : this->members) {
 		if (member.getSocket() == user.getSocket()) {
 			return true;
 		}

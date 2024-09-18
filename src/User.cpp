@@ -170,20 +170,19 @@ auto operator<<(std::ostream &stream, const User &user) -> std::ostream & {
 }
 
 int User::sendToSocket() {
-	try {
-		if (this->out_buffer.empty()) {
+	if (this->out_buffer.empty()) {
+		return 0;
+	}
+	cout << "Sending to socket " << socket << ":" << this->out_buffer << endl;
+	int bytesRead = send(socket, out_buffer.data(), out_buffer.size(), 0);
+	if (bytesRead == -1) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			return 0;
-		}
-		int bytesRead = send(socket, out_buffer.data(), out_buffer.size(), 0);
-		if (bytesRead == -1) {
-			throw runtime_error("Error: send failed");
 		}
 		this->out_buffer.erase(0, bytesRead);
 		return bytesRead;  // handle not being sent before this?
-	} catch (const runtime_error &e) {
-		errno = EAGAIN;
-		return -1;
 	}
+	return bytesRead;
 }
 
 bool User::checkPacket() { return this->in_buffer.find("\r\n") != string::npos; }

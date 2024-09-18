@@ -38,16 +38,14 @@ bool parse(User &user) {
 			if (found != string::npos) {
 				string args = getArgs(buffer, found);
 				if (!pair.second(stream, args, user)) {
-					cout << stream.str();
-					buffer = stream.str() + "\r\n";
 					return false;
 				}
-				user.addToBuffer(stream.str() + "\r\n");
-				cout << pair.first << stream.str() << "\n";
 			}
 		}
 	} catch (const runtime_error &e) {
 		return false;
 	}
+	user.addToBuffer(stream.str() + "\r\n");
+	stream.str("");
 	return true;
 }
