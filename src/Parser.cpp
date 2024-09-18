@@ -47,7 +47,7 @@ bool parse(User &user) {
 		return false;
 	}
 	user.addToBuffer(stream.str());
-	cout << "TEST: " << user.getOutBuffer() << '\n';
+	// cout << "TEST: " << user.getOutBuffer() << '\n';s
 	stream.str("");
 	return true;
 }

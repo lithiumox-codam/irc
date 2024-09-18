@@ -1,5 +1,6 @@
 #include "Server.hpp"
 
+#include <limits.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -12,7 +13,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <limits.h>
 
 #include "General.hpp"
 #include "User.hpp"
@@ -111,12 +111,12 @@ void Server::epollEvent(struct epoll_event &event) {
 	if (event.events & EPOLLIN) {
 		int ret = user.readFromSocket();
 
-		 if (ret > 0) {
-        if (!user.getOutBuffer().empty()) {
-            this->epollChange(socket_fd, EPOLLOUT);
-        }
-        return;
-	}
+		if (ret > 0) {
+			if (!user.getOutBuffer().empty()) {
+				this->epollChange(socket_fd, EPOLLOUT);
+			}
+			return;
+		}
 		if (ret == 0) {
 			cout << user << " gracefully disconnected" << '\n';
 		}
@@ -151,7 +151,6 @@ void Server::epollEvent(struct epoll_event &event) {
 		}
 		this->epollChange(socket_fd, EPOLLIN);
 	}
-
 }
 
 void Server::epollRemove(int socket_fd) {
@@ -177,7 +176,7 @@ void Server::acceptNewConnection() {
 
 	if (clientSocket == -1) {
 		if (errno == EWOULDBLOCK) {
-			return;  // Non-blocking, try again later
+			return;	 // Non-blocking, try again later
 		}
 		cerr << strerror(errno) << '\n';
 		cerr << "Error: accept failed" << '\n';
@@ -230,8 +229,6 @@ void Server::start() {
 			cerr << "Error: epoll_wait failed" << '\n';
 			exit(EXIT_FAILURE);
 		}
-
-		cerr << "Number of events: " << numberOfEvents << '\n';
 
 		handleEvents(events, numberOfEvents);
 	}

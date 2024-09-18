@@ -6,6 +6,7 @@
 #include "Server.hpp"
 #include "User.hpp"
 
+extern Server server;
 /*
 	CAP LS: List supported capabilities.
 		client: CAP LS [VERSION]
@@ -52,6 +53,11 @@ bool CAP(stringstream &stream, string &args, User &user) {
 		}
 		stream << END;
 	} else if (command == "END") {
+		stream << startRes(RPL_MOTDSTART) << user.getNickname() << " :- " << server.getHostname()
+			   << " Message of the day - " << END;
+		stream << startRes(RPL_MOTD) << user.getNickname() << " :- Welcome to the Internet Relay Network "
+			   << server.getHostname() << END;
+		stream << startRes(RPL_ENDOFMOTD) << user.getNickname() << " :End of /MOTD command." << END;
 		return true;
 	} else {
 		stream.str("");
