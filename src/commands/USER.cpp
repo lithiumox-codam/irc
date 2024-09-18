@@ -34,6 +34,10 @@ static vector<string> user_split(string &args) {
  * realname of a new user.
  */
 bool USER(std::stringstream &stream, string &args, User &user) {
+	if (user.hasHandshake(U_USER)) {
+		stream << startRes(ERR_ALREADYREGISTRED) << user.getNickname() << " :You may not reregister" << "\n";
+		return false;
+	}
 	vector<string> tokens = user_split(args);
 	if (tokens.size() < 4) {
 		cerr << "Error: USER packet has less than 4 arguments" << "\n";
