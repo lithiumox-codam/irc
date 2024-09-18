@@ -141,7 +141,8 @@ int User::readFromSocket() {
 	this->in_buffer.append(buffer.data());
 
 	parse(*this);
-
+	this->in_buffer.clear();
+	cerr << "bytesRead: " << bytesRead << "\n";
 	return bytesRead;
 }
 
@@ -170,9 +171,9 @@ auto operator<<(std::ostream &stream, const User &user) -> std::ostream & {
 }
 
 int User::sendToSocket() {
-	if (this->out_buffer.empty()) {
-		return 0;
-	}
+	// if (this->out_buffer.empty()) {
+	// 	return 0;
+	// }
 	cout << "Sending to socket " << socket << ":" << this->out_buffer << "\n";
 	int bytesRead = send(socket, out_buffer.data(), out_buffer.size(), 0);
 	if (bytesRead == -1) {
@@ -183,6 +184,7 @@ int User::sendToSocket() {
 		return bytesRead;  // handle not being sent before this?
 	}
 	this->out_buffer.erase(0, bytesRead);
+	cerr << "bytesRead: " << bytesRead << "\n";
 	return bytesRead;
 }
 

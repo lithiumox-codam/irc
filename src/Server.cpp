@@ -7,6 +7,7 @@
 #include <array>
 #include <cerrno>
 #include <climits>
+#include <cstdio>
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -89,7 +90,6 @@ void Server::epollAdd(int socket_fd) {
 void Server::epollEvent(struct epoll_event &event) {
 	int socket_fd = event.data.fd;
 	User &user = server.getUser(socket_fd);
-
 	if (event.events & EPOLLERR) {	// Error on the socket
 		cerr << "Error: EPOLLERR" << '\n';
 
@@ -111,10 +111,12 @@ void Server::epollEvent(struct epoll_event &event) {
 	if (event.events & EPOLLIN) {
 		int ret = user.readFromSocket();
 
-		if (ret > 0) {
-			this->epollChange(socket_fd, EPOLLIN | EPOLLOUT);
-			return;
-		}
+		 if (ret > 0) {
+        if (!user.getOutBuffer().empty()) {
+            this->epollChange(socket_fd, EPOLLOUT);
+        }
+        return;
+	}
 		if (ret == 0) {
 			cout << user << " gracefully disconnected" << '\n';
 		}
@@ -128,39 +130,28 @@ void Server::epollEvent(struct epoll_event &event) {
 		server.removeUser(user);
 	}
 	if (event.events & EPOLLOUT) {
-		int ret = user.sendToSocket();
+		if (!user.getOutBuffer().empty()) {
+			int ret = user.sendToSocket();
 
-		if (ret > 0) {
-			return;
-		}
-		if (ret == 0) {
-			cout << user << " gracefully disconnected" << '\n';
-		}
-		if (ret == -1) {
-			if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				this->epollChange(socket_fd, EPOLLIN);
+			if (ret > 0) {
 				return;
 			}
+			if (ret == 0) {
+				cout << user << " gracefully disconnected" << '\n';
+			}
+			if (ret == -1) {
+				if (errno == EWOULDBLOCK || errno == EAGAIN) {
+					this->epollChange(socket_fd, EPOLLIN);
+					return;
+				}
 
-			cerr << "Error: send failed" << '\n';
+				cerr << "Error: send failed" << '\n';
+			}
+			server.removeUser(user);
 		}
-		server.removeUser(user);
-	}
-}
-
-void Server::epollWait() {
-	const int maxEvents = 10;
-	array<struct epoll_event, maxEvents> events;
-	int numberOfEvents = epoll_wait(this->epoll_fd, events.data(), (int)ServerConfig::MAX_EVENTS, 0);
-	if (numberOfEvents == -1) {
-		cerr << strerror(errno) << '\n';
-		cerr << "Error: epoll_wait failed" << '\n';
-		exit(EXIT_FAILURE);
+		this->epollChange(socket_fd, EPOLLIN);
 	}
 
-	for (int i = 0; i < numberOfEvents; i++) {
-		this->epollEvent(events[i]);
-	}
 }
 
 void Server::epollRemove(int socket_fd) {
@@ -181,6 +172,37 @@ void Server::epollChange(int socket_fd, uint32_t events) {
 	}
 }
 
+void Server::acceptNewConnection() {
+	const int clientSocket = accept(this->socket, nullptr, nullptr);
+
+	if (clientSocket == -1) {
+		if (errno == EWOULDBLOCK) {
+			return;  // Non-blocking, try again later
+		}
+		cerr << strerror(errno) << '\n';
+		cerr << "Error: accept failed" << '\n';
+		exit(EXIT_FAILURE);
+	}
+
+	bool opt = true;
+	setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	this->addUser(clientSocket);
+
+	cout << GREEN << "New connection on socket " << clientSocket << RESET << '\n';
+}
+
+void Server::handleEvents(array<struct epoll_event, (size_t)ServerConfig::BACKLOG> &events, int numberOfEvents) {
+	for (int i = 0; i < numberOfEvents; i++) {
+		struct epoll_event &event = events[i];
+
+		if (event.data.fd == this->socket && (event.events & EPOLLIN)) {
+			acceptNewConnection();
+		} else {
+			this->epollEvent(event);
+		}
+	}
+}
+
 void Server::start() {
 	// Listen for incoming connections, with a backlog of 10 pending connections
 	if (listen(this->socket, (int)ServerConfig::BACKLOG) != -1) {
@@ -197,28 +219,21 @@ void Server::start() {
 	this->epollCreate();
 
 	string message;
+	this->epollAdd(this->socket);
 	while (true) {
-		this->epollWait();
+		const int maxEvents = 10;
+		array<struct epoll_event, maxEvents> events;
+		int numberOfEvents = epoll_wait(this->epoll_fd, events.data(), (int)ServerConfig::MAX_EVENTS, -1);
 
-		// Accept a connection
-		const int clientSocket = accept(this->socket, nullptr, nullptr);
-
-		if (clientSocket == -1) {
-			if (errno == EWOULDBLOCK) {
-				continue;
-			}
-
+		if (numberOfEvents == -1) {
 			cerr << strerror(errno) << '\n';
-			cerr << "Error: accept failed" << '\n';
+			cerr << "Error: epoll_wait failed" << '\n';
 			exit(EXIT_FAILURE);
 		}
 
-		bool opt = true;
-		setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+		cerr << "Number of events: " << numberOfEvents << '\n';
 
-		this->addUser(clientSocket);
-
-		cout << GREEN << "New connection on socket " << clientSocket << RESET << '\n';
+		handleEvents(events, numberOfEvents);
 	}
 }
 

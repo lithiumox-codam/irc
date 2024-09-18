@@ -53,7 +53,9 @@ class Server {
 	void epollRemove(int socket);
 	void epollChange(int socket, uint32_t events);
 	void epollEvent(struct epoll_event &event);
-	void epollWait();
+	int epollWait();
+	void handleEvents(array<struct epoll_event, 10> &events, int numberOfEvents);
+	void acceptNewConnection();
 
 	void addUser(unsigned int socket);
 	void removeUser(User &user);
