@@ -21,6 +21,7 @@ extern Server server;
 
 Server::Server() : socket(0), port(0), running(false) {
 	try {
+		getDotEnv();
 		this->hostname = getenv("HOSTNAME");
 		if (this->hostname.empty()) {
 			this->hostname = "localhost";
@@ -67,6 +68,8 @@ void Server::bindSocket(const string &portString) {
 	}
 	cout << "Socket bound to port " << portString << '\n';
 }
+
+void Server::setHostname(const string &hostString) { hostname = hostString; }
 
 void Server::epollCreate() {
 	this->epoll_fd = epoll_create1(0);

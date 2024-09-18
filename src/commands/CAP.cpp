@@ -45,7 +45,7 @@ bool CAP(stringstream &stream, string &args, User &user) {
 			stream << token << " ";
 		}
 		stream << END;
-	} else if (command == "END") {
+	} else if (command == "END" && user.hasHandshake(U_COMPLETED)) {
 		string empty;
 		MOTD(stream, empty, user);
 		return true;

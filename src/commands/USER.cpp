@@ -1,3 +1,5 @@
+#include "User.hpp"
+
 #include <iostream>
 
 #include "General.hpp"
@@ -48,9 +50,6 @@ bool USER(stringstream &stream, string &args, User &user) {
 	user.setRealname(tokens[3]);
 	user.setHostname(tokens[2]);
 	user.addHandshake(U_USER);
-	user.printUser();
 
-	stream << ":" << user.getNickname() << " USER " << user.getUsername() << " " << user.getHostname() << " "
-		   << server.getHostname() << " :" << user.getRealname() << END;
 	return true;
 }

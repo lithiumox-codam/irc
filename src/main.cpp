@@ -24,6 +24,7 @@ void signalHandler(int signum) {
 }
 
 int main(int argc, char **argv) {
+	(void)argv;
 	signal(SIGINT, signalHandler);
 	signal(SIGTERM, signalHandler);
 	if (argc != 3) {
@@ -31,8 +32,8 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	server.bindSocket(argv[1]);
-	server.setPassword(argv[2]);
+	// server.bindSocket(argv[1]);
+	// server.setPassword(argv[2]);
 	server.start();
 	return 0;
 }

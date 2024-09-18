@@ -13,7 +13,9 @@
 
 using namespace std;
 
-// NOLINTNEXTLINE
+/* env related */
+void getDotEnv();
+
 enum class ServerConfig {
 	BACKLOG = 10,
 	MAX_EVENTS = 10,
@@ -44,6 +46,7 @@ class Server {
 
 	// Public Methods
 	void bindSocket(const string &portString);
+	void setHostname(const string &hostString);
 
 	void start();
 	void stop();
