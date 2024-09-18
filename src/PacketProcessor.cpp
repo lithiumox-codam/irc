@@ -45,18 +45,16 @@ static vector<string> split(const string &str, const char &delim) {
 	CAP [UNKNOWN COMMAND]: Unknown command.
 		server: 421 [NICK] CAP :Unknown command
 */
-void CAP(string &args, User &user) {
-	cout << PacketType::CAP << " " << args << "\n";
-
+bool CAP(std::stringstream &stream, string &args, User &user) {
 	if (args.empty()) {
-		cerr << "Error: CAP command is invalid"
-			 << "\n";
-		return;
+		stream << "Error: CAP command is invalid" << "\n";
+		return false;
 	}
 	try {
 		user.addHandshake(U_INFO);
 	} catch (const runtime_error &e) {
-		cerr << "Error: " << e.what() << "\n";
+		stream << "Error: " << e.what() << "\n";
+		return false;
 	}
 
 	vector<string> tokens = split(args, ' ');
@@ -65,44 +63,45 @@ void CAP(string &args, User &user) {
 	tokens.erase(tokens.begin());
 
 	if (command == "LS") {
-		user.addToBuffer(":localhost CAP * LS\r\n");
+		stream << ":localhost CAP * LS\r\n";
 	} else if (command == "REQ") {
-		user.addToBuffer(":localhost CAP * NAK ");
+		stream << ":localhost CAP * NAK ";
 		for (const string &token : tokens) {
-			user.addToBuffer(token + " ");
+			stream << token << " ";
 		}
-		user.addToBuffer("\r\n");
+		stream << "\r\n";
 	} else if (command == "END") {
-		return;
+		return true;
 	} else {
-		user.addToBuffer(":localhost 421 " + user.getNickname() + " CAP :Unknown command\r\n");
+		stream.flush();
+		stream << ":localhost 421 " + user.getNickname() + " CAP :Unknown command\r\n";
+		return false;
 	}
+
+	return true;
 }
 
-void NICK(string &args, User &user) {
-	cout << PacketType::NICK << " " << args << "\n";
-
+bool NICK(std::stringstream &stream, string &args, User &user) {
+	stream << "User " << user.getNickname() << " has changed their nickname to " << args << "\n";
 	if (args.empty()) {
-		cerr << "Error: NICK packet has no argument"
-			 << "\n";
-		return;
+		stream.flush();
+		return false;
 	}
 	if (args.find(' ') != string::npos) {
-		cerr << "Error: NICK packet has a space in the argument"
-			 << "\n";
-		return;
+		stream << "Error: NICK packet has a space in the argument" << "\n";
+		return false;
 	}
 	user.setNickname(args);
 	user.addHandshake(U_NICK);
-	user.addToBuffer(":" + user.getNickname() + " NICK " + user.getNickname() + "\r\n");
+	stream << ":" << user.getNickname() << " NICK " << user.getNickname() << "\r\n";
+	return true;
 }
 
-void USER(string &args, User &user) {
+bool USER(std::stringstream &stream, string &args, User &user) {
 	vector<string> tokens = split(args, ' ');
 	if (tokens.size() < 4) {
-		cerr << "Error: USER packet has less than 4 arguments"
-			 << "\n";
-		return;
+		stream << "Error: USER packet has less than 4 arguments" << "\n";
+		return false;
 	}
 
 	user.setUsername(tokens[0]);
@@ -110,66 +109,54 @@ void USER(string &args, User &user) {
 	user.setHostname(tokens[2]);
 	user.addHandshake(U_USER);
 
-	cout << "User " << tokens[0] << " has connected"
-		 << "\n";
+	// stream the response to the user this has to be valid irc response
+	stream << ":" << user.getNickname() << " USER " << user.getUsername() << " " << user.getHostname() << " "
+		   << server.getHostname() << " :" << user.getRealname() << "\r\n";
+	return true;
 }
 
-void PASS(string &args, User &user) {
-	cout << PacketType::PASS << " " << args << "\n";
-
+bool PASS(std::stringstream &stream, string &args, User &user) {
 	if (args.empty()) {
-		cerr << "Error: PASS packet has less than 1 argument"
-			 << "\n";
-		return;
+		stream << "Error: PASS packet has less than 1 argument" << "\n";
+		return false;
 	}
 	if (args == server.getPassword()) {
-		try {
-			user.addHandshake(U_AUTHENTICATED);
-		} catch (const runtime_error &e) {
-			cerr << "Error: " << e.what() << "\n";
-		}
-
+		user.addHandshake(U_AUTHENTICATED);
 	} else {
-		cerr << "Error: User has failed to authenticate expecte: \"" << server.getPassword() << "\" got: \"" << args
-			 << "\""
-			 << "\n";
+		stream << "Error: User has failed to authenticate expecte: \"" << server.getPassword() << "\" got: \"" << args
+			   << "\"" << "\n";
 	}
-	std::string welcomeMessage =
-		":" + std::string("temp") + " 001 " + user.getNickname() + " :Welcome to the Internet Relay Network ";
-	user.addToBuffer(welcomeMessage);
 	user.addHandshake(U_WELCOME);
+	return true;
 }
 
-void INFO(string &args, User &user) {
-	cout << PacketType::INFO << " " << args << "\n";
-
+bool INFO(std::stringstream &stream, string &args, User &user) {
 	user.printUser();
 
 	if (args.empty()) {
-		cerr << "Error: INFO packet has less than 1 argument"
-			 << "\n";
-		return;
+		stream << "Error: INFO packet has less than 1 argument" << "\n";
+		return false;
 	}
+
+	return true;
 }
 
-void JOIN(string &args, User &user) {
-	cout << PacketType::JOIN << " " << args << "\n";
-
+bool JOIN(std::stringstream &stream, string &args, User &user) {
 	if (args.empty()) {
-		cerr << "Error: JOIN packet has less than 1 argument"
-			 << "\n";
-		return;
+		cerr << "Error: JOIN packet has less than 1 argument" << "\n";
+		return false;
 	}
-	user.addToBuffer(":" + user.getNickname() + " JOIN " + args + "\r\n");
+	stream << ":" << user.getNickname() << " JOIN " << args << "\r\n";
+	return true;
 }
 
-void PING(string &args, User &user) {
-	cout << PacketType::PING << args << "\n";
-
+bool PING(std::stringstream &stream, string &args, User &user) {
+	(void)user;
 	if (args.empty()) {
 		cerr << "Error: PING packet has less than 1 argument"
 			 << "\n";
-		return;
+		return false;
 	}
-	user.addToBuffer("PONG :" + args + "\r\n");
+	stream << "PONG :" << args << "\r\n";
+	return true;
 }

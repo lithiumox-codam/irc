@@ -27,14 +27,14 @@ class Channel {
 	Channel(Channel &&channel) noexcept;
 	auto operator=(Channel &&channel) noexcept -> Channel &;
 
-	[[nodiscard]] const string & getName() const;
+	[[nodiscard]] const string &getName() const;
 	void setName(const std::string &name);
 
 	void addUser(User &&user);
 	void removeUser(User &user);
 	bool hasUser(User &user) const;
 
-	[[nodiscard]] vector<ChannelMember> & getMembers() ;
+	[[nodiscard]] vector<ChannelMember> &getMembers();
 
 	void setModes(unsigned int modes);
 	[[nodiscard]] unsigned int getModes() const;

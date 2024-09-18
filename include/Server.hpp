@@ -40,7 +40,7 @@ class Server {
 
 	// Getters and Setters
 	void setPassword(const string &password);
-	[[nodiscard]] const string & getPassword() const;
+	[[nodiscard]] const string &getPassword() const;
 
 	// Public Methods
 	void bindSocket(const string &portString);
@@ -57,13 +57,14 @@ class Server {
 
 	void addUser(unsigned int socket);
 	void removeUser(User &user);
-	[[nodiscard]] User & getUser(int socket) ;
-	[[nodiscard]] const vector<User> & getUsers() const;
+	[[nodiscard]] User &getUser(int socket);
+	[[nodiscard]] const vector<User> &getUsers() const;
 
-	Channel & addChannel(string &channelName) ;
+	Channel &addChannel(string &channelName);
 	void removeChannel(Channel &channel);
-	[[nodiscard]] vector<Channel> & getChannels() ;
-	[[nodiscard]] Channel & getChannel(const string &name) ;
+	[[nodiscard]] vector<Channel> &getChannels();
+	[[nodiscard]] Channel &getChannel(const string &name);
+	[[nodiscard]] const string &getHostname();
 
    private:
 };

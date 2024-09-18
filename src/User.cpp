@@ -160,6 +160,10 @@ string User::getNextCommand(string &buffer) {
 
 void User::addToBuffer(const string &data) { this->out_buffer.append(data); };
 
+void User::clearInBuffer() { this->in_buffer.clear(); }
+
+void User::clearOutBuffer() { this->out_buffer.clear(); }
+
 auto operator<<(std::ostream &stream, const User &user) -> std::ostream & {
 	stream << "Username: [" << user.getNickname() << "]  socket: [" << user.getSocket() << "]";
 	return stream;
@@ -167,11 +171,14 @@ auto operator<<(std::ostream &stream, const User &user) -> std::ostream & {
 
 int User::sendToSocket() {
 	try {
-		string command = this->getNextCommand(this->out_buffer);
-
-		cout << "Sending to socket " << this->socket << ": " << command << "\n";
-
-		int bytesRead = send(this->socket, command.data(), command.size(), 0);
+		if (this->out_buffer.empty()) {
+			return 0;
+		}
+		int bytesRead = send(socket, out_buffer.data(), out_buffer.size(), 0);
+		if (bytesRead == -1) {
+			throw runtime_error("Error: send failed");
+		}
+		this->out_buffer.erase(0, bytesRead);
 		return bytesRead;  // handle not being sent before this?
 	} catch (const runtime_error &e) {
 		errno = EAGAIN;

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <array>
+#include <sstream>
 #include <string>
-#include <unordered_map>
+#include <map>
 
 #include "User.hpp"
 
@@ -27,74 +27,27 @@ using namespace std;
 #define CYAN "\033[36m"
 #define WHITE "\033[37m"
 
-/*
- * Parser related definitions.
- */
-// NOLINTNEXTLINE
-enum class PacketType {
-	NONE = -1,
-	CAP,
-	PASS,
-	JOIN,
-	PART,
-	PRIVMSG,
-	NOTICE,
-	NICK,
-	USER,
-	QUIT,
-	PING,
-	PONG,
-	MODE,
-	TOPIC,
-	INVITE,
-	KICK,
-	WHO,
-	WHOIS,
-	LIST,
-	NAMES,
-	MOTD,
-	LUSERS,
-	VERSION,
-	STATS,
-	LINKS,
-	TIME,
-	CONNECT,
-	TRACE,
-	ADMIN,
-	INFO,
-	SERVLIST,
-};
-
-auto operator<<(ostream &outputStream, const PacketType &type) -> ostream &;
-
 /* A struct that maps a key to a PacketType also used by the PacketProcessor later on. */
 using PacketTypeMap = struct {
 	const string key;
-	void (*func)(string &, User &);
+	void (*func)(string&, User&);
 };
 
-void CAP(string &args, User &user);
-void NICK(string &args, User &user);
-void USER(string &args, User &user);
-void PASS(string &args, User &user);
-void INFO(string &args, User &user);
-void JOIN(string &args, User &user);
-void PING(string &args, User &user);
+bool CAP(std::stringstream& stream, string& args, User& user);
+bool NICK(std::stringstream& stream, string& args, User& user);
+bool USER(std::stringstream& stream, string& args, User& user);
+bool PASS(std::stringstream& stream, string& args, User& user);
+bool INFO(std::stringstream& stream, string& args, User& user);
+bool JOIN(std::stringstream& stream, string& args, User& user);
+bool PING(std::stringstream& stream, string& args, User& user);
 
 /**
  * @brief The store array is a map of PacketType and the key to look for in a message.
  * @note If you add a new PacketType, make sure to add it to the store array. If you don't, the parse function will
  * not be able to find the key in the message.
  */
+// have a function poitner to the function that will be called
+const std::map<string, bool (*)(std::stringstream&, string&, User&)> store = {
+	{"CAP", CAP}, {"NICK", NICK}, {"USER", USER}, {"PASS", PASS}, {"INFO", INFO}, {"JOIN", JOIN}, {"PING", PING}};
 
-const std::array<PacketTypeMap, 7> store = {{
-	{"PING", &PING},
-	{"CAP", &CAP},
-	{"NICK", &NICK},
-	{"USER", &USER},
-	{"PASS", &PASS},
-	{"INFO", &INFO},
-	{"JOIN", &JOIN},
-}};
-
-void parse(User &user);
+bool parse(User& user);

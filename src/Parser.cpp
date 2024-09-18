@@ -2,47 +2,22 @@
 #include <iostream>
 #include <ostream>
 #include <string>
+#include <unordered_map>
 
 #include "General.hpp"
 
-/**
- * @brief The PacketType enum is used to determine the type of packet.
- *
- * @note If you add a new PacketType, and want it to be fancy printed, make sure to add it to this list.
- */
-auto operator<<(ostream &outputStream, const PacketType &type) -> ostream & {
-	switch (type) {
-		case PacketType::CAP:
-			outputStream << BLUE << "CAP" << RESET;
-			break;
-		case PacketType::NICK:
-			outputStream << YELLOW << "NICK" << RESET;
-			break;
-		case PacketType::USER:
-			outputStream << CYAN << "USER" << RESET;
-			break;
-		case PacketType::PASS:
-			outputStream << GREEN << "PASS" << RESET;
-			break;
-		case PacketType::INFO:
-			outputStream << MAGENTA << "INFO" << RESET;
-			break;
-		case PacketType::JOIN:
-			outputStream << RED << "JOIN" << RESET;
-			break;
-		case PacketType::PING:
-			outputStream << RED << "PING" << RESET;
-			break;
-		default:
-			outputStream << "Unknown packet type";
-			break;
+static string getArgs(string &buffer, size_t found) {
+	size_t start = buffer.find(' ', found);
+	if (start == string::npos) {
+		return "";
 	}
-	return outputStream;
-}
+	start++;
+	size_t end = buffer.find("\r\n", start);
+	if (end == string::npos) {
+		return "";
+	}
 
-static void trim(string &str) {
-	str.erase(0, str.find_first_not_of(" \t\r\n"));
-	str.erase(str.find_last_not_of(" \t\r\n") + 1);
+	return buffer.substr(start, end - start);
 }
 
 /**
@@ -51,23 +26,28 @@ static void trim(string &str) {
  * @param message The entire message to parse
  * @return unordered_map<PacketType, string> A map of PacketType and the message representing the packet
  */
-void parse(User &user) {
+bool parse(User &user) {
+	std::stringstream stream;
 	try {
-		string command = user.getNextCommand(user.getInBuffer());
-		trim(command);
-
-		string key = command.substr(0, command.find(' '));
-		string arguments = command.substr(command.find(' ') + 1);
-
-		cout << "Command: " << command << '\n';
-
-		auto iter = std::find_if(store.begin(), store.end(), [&key](const auto &packet) { return packet.key == key; });
-		if (iter == store.end()) {
-			// unknown command
-			return;
+		string &buffer = user.getInBuffer();
+		if (buffer.empty()) {
+			return false;
 		}
-		iter->func(arguments, user);
+		for (const auto &pair : store) {
+			size_t found = buffer.find(pair.first);
+			if (found != string::npos) {
+				string args = getArgs(buffer, found);
+				if (!pair.second(stream, args, user)) {
+					cout << stream.str();
+					buffer = stream.str() + "\r\n";
+					return false;
+				}
+				user.addToBuffer(stream.str() + "\r\n");
+				cout << pair.first << stream.str() << "\n";
+			}
+		}
 	} catch (const runtime_error &e) {
-		return;
+		return false;
 	}
+	return true;
 }

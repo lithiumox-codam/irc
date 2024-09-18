@@ -45,10 +45,10 @@ class User {
 	void closeSocket();
 	[[nodiscard]] int getSocket() const;
 
-	[[nodiscard]] const string & getNickname() const;
-	[[nodiscard]] const string & getUsername() const;
-	[[nodiscard]] const string & getRealname() const;
-	[[nodiscard]] const string & getHostname() const;
+	[[nodiscard]] const string &getNickname() const;
+	[[nodiscard]] const string &getUsername() const;
+	[[nodiscard]] const string &getRealname() const;
+	[[nodiscard]] const string &getHostname() const;
 
 	void setNickname(string &nickname);
 	void setUsername(string &username);
@@ -62,16 +62,18 @@ class User {
 	void printHandshake() const;
 	void printUser() const;
 
-	[[nodiscard]] bool checkPacket() ;
+	[[nodiscard]] bool checkPacket();
 
-	int readFromSocket() ;
-	int sendToSocket() ;
+	int readFromSocket();
+	int sendToSocket();
 	void addToBuffer(const string &data);
 
-	[[nodiscard]] string & getInBuffer() ;
-	[[nodiscard]] string & getOutBuffer() ;
+	[[nodiscard]] string &getInBuffer();
+	[[nodiscard]] string &getOutBuffer();
+	void clearInBuffer();
+	void clearOutBuffer();
 
-	[[nodiscard]] static string getNextCommand(string &buffer) ;
+	[[nodiscard]] static string getNextCommand(string &buffer);
 };
 
 auto operator<<(ostream &os, const User &user) -> ostream &;

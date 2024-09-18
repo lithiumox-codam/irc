@@ -277,3 +277,5 @@ Channel &Server::getChannel(const string &name) {
 	}
 	throw runtime_error("Channel not found");
 }
+
+const string &Server::getHostname() { return this->hostname; }
