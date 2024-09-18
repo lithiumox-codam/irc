@@ -44,9 +44,9 @@ bool CAP(stringstream &stream, string &args, User &user) {
 	tokens.erase(tokens.begin());
 
 	if (command == "LS") {
-		stream << "CAP * LS :multi-prefix sasl" << END;
+		stream << "CAP * LS :multi-prefix" << END;
 	} else if (command == "REQ") {
-		stream << ":localhost CAP * NAK " << END;
+		stream << "CAP * ACK ";
 		for (const string &token : tokens) {
 			stream << token << " ";
 		}

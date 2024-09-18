@@ -48,6 +48,6 @@ bool PING(stringstream& stream, string& args, User& user);
  */
 // have a function poitner to the function that will be called
 const std::map<string, bool (*)(stringstream&, string&, User&)> store = {
-	{"CAP", CAP}, {"NICK", NICK}, {"USER", USER}, {"PASS", PASS}, {"INFO", INFO}, {"JOIN", JOIN}, {"PING", PING}};
+	{"PASS", PASS}, {"CAP", CAP}, {"NICK", NICK}, {"USER", USER}, {"INFO", INFO}, {"JOIN", JOIN}, {"PING", PING}};
 
 bool parse(User& user);

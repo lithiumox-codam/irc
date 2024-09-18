@@ -25,39 +25,23 @@ bool NICK(stringstream &stream, string &args, User &user) {
 	return true;
 }
 
-/**
- * @brief The USER command is used at the beginning of connection to specify the username, hostname, servername and
- * realname of a new user.
- */
-bool USER(std::stringstream &stream, string &args, User &user) {
-	vector<string> tokens = split(args, ' ');
-	if (tokens.size() < 4) {
-		stream << "Error: USER packet has less than 4 arguments" << "\n";
-		return false;
-	}
-
-	user.setUsername(tokens[0]);
-	user.setRealname(tokens[3]);
-	user.setHostname(tokens[2]);
-	user.addHandshake(U_USER);
-
-	stream << ":" << user.getNickname() << " USER " << user.getUsername() << " " << user.getHostname() << " "
-		   << server.getHostname() << " :" << user.getRealname() << "\r\n";
-	return true;
-}
-
 bool PASS(std::stringstream &stream, string &args, User &user) {
 	if (args.empty()) {
-		stream << "Error: PASS packet has less than 1 argument" << "\n";
+		stream.str("");
+		stream << "ERROR :Closing Link: " << server.getHostname() << " (Bad Password)" << "\n ";
+		return false;
+	}
+	if (user.hasHandshake(U_AUTHENTICATED)) {
+		stream.str("");
+		stream << startRes(ERR_ALREADYREGISTRED) << user.getNickname() << " :You are already registered" << "\n";
 		return false;
 	}
 	if (args == server.getPassword()) {
 		user.addHandshake(U_AUTHENTICATED);
 	} else {
-		stream << "Error: User has failed to authenticate expecte: \"" << server.getPassword() << "\" got: \"" << args
-			   << "\"" << "\n";
+		return false;
 	}
-	user.addHandshake(U_WELCOME);
+
 	return true;
 }
 
