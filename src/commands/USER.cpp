@@ -35,7 +35,7 @@ static vector<string> user_split(string &args) {
  */
 bool USER(std::stringstream &stream, string &args, User &user) {
 	if (user.hasHandshake(U_USER)) {
-		stream << startRes(ERR_ALREADYREGISTRED) << user.getNickname() << " :You may not reregister" << "\n";
+		stream << startRes(ERR_ALREADYREGISTRED) << user.getNickname() << " :You may not reregister" << END;
 		return false;
 	}
 	vector<string> tokens = user_split(args);
@@ -51,6 +51,6 @@ bool USER(std::stringstream &stream, string &args, User &user) {
 	user.printUser();
 
 	stream << ":" << user.getNickname() << " USER " << user.getUsername() << " " << user.getHostname() << " "
-		   << server.getHostname() << " :" << user.getRealname() << "\r\n";
+		   << server.getHostname() << " :" << user.getRealname() << END;
 	return true;
 }
