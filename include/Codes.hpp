@@ -123,3 +123,5 @@
 #define ERR_UNIQOPRIVSNEEDED " 485 "  // Unique operator privileges needed
 #define ERR_UMODEUNKNOWNFLAG " 501 "  // Unknown user mode flag
 #define ERR_USERSDONTMATCH " 502 "	  // Users don't match
+
+#define END "\r\n"	// End of line

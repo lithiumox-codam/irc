@@ -173,7 +173,7 @@ int User::sendToSocket() {
 	if (this->out_buffer.empty()) {
 		return 0;
 	}
-	cout << "Sending to socket " << socket << ":" << this->out_buffer << endl;
+	cout << "Sending to socket " << socket << ":" << this->out_buffer << "\n";
 	int bytesRead = send(socket, out_buffer.data(), out_buffer.size(), 0);
 	if (bytesRead == -1) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
