@@ -47,7 +47,7 @@ bool CAP(stringstream &stream, string &args, User &user) {
 	if (command == "LS") {
 		stream << "CAP * LS :multi-prefix" << END;
 	} else if (command == "REQ") {
-		stream << "CAP * ACK ";
+		stream << "CAP * ACK :";
 		for (const string &token : tokens) {
 			stream << token << " ";
 		}
