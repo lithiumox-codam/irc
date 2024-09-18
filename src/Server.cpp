@@ -6,10 +6,12 @@
 
 #include <array>
 #include <cerrno>
+#include <climits>
 #include <cstring>
 #include <iostream>
 #include <string>
 #include <vector>
+#include <limits.h>
 
 #include "General.hpp"
 #include "User.hpp"
@@ -17,11 +19,12 @@
 extern Server server;
 
 Server::Server() : socket(0), port(0), running(false) {
-	string hostname((int)ServerConfig::BUFFER_SIZE, '\0');
-
 	try {
-		gethostname(hostname.data(), hostname.size());
-		this->hostname = hostname;
+		this->hostname = getenv("HOSTNAME");
+		if (this->hostname.empty()) {
+			this->hostname = "localhost";
+		}
+		cerr << "Hostname: " << this->hostname << '\n';
 	} catch (const exception &e) {
 		cerr << "Error: " << e.what() << '\n';
 	}
