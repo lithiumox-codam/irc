@@ -11,7 +11,6 @@
 extern Server server;
 
 bool NICK(stringstream &stream, string &args, User &user) {
-	cout << "User " << user.getNickname() << " has changed their nickname to " << args << "\n";
 	if (args.empty()) {
 		stream.flush();
 		return false;
@@ -26,6 +25,10 @@ bool NICK(stringstream &stream, string &args, User &user) {
 	return true;
 }
 
+/**
+ * @brief The USER command is used at the beginning of connection to specify the username, hostname, servername and
+ * realname of a new user.
+ */
 bool USER(std::stringstream &stream, string &args, User &user) {
 	vector<string> tokens = split(args, ' ');
 	if (tokens.size() < 4) {
@@ -38,7 +41,6 @@ bool USER(std::stringstream &stream, string &args, User &user) {
 	user.setHostname(tokens[2]);
 	user.addHandshake(U_USER);
 
-	// stream the response to the user this has to be valid irc response
 	stream << ":" << user.getNickname() << " USER " << user.getUsername() << " " << user.getHostname() << " "
 		   << server.getHostname() << " :" << user.getRealname() << "\r\n";
 	return true;

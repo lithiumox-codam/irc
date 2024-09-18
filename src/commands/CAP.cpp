@@ -44,9 +44,9 @@ bool CAP(stringstream &stream, string &args, User &user) {
 	tokens.erase(tokens.begin());
 
 	if (command == "LS") {
-		stream << "CAP * LS :multi-prefix sasl";
+		stream << "CAP * LS :multi-prefix sasl" << "\r\n";
 	} else if (command == "REQ") {
-		stream << ":localhost CAP * NAK ";
+		stream << ":localhost CAP * NAK " << "\r\n";
 		for (const string &token : tokens) {
 			stream << token << " ";
 		}
@@ -54,8 +54,8 @@ bool CAP(stringstream &stream, string &args, User &user) {
 	} else if (command == "END") {
 		return true;
 	} else {
-		stream.flush();
-		stream << ":localhost 421 " + user.getNickname() + " CAP :Unknown command\r\n";
+		stream.str("");
+		stream << startRes(RPL_ISUPPORT) + user.getNickname() + " CAP :Unknown command" << "\r\n";
 		return false;
 	}
 

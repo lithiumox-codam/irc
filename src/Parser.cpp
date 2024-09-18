@@ -31,12 +31,13 @@ bool parse(User &user) {
 	try {
 		string &buffer = user.getInBuffer();
 		if (buffer.empty()) {
-			return false;
+			return true;
 		}
 		for (const auto &pair : store) {
 			size_t found = buffer.find(pair.first);
 			if (found != string::npos) {
 				string args = getArgs(buffer, found);
+				cout << "Command found: " << pair.first << " with args: " << args << '\n';
 				if (!pair.second(stream, args, user)) {
 					return false;
 				}
@@ -45,7 +46,8 @@ bool parse(User &user) {
 	} catch (const runtime_error &e) {
 		return false;
 	}
-	user.addToBuffer(stream.str() + "\r\n");
+	user.addToBuffer(stream.str());
+	cout << "TEST: " << user.getOutBuffer() << '\n';
 	stream.str("");
 	return true;
 }

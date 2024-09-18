@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "Codes.hpp"
 #include "User.hpp"
 
 using namespace std;
@@ -30,6 +31,7 @@ using namespace std;
 
 /* Utils */
 vector<string> split(const string& str, const char& delim);
+string startRes(const string& code);
 
 bool CAP(stringstream& stream, string& args, User& user);
 bool NICK(stringstream& stream, string& args, User& user);

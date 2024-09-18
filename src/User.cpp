@@ -179,9 +179,10 @@ int User::sendToSocket() {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			return 0;
 		}
-		this->out_buffer.erase(0, bytesRead);
+		cerr << "Error: send failed" << "\n";
 		return bytesRead;  // handle not being sent before this?
 	}
+	this->out_buffer.erase(0, bytesRead);
 	return bytesRead;
 }
 
