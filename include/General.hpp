@@ -40,6 +40,7 @@ bool PASS(stringstream& stream, string& args, User& user);
 bool INFO(stringstream& stream, string& args, User& user);
 bool JOIN(stringstream& stream, string& args, User& user);
 bool PING(stringstream& stream, string& args, User& user);
+bool MOTD(stringstream& stream, string& args, User& user);
 
 /**
  * @brief The store array is a map of PacketType and the key to look for in a message.

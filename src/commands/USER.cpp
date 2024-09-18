@@ -33,7 +33,7 @@ static vector<string> user_split(string &args) {
  * @brief The USER command is used at the beginning of connection to specify the username, hostname, servername and
  * realname of a new user.
  */
-bool USER(std::stringstream &stream, string &args, User &user) {
+bool USER(stringstream &stream, string &args, User &user) {
 	if (user.hasHandshake(U_USER)) {
 		stream << startRes(ERR_ALREADYREGISTRED) << user.getNickname() << " :You may not reregister" << END;
 		return false;

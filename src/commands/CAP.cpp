@@ -1,7 +1,5 @@
 #include <arpa/inet.h>
 
-#include <iostream>
-
 #include "General.hpp"
 #include "Server.hpp"
 #include "User.hpp"
@@ -32,12 +30,7 @@ bool CAP(stringstream &stream, string &args, User &user) {
 		stream << "Error: CAP command is invalid" << "\n";
 		return false;
 	}
-	try {
-		user.addHandshake(U_INFO);
-	} catch (const runtime_error &e) {
-		stream << "Error: " << e.what() << "\n";
-		return false;
-	}
+	user.addHandshake(U_INFO);
 
 	vector<string> tokens = split(args, ' ');
 
@@ -53,11 +46,8 @@ bool CAP(stringstream &stream, string &args, User &user) {
 		}
 		stream << END;
 	} else if (command == "END") {
-		stream << startRes(RPL_MOTDSTART) << user.getNickname() << " :- " << server.getHostname()
-			   << " Message of the day - " << END;
-		stream << startRes(RPL_MOTD) << user.getNickname() << " :- Welcome to the Internet Relay Network "
-			   << server.getHostname() << END;
-		stream << startRes(RPL_ENDOFMOTD) << user.getNickname() << " :End of /MOTD command." << END;
+		string empty;
+		MOTD(stream, empty, user);
 		return true;
 	} else {
 		stream.str("");
