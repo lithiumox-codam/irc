@@ -39,6 +39,5 @@ string startRes(const string &code) {
 	string res;
 	res.append(server.getHostname());
 	res.append(code);
-	res.append(" ");
 	return res;
 }
