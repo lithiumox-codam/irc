@@ -32,7 +32,7 @@ bool parse(User &user) {
 		if (buffer.empty()) {
 			return true;
 		}
-		cout << "Buffer: " << buffer << '\n';
+		// cout << "Buffer: " << buffer << '\n';
 		for (const auto &pair : store) {
 			size_t found = buffer.find(pair.first);
 			if (found != string::npos) {
@@ -49,7 +49,7 @@ bool parse(User &user) {
 		return false;
 	}
 	user.addToBuffer(stream.str());
-	cout << "TEST: " << user.getOutBuffer() << '\n';
+	// cout << "TEST: " << user.getOutBuffer() << '\n';
 	stream.str("");
 	return true;
 }

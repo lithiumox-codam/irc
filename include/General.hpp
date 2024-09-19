@@ -48,7 +48,6 @@ bool MOTD(stringstream& stream, string& args, User& user);
  * not be able to find the key in the message.
  */
 // have a function poitner to the function that will be called
-const std::map<string, bool (*)(stringstream&, string&, User&)> store = {
-	{"PASS", PASS}, {"CAP", CAP}, {"NICK", NICK}, {"USER", USER}, {"INFO", INFO}, {"JOIN", JOIN}, {"PING", PING}};
+const std::map<string, bool (*)(stringstream&, string&, User&)> store = {{"PASS", PASS}, {"CAP", CAP},	 {"NICK", NICK}, {"MOTD", MOTD}, {"USER", USER}, {"INFO", INFO}, {"JOIN", JOIN}, {"PING", PING}};
 
 bool parse(User& user);
