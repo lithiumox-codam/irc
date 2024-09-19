@@ -19,18 +19,7 @@
 
 extern Server server;
 
-Server::Server() : socket(0), port(0), running(false) {
-	try {
-		getDotEnv();
-		this->hostname = getenv("HOSTNAME");
-		if (this->hostname.empty()) {
-			this->hostname = "localhost";
-		}
-		cerr << "Hostname: " << this->hostname << '\n';
-	} catch (const exception &e) {
-		cerr << "Error: " << e.what() << '\n';
-	}
-}
+Server::Server() : socket(0), port(0), running(false) {}
 
 Server::~Server() { this->stop(); }
 
@@ -297,3 +286,5 @@ Channel &Server::getChannel(const string &name) {
 }
 
 const string &Server::getHostname() { return this->hostname; }
+
+bool Server::isBound() const { return this->socket != 0; }

@@ -45,9 +45,14 @@ bool CAP(stringstream &stream, string &args, User &user) {
 			stream << token << " ";
 		}
 		stream << END;
-	} else if (command == "END" && user.hasHandshake(U_COMPLETED)) {
-		string empty;
-		MOTD(stream, empty, user);
+	} else if (command == "END") {
+		if (user.hasHandshake(U_AUTHENTICATED)) {
+			string empty;
+			MOTD(stream, empty, user);
+			user.addHandshake(U_WELCOME);
+		} else {
+			stream << startRes(ERR_PASSWDMISMATCH) + user.getNickname() + " :Password incorrect" << END;
+		}
 		return true;
 	} else {
 		stream.str("");

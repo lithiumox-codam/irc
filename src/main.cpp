@@ -24,16 +24,25 @@ void signalHandler(int signum) {
 }
 
 int main(int argc, char **argv) {
-	(void)argv;
 	signal(SIGINT, signalHandler);
 	signal(SIGTERM, signalHandler);
-	if (argc != 3) {
-		cerr << "Usage: ./ircserver [port] [password]" << '\n';
-		return 1;
+	getEnv();
+	if (server.getPassword().empty() && server.getHostname().empty() && !server.isBound()) {
+		if (argc != 3) {
+			cerr << "Error: Password, port, and hostname not set by env. Please provide them like:" << '\n';
+			cerr << "./ircserver [port] [password]" << '\n';
+			return 1;
+		}
+		server.bindSocket(argv[1]);
+		server.setPassword(argv[2]);
+	} else {
+		if (server.getPassword().empty() || !server.isBound()) {
+			cerr << "Error: Password and/or port not set by env. Please provide them like:" << '\n';
+			cerr << "./ircserver [port] [password]" << '\n';
+			return 1;
+		}
 	}
 
-	// server.bindSocket(argv[1]);
-	// server.setPassword(argv[2]);
 	server.start();
 	return 0;
 }

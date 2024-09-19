@@ -14,9 +14,9 @@
 using namespace std;
 
 /* env related */
-void getDotEnv();
+bool getEnv();
 
-enum class ServerConfig {
+enum class ServerConfig : std::uint16_t {
 	BACKLOG = 10,
 	MAX_EVENTS = 10,
 	BUFFER_SIZE = 1024,
@@ -46,6 +46,7 @@ class Server {
 
 	// Public Methods
 	void bindSocket(const string &portString);
+	bool isBound() const;
 	void setHostname(const string &hostString);
 
 	void start();
