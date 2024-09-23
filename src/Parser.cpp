@@ -1,5 +1,3 @@
-#include <iostream>
-#include <ostream>
 #include <string>
 
 #include "General.hpp"
@@ -32,12 +30,10 @@ bool parse(User &user) {
 		if (buffer.empty()) {
 			return true;
 		}
-		// cout << "Buffer: " << buffer << '\n';
 		for (const auto &pair : store) {
 			size_t found = buffer.find(pair.first);
 			if (found != string::npos) {
 				string args = getArgs(buffer, found);
-				cout << "Command found: " << pair.first << " with args: " << args << '\n';
 				if (!pair.second(stream, args, user)) {
 					user.addToBuffer(stream.str());
 					stream.str("");
@@ -49,7 +45,6 @@ bool parse(User &user) {
 		return false;
 	}
 	user.addToBuffer(stream.str());
-	// cout << "TEST: " << user.getOutBuffer() << '\n';
 	stream.str("");
 	return true;
 }

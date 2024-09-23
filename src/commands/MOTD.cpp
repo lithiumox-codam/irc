@@ -1,3 +1,4 @@
+#include "Codes.hpp"
 #include "General.hpp"
 #include "Server.hpp"
 

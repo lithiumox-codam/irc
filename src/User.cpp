@@ -14,10 +14,10 @@
 
 extern Server server;
 
-User::User(int socket) : socket(socket), handshake(0) { cout << "Creating user with socket: " << this->socket << endl; }
+User::User(int socket) : socket(socket), handshake(0) { cout << "Creating user with socket: " << this->socket << "\n"; }
 
 User::User(User &&user) noexcept {
-	cout << "Moving user " << user.nickname << ": " << user.socket << endl;
+	cout << "Moving user " << user.nickname << ": " << user.socket << "\n";
 
 	this->socket = user.socket;
 	user.socket = -1;
@@ -30,8 +30,8 @@ User::User(User &&user) noexcept {
 	this->in_buffer = std::move(user.in_buffer);
 }
 
-auto User::operator=(User &&user) noexcept -> User & {
-	cout << "Moving user " << user.nickname << ": " << user.socket << endl;
+User &User::operator=(User &&user) noexcept {
+	cout << "Moving user " << user.nickname << ": " << user.socket << "\n";
 
 	this->socket = user.socket;
 	user.socket = -1;
@@ -90,43 +90,9 @@ void User::setHostname(string &hostname) { this->hostname = std::move(hostname);
 
 void User::addHandshake(unsigned int handshake) { this->handshake |= handshake; }
 
-void User::printHandshake() const {
-	cout << "Handshake contains: [";
-	if (this->hasHandshake(U_USER)) {
-		cout << "U_USER ";
-	}
-	if (this->hasHandshake(U_NICK)) {
-		cout << "U_NICK ";
-	}
-	if (this->hasHandshake(U_AUTHENTICATED)) {
-		cout << "U_AUTHENTICATED ";
-	}
-	if (this->hasHandshake(U_INFO)) {
-		cout << "U_INFO ";
-	}
-	if (this->hasHandshake(U_WELCOME)) {
-		cout << "U_WELCOME ";
-	}
-	cout << "]"
-		 << "\n";
-}
-
 unsigned int User::getHandshake() const { return this->handshake; }
 
 bool User::hasHandshake(unsigned int handshake) const { return (this->handshake & handshake) == handshake; }
-
-void User::printUser() const {
-	cout << "======================"
-		 << "\n";
-	cout << setw(10) << left << "Username:" << this->username << "\n";
-	cout << setw(10) << left << "Nickname:" << this->nickname << "\n";
-	cout << setw(10) << left << "Realname:" << this->realname << "\n";
-	cout << setw(10) << left << "Hostname:" << this->hostname << "\n";
-	cout << setw(10) << left << "Socket:" << this->socket << "\n";
-	this->printHandshake();
-	cout << "======================"
-		 << "\n";
-}
 
 int User::readFromSocket() {
 	vector<char> buffer(UserConfig::BUFFER_SIZE);
@@ -145,27 +111,56 @@ int User::readFromSocket() {
 	return bytesRead;
 }
 
-string User::getNextCommand(string &buffer) {
-	if (buffer.empty()) {
-		throw runtime_error("Buffer is empty");
-	}
-	if (buffer.find("\r\n") == string::npos) {
-		throw runtime_error("No command found");
-	}
-
-	string command = buffer.substr(0, buffer.find("\r\n") + 2);
-	buffer.erase(0, command.size());
-	return command;
-}
-
 void User::addToBuffer(const string &data) { this->out_buffer.append(data); };
 
 void User::clearInBuffer() { this->in_buffer.clear(); }
 
 void User::clearOutBuffer() { this->out_buffer.clear(); }
 
-auto operator<<(std::ostream &stream, const User &user) -> std::ostream & {
-	stream << "Username: [" << user.getNickname() << "]  socket: [" << user.getSocket() << "]";
+ostream &operator<<(std::ostream &stream, const User &user) {
+	const int WIDTH = 52;
+	const std::map<unsigned int, char> handshakeMap = {
+		{U_INFO, 'I'}, {U_USER, 'U'}, {U_NICK, 'N'}, {U_AUTHENTICATED, 'A'}, {U_WELCOME, 'W'}};
+
+	// NOLINTNEXTLINE
+	auto line = [](char l, char m, char r) { return l + std::string(WIDTH - 2, m) + r; };
+
+	auto center = [](const std::string &text, int width) {
+		int padding = width - text.length();
+		int lpad = padding / 2;
+		int rpad = padding - lpad;
+		return std::string(lpad, ' ') + text + std::string(rpad, ' ');
+	};
+
+	auto formatField = [](const std::string &label, const std::string &value) {
+		std::ostringstream oss;
+		// NOLINTNEXTLINE
+		oss << "| " << std::left << std::setw(10) << label << "| " << std::left << std::setw(37) << value << "|";
+		return oss.str();
+	};
+
+	std::string handshakeStr;
+	for (const auto &pair : handshakeMap) {
+		if (user.hasHandshake(pair.first)) {
+			handshakeStr += "[" + std::string(1, pair.second) + "] ";
+		}
+	}
+	if (!handshakeStr.empty()) {
+		handshakeStr.pop_back();
+	}
+
+	stream << line('+', '-', '+') << "\n";
+	stream << "|" << center("** User Information **", WIDTH - 2) << "|\n";
+	stream << line('+', '-', '+') << "\n";
+	stream << formatField("Nickname", user.getNickname()) << "\n";
+	stream << formatField("Username", user.getUsername()) << "\n";
+	stream << formatField("Realname", user.getRealname()) << "\n";
+	stream << formatField("Hostname", user.getHostname()) << "\n";
+	stream << formatField("Socket", std::to_string(user.getSocket())) << "\n";
+	stream << line('+', '-', '+') << "\n";
+	stream << formatField("Handshake", handshakeStr) << "\n";
+	stream << line('+', '-', '+') << "\n";
+
 	return stream;
 }
 

@@ -1,8 +1,10 @@
+#include <iostream>
+
 #include "Codes.hpp"
 #include "General.hpp"
 
 bool INFO(stringstream &stream, string &args, User &user) {
-	user.printUser();
+	cout << user << endl;
 
 	if (args.empty()) {
 		stream << startRes(ERR_NEEDMOREPARAMS) << user.getNickname() << " :Not enough parameters" << END;
