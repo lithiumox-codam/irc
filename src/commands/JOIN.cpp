@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include "General.hpp"
+#include "Codes.hpp"
 #include "Server.hpp"
 #include "User.hpp"
 #include "Channel.hpp"
