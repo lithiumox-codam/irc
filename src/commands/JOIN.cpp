@@ -58,7 +58,6 @@ bool JOIN(stringstream &stream, string &args, User &user) {
 			return false;
 		}
 		try {
-			server.getChannel(token.first);
 			if (!token.second.empty() && server.getChannel(token.first).hasModes(M_PASSWORD) && server.getChannel(token.first).getPassword() != token.second) {
 				stream << startRes(ERR_BADCHANNELKEY) << user.getNickname() << " " << token.first << " :Cannot join channel (+k)" << END;
 				return false;
