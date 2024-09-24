@@ -29,6 +29,10 @@ auto Channel::operator=(const Channel &channel) noexcept -> Channel & {
 
 const string &Channel::getName() const { return this->name; }
 
+const string &Channel::getPassword() const { return this->password; }
+
+void Channel::setPassword(const string &password) { this->password = password; }
+
 void Channel::setName(const string &name) { this->name = name; }
 
 void Channel::addUser(User &user) { this->members.emplace_back(std::move(user)); }
@@ -81,4 +85,16 @@ void Channel::printModes() const {
 	if (this->hasModes(M_PASSWORD)) {
 		cout << "  +k (password protected)" << "\n";
 	}
+}
+
+ostream &operator<<(ostream &stream, Channel &channel) {
+	stream << "Channel: " << channel.getName() << "\n";
+	stream << "Password: " << channel.getPassword() << "\n";
+	stream << "Modes: " << channel.getModes() << "\n";
+	stream << "Members: " << "\n";
+	std::vector<ChannelMember> members = channel.getMembers();
+	for (const auto &member : members) {
+		stream << member.getUsername() << "\n";
+	}
+	return stream;
 }

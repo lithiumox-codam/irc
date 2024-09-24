@@ -31,6 +31,9 @@ class Channel {
 	[[nodiscard]] const string &getName() const;
 	void setName(const std::string &name);
 
+	[[nodiscard]] const string &getPassword() const;
+	void setPassword(const std::string &password);
+
 	void addUser(User &user);
 	void removeUser(User &user);
 	bool hasUser(User &user) const;
@@ -44,3 +47,5 @@ class Channel {
 	[[nodiscard]] bool hasModes(unsigned int modes) const;
 	void printModes() const;
 };
+
+ostream &operator<<(ostream &stream, Channel &channel);

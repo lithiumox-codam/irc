@@ -66,7 +66,7 @@ class Server {
 	[[nodiscard]] User &getUser(int socket);
 	[[nodiscard]] const vector<User> &getUsers() const;
 
-	Channel &addChannel(string &channelName);
+	Channel &addChannel(const string &channelName);
 	void removeChannel(Channel &channel);
 	[[nodiscard]] vector<Channel> &getChannels();
 	[[nodiscard]] Channel &getChannel(const string &name);
@@ -74,3 +74,5 @@ class Server {
 
    private:
 };
+
+ostream &operator<<(ostream &stream, Server &server);

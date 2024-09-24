@@ -263,7 +263,7 @@ void Server::removeUser(User &user) {
 	}
 }
 
-Channel &Server::addChannel(string &channelName) { return this->channels.emplace_back(channelName); }
+Channel &Server::addChannel(const string &channelName) { return this->channels.emplace_back(channelName); }
 
 void Server::removeChannel(Channel &channel) {
 	for (auto it = this->channels.begin(); it != this->channels.end(); ++it) {
@@ -288,3 +288,19 @@ Channel &Server::getChannel(const string &name) {
 const string &Server::getHostname() { return this->hostname; }
 
 bool Server::isBound() const { return this->socket != 0; }
+
+ostream &operator<<(ostream &stream, Server &server) {
+	stream << "Server: " << server.getHostname() << '\n';
+	stream << "Password: " << server.getPassword() << '\n';
+	std::vector channels = server.getChannels();
+	stream << "Channels: " << '\n';
+	for (auto &channel : channels) {
+		stream << channel << '\n';
+	}
+	stream << "Users: " << '\n';
+	std::vector users = server.getUsers();
+	for (auto &user : users) {
+		stream << user << '\n';
+	}
+	return stream;
+}
