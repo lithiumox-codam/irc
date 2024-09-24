@@ -2,12 +2,12 @@
 
 #include <iostream>
 
-ChannelMember::ChannelMember(User &&user) : User(std::move(user)), modes(0) {}
+ChannelMember::ChannelMember(const User &user) : User(user), modes(0) {}
 
-ChannelMember::ChannelMember(ChannelMember &&member) noexcept : User(std::move(member)), modes(member.modes) {}
+ChannelMember::ChannelMember(const ChannelMember &member) noexcept : User(member), modes(member.modes) {}
 
-auto ChannelMember::operator=(ChannelMember &&member) noexcept -> ChannelMember & {
-	User::operator=(std::move(member));
+auto ChannelMember::operator=(const ChannelMember &member) noexcept -> ChannelMember & {
+	User::operator=(member);
 	this->modes = member.modes;
 	return *this;
 }

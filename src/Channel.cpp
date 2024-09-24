@@ -7,20 +7,22 @@
 
 using namespace std;
 
-Channel::Channel(string &name) : name(std::move(name)), modes(0) {}
+Channel::Channel() : modes(0) {};
 
-Channel::Channel(Channel &&channel) noexcept
-	: members(std::move(channel.members)),
-	  name(std::move(channel.name)),
-	  password(std::move(channel.password)),
-	  topic(std::move(channel.password)),
+Channel::Channel(const string &name) : name(name), modes(0) {}
+
+Channel::Channel(const Channel &channel) noexcept
+	: members(channel.members),
+	  name(channel.name),
+	  password(channel.password),
+	  topic(channel.password),
 	  modes(channel.modes) {}
 
-auto Channel::operator=(Channel &&channel) noexcept -> Channel & {
-	this->members = std::move(channel.members);
-	this->name = std::move(channel.name);
-	this->password = std::move(channel.password);
-	this->topic = std::move(channel.topic);
+auto Channel::operator=(const Channel &channel) noexcept -> Channel & {
+	this->members = channel.members;
+	this->name = channel.name;
+	this->password = channel.password;
+	this->topic = channel.topic;
 	this->modes = channel.modes;
 	return *this;
 }
@@ -29,7 +31,7 @@ const string &Channel::getName() const { return this->name; }
 
 void Channel::setName(const string &name) { this->name = name; }
 
-void Channel::addUser(User &&user) { this->members.emplace_back(std::move(user)); }
+void Channel::addUser(User &user) { this->members.emplace_back(std::move(user)); }
 
 void Channel::removeUser(User &user) {
 	for (auto it = this->members.begin(); it != this->members.end(); ++it) {

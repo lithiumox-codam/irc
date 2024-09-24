@@ -21,16 +21,17 @@ class Channel {
 	unsigned int modes;
 
    public:
-	Channel(string &name);
-	Channel(Channel &channel) = delete;
-	auto operator=(Channel &channel) -> Channel & = delete;
-	Channel(Channel &&channel) noexcept;
-	auto operator=(Channel &&channel) noexcept -> Channel &;
+	Channel();
+	Channel(const string &name);
+	// Channel(Channel &channel) = delete;
+	// auto operator=(Channel &channel) -> Channel;
+	Channel(const Channel &channel) noexcept;
+	auto operator=(const Channel &channel) noexcept -> Channel &;
 
 	[[nodiscard]] const string &getName() const;
 	void setName(const std::string &name);
 
-	void addUser(User &&user);
+	void addUser(User &user);
 	void removeUser(User &user);
 	bool hasUser(User &user) const;
 

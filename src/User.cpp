@@ -16,32 +16,34 @@ extern Server server;
 
 User::User(int socket) : socket(socket), handshake(0) { cout << "Creating user with socket: " << this->socket << endl; }
 
-User::User(User &&user) noexcept {
-	cout << "Moving user " << user.nickname << ": " << user.socket << endl;
+User::User(const User &user) noexcept {
+	cout << "Copying user " << user.nickname << ": " << user.socket << endl;
 
 	this->socket = user.socket;
-	user.socket = -1;
-
-	this->username = std::move(user.username);
-	this->nickname = std::move(user.nickname);
-	this->realname = std::move(user.realname);
-	this->hostname = std::move(user.hostname);
+	this->username = user.username;
+	this->nickname = user.nickname;
+	this->realname = user.realname;
+	this->hostname = user.hostname;
 	this->handshake = user.handshake;
-	this->in_buffer = std::move(user.in_buffer);
+	this->in_buffer = user.in_buffer;
+	this->out_buffer = user.out_buffer;
 }
 
-auto User::operator=(User &&user) noexcept -> User & {
-	cout << "Moving user " << user.nickname << ": " << user.socket << endl;
+auto User::operator=(const User &user) noexcept -> User & {
+	cout << "Copying user " << user.nickname << ": " << user.socket << endl;
+
+	if (this == &user) {
+		return *this;
+	}
 
 	this->socket = user.socket;
-	user.socket = -1;
-
-	this->username = std::move(user.username);
-	this->nickname = std::move(user.nickname);
-	this->realname = std::move(user.realname);
-	this->hostname = std::move(user.hostname);
+	this->username = user.username;
+	this->nickname = user.nickname;
+	this->realname = user.realname;
+	this->hostname = user.hostname;
 	this->handshake = user.handshake;
-	this->in_buffer = std::move(user.in_buffer);
+	this->in_buffer = user.in_buffer;
+	this->out_buffer = user.out_buffer;
 
 	return *this;
 }
