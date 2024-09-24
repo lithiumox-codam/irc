@@ -1,10 +1,12 @@
 #include "IRStream.hpp"
 
+extern Server server;
+
 IRStream &IRStream::command(const string &cmd) {
 	if (!str().empty()) {
-		finalizeCommand();
+		end();
 	}
-	*this << ":" << server->getHostname() << " " << cmd;
+	*this << ":" << server.getHostname() << " " << cmd;
 	return *this;
 }
 
