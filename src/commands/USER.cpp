@@ -2,33 +2,29 @@
 
 #include <iostream>
 
+#include "Codes.hpp"
 #include "General.hpp"
 #include "Server.hpp"
 
 extern Server server;
 
 /**
- * @brief Splits the incoming arguments for the USER command.
+ * @brief Makes it so that the realname is not split by spaces.
  *
- * @info This function is used to properly get the realname of the user. The realname can contain spaces, so we need to
- * split the string by spaces first and then join the rest of the arguments to get the realname.
- *
- * @param args The arguments of the USER command. e.g. "username hostname servername :realname"
- * @return vector<string>
+ * @param args The split arguments of the USER command.
+ * @return The arguments of the USER command with the realname as one string.
  */
-static vector<string> user_split(string &args) {
-	vector<string> tokens = split(args, ' ');
+static void correct_realname(vector<string> &args) {
 	string realname;
-	for (size_t i = 3; i < tokens.size(); i++) {
-		realname += tokens[i];
-		if (i + 1 < tokens.size()) {
+	for (size_t i = 3; i < args.size(); i++) {
+		realname += args[i];
+		if (i + 1 < args.size()) {
 			realname += " ";
 		}
 	}
 	realname.erase(0, realname.find_first_not_of(':'));
-	tokens.erase(tokens.begin() + 3, tokens.end());
-	tokens.push_back(realname);
-	return tokens;
+	args.erase(args.begin() + 3, args.end());
+	args.push_back(realname);
 }
 
 /**
@@ -40,7 +36,8 @@ bool USER(stringstream &stream, string &args, User &user) {
 		stream << startRes(ERR_ALREADYREGISTRED) << user.getNickname() << " :You may not reregister" << END;
 		return false;
 	}
-	vector<string> tokens = user_split(args);
+	vector<string> tokens = split(args, ' ');
+	correct_realname(tokens);
 	if (tokens.size() < 4) {
 		cerr << "Error: USER packet has less than 4 arguments" << "\n";
 		return false;

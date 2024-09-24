@@ -1,5 +1,4 @@
-#include <iostream>
-
+#include "Codes.hpp"
 #include "General.hpp"
 #include "Server.hpp"
 
@@ -37,6 +36,6 @@ bool MOTD(stringstream &stream, string &args, User &user) {
 		return true;
 	}
 	stream.str("");
-	stream << startRes(ERR_NEEDMOREPARAMS) << user.getNickname() << " :Not enough parameters" << END;
+	stream << startRes(ERR_NEEDMOREPARAMS) << user.getNickname() << " :Outside of project scope!" << END;
 	return false;
 }

@@ -1,5 +1,8 @@
 #include <arpa/inet.h>
 
+#include <iostream>
+
+#include "Codes.hpp"
 #include "General.hpp"
 #include "Server.hpp"
 #include "User.hpp"
@@ -50,6 +53,7 @@ bool CAP(stringstream &stream, string &args, User &user) {
 			string empty;
 			MOTD(stream, empty, user);
 			user.addHandshake(U_WELCOME);
+			cout << user << endl;
 		} else {
 			stream << startRes(ERR_PASSWDMISMATCH) + user.getNickname() + " :Password incorrect" << END;
 		}

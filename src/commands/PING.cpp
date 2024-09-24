@@ -1,5 +1,6 @@
 #include <vector>
 
+#include "Codes.hpp"
 #include "General.hpp"
 
 bool PING(stringstream &stream, string &args, User &user) {
