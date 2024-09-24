@@ -4,106 +4,183 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <iomanip>
 #include <iostream>
 #include <vector>
 
 #include "General.hpp"
+#include "Server.hpp"
 
-User::User(int socket) : socket(socket), handshake(0) {}
+extern Server server;
 
-User::~User() { close(this->socket); }
+User::User(int socket) : socket(socket), handshake(0) { cout << "Creating user with socket: " << this->socket << "\n"; }
 
-auto User::getSocket() const -> int { return this->socket; }
+User::User(const User &user) noexcept {
+	cout << "Copying user " << user.nickname << ": " << user.socket << endl;
 
-auto User::getUsername() const -> const string & { return this->username; };
+	this->socket = user.socket;
+	this->username = user.username;
+	this->nickname = user.nickname;
+	this->realname = user.realname;
+	this->hostname = user.hostname;
+	this->handshake = user.handshake;
+	this->in_buffer = user.in_buffer;
+	this->out_buffer = user.out_buffer;
+}
 
-auto User::getNickname() const -> const string & { return this->nickname; }
+auto User::operator=(const User &user) noexcept -> User & {
+	cout << "Copying user " << user.nickname << ": " << user.socket << endl;
 
-void User::setNickname(const string &nickname) { this->nickname = nickname; }
+	if (this == &user) {
+		return *this;
+	}
 
-void User::setUsername(const string &username) { this->username = username; }
+	this->socket = user.socket;
+	this->username = user.username;
+	this->nickname = user.nickname;
+	this->realname = user.realname;
+	this->hostname = user.hostname;
+	this->handshake = user.handshake;
+	this->in_buffer = user.in_buffer;
+	this->out_buffer = user.out_buffer;
 
-void User::setRealname(const string &realname) { this->realname = realname; }
+	return *this;
+}
 
-void User::setHostname(const string &hostname) { this->hostname = hostname; }
+void User::closeSocket() {
+	if (this->socket == -1) {
+		return;
+	}
+
+	if (shutdown(this->socket, SHUT_RDWR) == -1) {
+		if (errno == ENOTCONN) {
+			cerr << "Error: socket not connected" << "\n";
+		} else if (errno == ENOTSOCK) {
+			cerr << "Error: socket is not a socket" << "\n";
+		} else if (errno == EBADF) {
+			cerr << "Error: socket is not a valid file descriptor" << "\n";
+		} else {
+			cerr << "Error: shutdown failed" << "\n";
+		}
+		cerr << "Error: shutdown failed" << "\n";
+	}
+	if (close(this->socket) == -1) {
+		cerr << "Error: close failed" << "\n";
+	}
+
+	this->socket = -1;
+}
+
+int User::getSocket() const { return this->socket; }
+
+const string &User::getNickname() const { return this->nickname; }
+
+const string &User::getUsername() const { return this->username; };
+
+const string &User::getRealname() const { return this->realname; }
+
+const string &User::getHostname() const { return this->hostname; }
+
+void User::setNickname(string &nickname) { this->nickname = std::move(nickname); }
+
+void User::setUsername(string &username) { this->username = std::move(username); }
+
+void User::setRealname(string &realname) { this->realname = std::move(realname); }
+
+void User::setHostname(string &hostname) { this->hostname = std::move(hostname); }
 
 void User::addHandshake(unsigned int handshake) { this->handshake |= handshake; }
 
-void User::printHandshake() const {
-	cout << "Handshake contains: [";
-	if (this->hasHandshake(U_USER)) {
-		cout << "U_USER ";
-	}
-	if (this->hasHandshake(U_NICK)) {
-		cout << "U_NICK ";
-	}
-	if (this->hasHandshake(U_AUTHENTICATED)) {
-		cout << "U_AUTHENTICATED ";
-	}
-	if (this->hasHandshake(U_WELCOME)) {
-		cout << "U_WELCOME ";
-	}
-	cout << "]" << "\n";
-}
+unsigned int User::getHandshake() const { return this->handshake; }
 
-auto User::getHandshake() const -> unsigned int { return this->handshake; }
+bool User::hasHandshake(unsigned int handshake) const { return (this->handshake & handshake) == handshake; }
 
-auto User::hasHandshake(unsigned int handshake) const -> bool { return (this->handshake & handshake) == handshake; }
-
-void User::printUser() const {
-	cout << "======================" << "\n";
-	cout << setw(10) << left << "Username:" << this->username << "\n";
-	cout << setw(10) << left << "Nickname:" << this->nickname << "\n";
-	cout << setw(10) << left << "Realname:" << this->realname << "\n";
-	cout << setw(10) << left << "Hostname:" << this->hostname << "\n";
-	cout << setw(10) << left << "Socket:" << this->socket << "\n";
-	this->printHandshake();
-	cout << "======================" << "\n";
-}
-
-auto User::checkPacket() const -> bool {
-	if (this->context.empty()) {
-		return false;
-	}
-	if (!this->context.ends_with("\r\n")) {
-		return false;
-	}
-
-	unordered_map<PacketType, string> packet = parse(this->context);
-
-	for (auto &pair : packet) {
-		cout << pair.first << "\t" << pair.second << "\n";
-	}
-
-	packetProcessor(packet, this->socket);
-
-	return true;
-}
-
-auto User::readFromSocket() -> int {
+int User::readFromSocket() {
 	vector<char> buffer(UserConfig::BUFFER_SIZE);
 	int bytesRead = recv(this->socket, buffer.data(), buffer.size(), 0);
 
-	if (bytesRead == -1) {
-		cerr << "Error: recv failed" << "\n";
-		return 1;
-	}
-
-	if (bytesRead == 0) {
-		cerr << "Error: client disconnected" << "\n";
-		return 2;
+	if (bytesRead <= 0) {
+		return bytesRead;
 	}
 
 	buffer.push_back('\0');
 
-	this->context.append(buffer.data());
+	this->in_buffer.append(buffer.data());
 
-	cout << "Buffer for socket " << this->socket << ": " << this->context << "\n";
-
-	// This needs to only clear unti /r/n
-	if (this->checkPacket()) {
-		this->context.clear();
-	}
-	return 0;
+	parse(*this);
+	this->in_buffer.clear();
+	return bytesRead;
 }
+
+void User::addToBuffer(const string &data) { this->out_buffer.append(data); };
+
+void User::clearInBuffer() { this->in_buffer.clear(); }
+
+void User::clearOutBuffer() { this->out_buffer.clear(); }
+
+ostream &operator<<(std::ostream &stream, const User &user) {
+	const int WIDTH = 52;
+	const std::map<unsigned int, char> handshakeMap = {
+		{U_INFO, 'I'}, {U_USER, 'U'}, {U_NICK, 'N'}, {U_AUTHENTICATED, 'A'}, {U_WELCOME, 'W'}};
+
+	// NOLINTNEXTLINE
+	auto line = [](char l, char m, char r) { return l + std::string(WIDTH - 2, m) + r; };
+
+	auto center = [](const std::string &text, int width) {
+		int padding = width - text.length();
+		int lpad = padding / 2;
+		int rpad = padding - lpad;
+		return std::string(lpad, ' ') + text + std::string(rpad, ' ');
+	};
+
+	auto formatField = [](const std::string &label, const std::string &value) {
+		std::ostringstream oss;
+		// NOLINTNEXTLINE
+		oss << "| " << std::left << std::setw(10) << label << "| " << std::left << std::setw(37) << value << "|";
+		return oss.str();
+	};
+
+	std::string handshakeStr;
+	for (const auto &pair : handshakeMap) {
+		if (user.hasHandshake(pair.first)) {
+			handshakeStr += "[" + std::string(1, pair.second) + "] ";
+		}
+	}
+	if (!handshakeStr.empty()) {
+		handshakeStr.pop_back();
+	}
+
+	stream << line('+', '-', '+') << "\n";
+	stream << "|" << center("** User Information **", WIDTH - 2) << "|\n";
+	stream << line('+', '-', '+') << "\n";
+	stream << formatField("Nickname", user.getNickname()) << "\n";
+	stream << formatField("Username", user.getUsername()) << "\n";
+	stream << formatField("Realname", user.getRealname()) << "\n";
+	stream << formatField("Hostname", user.getHostname()) << "\n";
+	stream << formatField("Socket", std::to_string(user.getSocket())) << "\n";
+	stream << line('+', '-', '+') << "\n";
+	stream << formatField("Handshake", handshakeStr) << "\n";
+	stream << line('+', '-', '+') << "\n";
+
+	return stream;
+}
+
+int User::sendToSocket() {
+	int bytesRead = send(socket, out_buffer.data(), out_buffer.size(), 0);
+	if (bytesRead == -1) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			return 0;
+		}
+		cerr << "Error: send failed" << "\n";
+		return bytesRead;  // handle not being sent before this?
+	}
+	this->out_buffer.erase(0, bytesRead);
+	return bytesRead;
+}
+
+bool User::checkPacket() { return this->in_buffer.find("\r\n") != string::npos; }
+
+string &User::getInBuffer() { return this->in_buffer; }
+
+string &User::getOutBuffer() { return this->out_buffer; }

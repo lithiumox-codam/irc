@@ -7,13 +7,35 @@
 
 using namespace std;
 
-Channel::Channel(string &name) : name(std::move(name)), modes(0) {}
+Channel::Channel() : modes(0) {};
 
-auto Channel::getName() const -> const string & { return this->name; }
+Channel::Channel(const string &name) : name(name), modes(0) {}
+
+Channel::Channel(const Channel &channel) noexcept
+	: members(channel.members),
+	  name(channel.name),
+	  password(channel.password),
+	  topic(channel.password),
+	  modes(channel.modes) {}
+
+auto Channel::operator=(const Channel &channel) noexcept -> Channel & {
+	this->members = channel.members;
+	this->name = channel.name;
+	this->password = channel.password;
+	this->topic = channel.topic;
+	this->modes = channel.modes;
+	return *this;
+}
+
+const string &Channel::getName() const { return this->name; }
+
+const string &Channel::getPassword() const { return this->password; }
+
+void Channel::setPassword(const string &password) { this->password = password; }
 
 void Channel::setName(const string &name) { this->name = name; }
 
-void Channel::addUser(const User &user) { this->members.emplace_back(user); }
+void Channel::addUser(User &user) { this->members.emplace_back(std::move(user)); }
 
 void Channel::removeUser(User &user) {
 	for (auto it = this->members.begin(); it != this->members.end(); ++it) {
@@ -24,8 +46,9 @@ void Channel::removeUser(User &user) {
 	}
 }
 
-auto Channel::hasUser(User &user) const -> bool {
-	for (auto & member : this->members) {
+bool Channel::hasUser(User &user) const {
+	// NOLINTNEXTLINE
+	for (const auto &member : this->members) {
 		if (member.getSocket() == user.getSocket()) {
 			return true;
 		}
@@ -33,17 +56,17 @@ auto Channel::hasUser(User &user) const -> bool {
 	return false;
 }
 
-auto Channel::getMembers() -> std::vector<ChannelMember> & { return this->members; }
+std::vector<ChannelMember> &Channel::getMembers() { return this->members; }
 
 void Channel::setModes(unsigned int modes) { this->modes = modes; }
 
-auto Channel::getModes() const -> unsigned int { return this->modes; }
+unsigned int Channel::getModes() const { return this->modes; }
 
 void Channel::addModes(unsigned int modes) { this->modes |= modes; }
 
 void Channel::removeModes(unsigned int modes) { this->modes &= ~modes; }
 
-auto Channel::hasModes(unsigned int modes) const -> bool { return (this->modes & modes) == modes; }
+bool Channel::hasModes(unsigned int modes) const { return (this->modes & modes) == modes; }
 
 void Channel::printModes() const {
 	cout << "Modes for " << this->getName() << ":" << "\n";
@@ -62,4 +85,16 @@ void Channel::printModes() const {
 	if (this->hasModes(M_PASSWORD)) {
 		cout << "  +k (password protected)" << "\n";
 	}
+}
+
+ostream &operator<<(ostream &stream, Channel &channel) {
+	stream << "Channel: " << channel.getName() << "\n";
+	stream << "Password: " << channel.getPassword() << "\n";
+	stream << "Modes: " << channel.getModes() << "\n";
+	stream << "Members: " << "\n";
+	std::vector<ChannelMember> members = channel.getMembers();
+	for (const auto &member : members) {
+		stream << member.getUsername() << "\n";
+	}
+	return stream;
 }

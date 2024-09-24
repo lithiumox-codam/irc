@@ -13,17 +13,19 @@
 
 using namespace std;
 
-// NOLINTNEXTLINE
-enum class ServerConfig {
-   BACKLOG = 10,
-   MAX_EVENTS = 10,
-   BUFFER_SIZE = 1024,
+/* env related */
+bool getEnv();
+
+enum class ServerConfig : std::uint16_t {
+	BACKLOG = 10,
+	MAX_EVENTS = 10,
+	BUFFER_SIZE = 1024,
 };
 
 class Server {
    private:
 	vector<Channel> channels;  // List of channels
-	vector<User> users;	   // List of users
+	vector<User> users;		   // List of users
 
 	string password;  // Password for connecting to the server
 	string hostname;  // Hostname of the server
@@ -32,30 +34,45 @@ class Server {
 	int port;	   // Port number
 	bool running;  // Server running status
 
+	int epoll_fd;  // File descriptor for epoll
+
    public:
 	Server();
 	~Server();
 
 	// Getters and Setters
 	void setPassword(const string &password);
-	[[nodiscard]] auto getPassword() const -> const string &;
+	[[nodiscard]] const string &getPassword() const;
 
 	// Public Methods
 	void bindSocket(const string &portString);
+	bool isBound() const;
+	void setHostname(const string &hostString);
 
 	void start();
 	void stop();
 
-	void sendMessage(int client, const string &message);
+	void epollCreate();
+	void epollAdd(int socket);
+	void epollRemove(int socket);
+	void epollChange(int socket, uint32_t events);
+	void epollEvent(struct epoll_event &event);
+	int epollWait();
+	void handleEvents(array<struct epoll_event, 10> &events, int numberOfEvents);
+	void acceptNewConnection();
 
-	auto addUser(unsigned int socket) -> User &;
+	void addUser(unsigned int socket);
 	void removeUser(User &user);
-	[[nodiscard]] auto getUsers() const -> const vector<User> &;
+	[[nodiscard]] User &getUser(int socket);
+	[[nodiscard]] const vector<User> &getUsers() const;
 
-	auto addChannel(string &channelName) -> Channel &;
+	Channel &addChannel(const string &channelName);
 	void removeChannel(Channel &channel);
-	[[nodiscard]] auto getChannels() -> vector<Channel> &;
-	[[nodiscard]] auto getChannel(const string &name) -> Channel &;
+	[[nodiscard]] vector<Channel> &getChannels();
+	[[nodiscard]] Channel &getChannel(const string &name);
+	[[nodiscard]] const string &getHostname();
 
    private:
 };
+
+ostream &operator<<(ostream &stream, Server &server);

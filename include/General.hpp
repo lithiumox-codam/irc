@@ -1,8 +1,11 @@
 #pragma once
 
-#include <array>
+#include <map>
+#include <sstream>
 #include <string>
-#include <unordered_map>
+#include <vector>
+
+#include "User.hpp"
 
 using namespace std;
 
@@ -25,73 +28,27 @@ using namespace std;
 #define CYAN "\033[36m"
 #define WHITE "\033[37m"
 
-/*
- * Parser related definitions.
- */
- // NOLINTNEXTLINE
-enum class PacketType {
-	NONE = -1,
-	CAP,
-	PASS,
-	JOIN,
-	PART,
-	PRIVMSG,
-	NOTICE,
-	NICK,
-	USER,
-	QUIT,
-	PING,
-	PONG,
-	MODE,
-	TOPIC,
-	INVITE,
-	KICK,
-	WHO,
-	WHOIS,
-	LIST,
-	NAMES,
-	MOTD,
-	LUSERS,
-	VERSION,
-	STATS,
-	LINKS,
-	TIME,
-	CONNECT,
-	TRACE,
-	ADMIN,
-	INFO,
-	SERVLIST,
-};
+/* Utils */
+vector<string> split(const string& str, const char& delim);
+string startRes(const string& code);
 
-auto operator<<(ostream &outputStream, const PacketType &type) -> ostream &;
-
-/* A struct that maps a key to a PacketType also used by the PacketProcessor later on. */
-using PacketTypeMap = struct {
-	const string key;
-	PacketType type;
-	void (*func)(const string &, const int &);
-};
-
-void CAP(const string &args, const int &client);
-void NICK(const string &args, const int &client);
-void USER(const string &args, const int &client);
-void PASS(const string &args, const int &client);
-void INFO(const string &args, const int &client);
-void JOIN(const string &args, const int &client);
+bool CAP(stringstream& stream, string& args, User& user);
+bool NICK(stringstream& stream, string& args, User& user);
+bool USER(stringstream& stream, string& args, User& user);
+bool PASS(stringstream& stream, string& args, User& user);
+bool INFO(stringstream& stream, string& args, User& user);
+bool JOIN(stringstream& stream, string& args, User& user);
+bool PING(stringstream& stream, string& args, User& user);
+bool MOTD(stringstream& stream, string& args, User& user);
 
 /**
  * @brief The store array is a map of PacketType and the key to look for in a message.
  * @note If you add a new PacketType, make sure to add it to the store array. If you don't, the parse function will
  * not be able to find the key in the message.
  */
+// have a function poitner to the function that will be called
+const std::map<string, bool (*)(stringstream&, string&, User&)> store = {{"PASS", PASS}, {"CAP", CAP},	 {"NICK", NICK},
+																		 {"MOTD", MOTD}, {"USER", USER}, {"INFO", INFO},
+																		 {"JOIN", JOIN}, {"PING", PING}};
 
-const std::array<PacketTypeMap, 7> store = {{{"CAP", PacketType::CAP, &CAP},
-											 {"NICK", PacketType::NICK, &NICK},
-											 {"USER", PacketType::USER, &USER},
-											 {"PASS", PacketType::PASS, &PASS},
-											 {"INFO", PacketType::INFO, &INFO},
-											 {"JOIN", PacketType::JOIN, &JOIN},
-											 {"", PacketType::NONE, nullptr}}};
-
-auto parse(const string &message) -> unordered_map<PacketType, string>;
-void packetProcessor(const unordered_map<PacketType, string> &packet, const int &client);
+bool parse(User& user);

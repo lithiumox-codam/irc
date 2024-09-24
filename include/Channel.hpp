@@ -21,21 +21,31 @@ class Channel {
 	unsigned int modes;
 
    public:
-	Channel(string &name);
+	Channel();
+	Channel(const string &name);
+	// Channel(Channel &channel) = delete;
+	// auto operator=(Channel &channel) -> Channel;
+	Channel(const Channel &channel) noexcept;
+	auto operator=(const Channel &channel) noexcept -> Channel &;
 
-	[[nodiscard]] auto getName() const -> const string&;
+	[[nodiscard]] const string &getName() const;
 	void setName(const std::string &name);
 
-	void addUser(const User &user);
-	void removeUser(User &user);
-	auto hasUser(User &user) const -> bool;
+	[[nodiscard]] const string &getPassword() const;
+	void setPassword(const std::string &password);
 
-	[[nodiscard]] auto getMembers() -> vector<ChannelMember> &;
+	void addUser(User &user);
+	void removeUser(User &user);
+	bool hasUser(User &user) const;
+
+	[[nodiscard]] vector<ChannelMember> &getMembers();
 
 	void setModes(unsigned int modes);
-	[[nodiscard]] auto getModes() const -> unsigned int;
+	[[nodiscard]] unsigned int getModes() const;
 	void addModes(unsigned int modes);
 	void removeModes(unsigned int modes);
-	[[nodiscard]] auto hasModes(unsigned int modes) const -> bool;
+	[[nodiscard]] bool hasModes(unsigned int modes) const;
 	void printModes() const;
 };
+
+ostream &operator<<(ostream &stream, Channel &channel);

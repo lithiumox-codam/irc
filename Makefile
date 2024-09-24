@@ -16,12 +16,11 @@ ifdef DEBUG
 endif
 
 # Includes
-HDR		:= $(wildcard $(HDR_DIR)/*.hpp)
+HDR		:= $(shell find $(HDR_DIR) -name '*.hpp')
 
 # Files
-SRC		:=	$(wildcard $(SRC_DIR)/*.cpp)
-
-OBJ				:= $(addprefix $(OBJ_DIR)/, $(notdir $(SRC:.cpp=.o)))
+SRC		:= $(shell find $(SRC_DIR) -name '*.cpp')
+OBJ		:= $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC))
 
 # Colours
 GREEN			:= \033[32;1m
@@ -38,9 +37,8 @@ $(NAME): $(OBJ)
 	@ $(CC) $(CFLAGS) $(OBJ) -o $(NAME)
 	@ printf "\t\t%b%s%b\n" "$(GREEN)$(BOLD)" "[OK]" "$(RESET)"
 
-
-$(OBJ_DIR)/%.o: src/%.cpp $(HDR)
-	@ mkdir -p $(OBJ_DIR)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HDR)
+	@ mkdir -p $(dir $@)
 	@ $(CC) $(CFLAGS) -c $< -o $@ -I $(HDR_DIR)
 
 open: $(NAME)
