@@ -26,7 +26,18 @@
 *.a
 *.lib
 
+# VScode
+.vscode
+
 # Executables
 *.exe
 *.out
 *.app
+
+# Project related files
+.cache
+compile_commands.json
+ircserv
+.env
+# Subject File
+subject.pdf

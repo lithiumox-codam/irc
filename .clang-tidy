@@ -1,0 +1,7 @@
+---
+Checks: '-*,performance-*,readability-*'
+# ignore some checks such as things having to be in braces
+CheckOptions:
+	ShortStatementLines: 1
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*'
