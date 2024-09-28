@@ -13,20 +13,20 @@ extern Server server;
  * @param user The user that sent the PASS command.
  * @return true If the PASS command was successful.
  */
-bool PASS(IRStream &stream, string &args, User &user) {
+bool PASS(IRStream &stream, string &args, User *user) {
 	if (args.empty()) {
 		stream.str("");
 		stream.code(ERR_NEEDMOREPARAMS).trail("Not enough parameters").end();
 
 		return false;
 	}
-	if (user.hasHandshake(U_AUTHENTICATED)) {
+	if (user->hasHandshake(U_AUTHENTICATED)) {
 		stream.str("");
-		stream.code(ERR_ALREADYREGISTRED).param(user.getNickname()).trail("You are already authenticated").end();
+		stream.code(ERR_ALREADYREGISTRED).param(user->getNickname()).trail("You are already authenticated").end();
 		return false;
 	}
 	if (args == server.getPassword()) {
-		user.addHandshake(U_AUTHENTICATED);
+		user->addHandshake(U_AUTHENTICATED);
 	} else {
 		return false;
 	}

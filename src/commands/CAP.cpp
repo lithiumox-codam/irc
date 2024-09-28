@@ -30,12 +30,12 @@ extern Server server;
 	CAP [UNKNOWN COMMAND]: Unknown command.
 		server: 421 [NICK] CAP :Unknown command
 */
-bool CAP(IRStream &stream, string &args, User &user) {
+bool CAP(IRStream &stream, string &args, User *user) {
 	if (args.empty()) {
-		stream.prefix().param(user.getNickname()).param(" :Not enough parameters").end();
+		stream.prefix().param(user->getNickname()).param(" :Not enough parameters").end();
 		return false;
 	}
-	user.addHandshake(U_INFO);
+	user->addHandshake(U_INFO);
 
 	vector<string> tokens = split(args, ' ');
 
@@ -47,16 +47,16 @@ bool CAP(IRStream &stream, string &args, User &user) {
 	} else if (command == "REQ") {
 		stream.prefix().command().param("*").param("ACK").params(tokens).end();
 	} else if (command == "END") {
-		if (user.hasHandshake(U_AUTHENTICATED)) {
+		if (user->hasHandshake(U_AUTHENTICATED)) {
 			string empty;
 			MOTD(stream, empty, user);
-			user.addHandshake(U_WELCOME);
+			user->addHandshake(U_WELCOME);
 		} else {
-			stream.prefix().code(ERR_PASSWDMISMATCH).param(user.getNickname()).trail("Password incorrect").end();
+			stream.prefix().code(ERR_PASSWDMISMATCH).param(user->getNickname()).trail("Password incorrect").end();
 		}
 		return true;
 	} else {
-		stream.prefix().code(ERR_UNKNOWNCOMMAND).param(user.getNickname()).trail("CAP :Unknown command").end();
+		stream.prefix().code(ERR_UNKNOWNCOMMAND).param(user->getNickname()).trail("CAP :Unknown command").end();
 		return false;
 	}
 

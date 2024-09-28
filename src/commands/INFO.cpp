@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "Codes.hpp"
 #include "General.hpp"
 #include "IRStream.hpp"
@@ -7,9 +5,9 @@
 
 extern Server server;
 
-bool INFO(IRStream &stream, string &args, User &user) {
+bool INFO(IRStream &stream, string &args, User *user) {
 	(void)args;
-	const std::string &nickname = user.getNickname();
+	const auto &nickname = user->getNickname();
 
 	stream.prefix().code(RPL_INFO).param(nickname).trail(server.getHostname() + " - Server").end();
 	stream.prefix().code(RPL_INFO).param(nickname).trail("Version 1.0").end();
@@ -17,7 +15,7 @@ bool INFO(IRStream &stream, string &args, User &user) {
 	stream.prefix()
 		.code(RPL_INFO)
 		.param(nickname)
-		.trail("You are known as " + user.getRealname() + " have fun chatting 😃")
+		.trail("You are known as " + user->getRealname() + " have fun chatting 😃")
 		.end();
 	stream.prefix().code(RPL_ENDOFINFO).param(nickname).trail("End of /INFO list").end();
 

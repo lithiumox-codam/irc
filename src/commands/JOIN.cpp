@@ -1,9 +1,7 @@
-#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
 #include "Channel.hpp"
-#include "ChannelMember.hpp"
 #include "Codes.hpp"
 #include "General.hpp"
 #include "IRStream.hpp"
@@ -36,27 +34,27 @@ map<string, string> ParseJoin(string &args) {
 	return channelPasswordMap;
 }
 
-bool JOIN(IRStream &stream, string &args, User &user) {
-	if (!user.hasHandshake(U_COMPLETED)) {
-		stream.prefix().code(ERR_NOTREGISTERED).param(user.getNickname()).trail("You have not registered").end();
+bool JOIN(IRStream &stream, string &args, User *user) {
+	if (!user->hasHandshake(U_COMPLETED)) {
+		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return false;
 	}
 	if (args.empty()) {
-		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user.getNickname()).trail("Not enough parameters").end();
+		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 		return false;
 	}
 	map<string, string> tokens = ParseJoin(args);
 	for (auto &token : tokens) {
 		if (token.first.empty()) {
-			stream.prefix().code(ERR_NEEDMOREPARAMS).param(user.getNickname()).trail("Not enough parameters").end();
+			stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 			return false;
 		}
 		if (token.first[0] != '#') {
-			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user.getNickname()).trail("No such channel").end();
+			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
 			return false;
 		}
 		if (token.first.size() > 50) {
-			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user.getNickname()).trail("No such channel").end();
+			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
 			return false;
 		}
 		try {
@@ -64,7 +62,7 @@ bool JOIN(IRStream &stream, string &args, User &user) {
 			if (!token.second.empty() && channel->hasModes(M_PASSWORD) && channel->getPassword() != token.second) {
 				stream.prefix()
 					.code(ERR_BADCHANNELKEY)
-					.param(user.getNickname())
+					.param(user->getNickname())
 					.param(token.first)
 					.trail("Cannot join channel (+k) - bad key")
 					.end();
@@ -80,7 +78,7 @@ bool JOIN(IRStream &stream, string &args, User &user) {
 				channel->setPassword(token.second);
 				channel->addModes(M_PASSWORD);
 			}
-			channel->getMembers()->front().addModes(M_OPERATOR);
+			channel->getMembers()->front().second.addModes(M_OPERATOR);
 			stream.prefix(user).command().param(channel->getName()).end();
 		}
 	}

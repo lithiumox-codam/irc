@@ -19,7 +19,7 @@ class IRStream : public stringstream {
 
 	IRStream &setCommand(const string &cmd);
 	IRStream &prefix();
-	IRStream &prefix(User &user);
+	IRStream &prefix(User *user);
 	IRStream &command();
 	IRStream &code(const string &code);
 	IRStream &param(const string &param);
@@ -27,7 +27,7 @@ class IRStream : public stringstream {
 	IRStream &trail(const string &trail);
 	IRStream &end();
 
-	void sendPacket(User &user);
+	void sendPacket(User *user);
 	string getString();
 	void clear();
 };

@@ -106,7 +106,7 @@ int User::readFromSocket() {
 
 	this->in_buffer.append(buffer.data());
 
-	parse(*this);
+	parse(this);
 	this->in_buffer.clear();
 	return bytesRead;
 }

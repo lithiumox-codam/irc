@@ -26,11 +26,11 @@ static string getArgs(string &buffer, size_t found) {
  * @return bool Returns true if the message was parsed successfully, false when an error occurs during one of the called
  * functions.
  */
-bool parse(User &user) {
+bool parse(User *user) {
 	IRStream stream;
 	try {
-		string &buffer = user.getInBuffer();
-		cout << "Buffer: " << buffer << endl;
+		string &buffer = user->getInBuffer();
+		cout << "Buffer: " << buffer << "\n";
 		if (buffer.empty()) {
 			return true;
 		}

@@ -39,11 +39,11 @@ IRStream &IRStream::prefix() {
  * @brief Add the user prefix to the current command.
  * @code " :<nickname>!<username>@<hostname>" cannot contain spaces.
  *
- * @param user
+ * @param user A pointer to the user to prefix the command with.
  * @return IRStream&
  */
-IRStream &IRStream::prefix(User &user) {
-	*this << ":" << user.getNickname() << "!" << user.getUsername() << "@" << user.getHostname();
+IRStream &IRStream::prefix(User *user) {
+	*this << ":" << user->getNickname() << "!" << user->getUsername() << "@" << user->getHostname();
 	return *this;
 }
 
@@ -120,12 +120,12 @@ IRStream &IRStream::end() {
 
 /**
  * @brief Assemble the packet from the buffer.
- * @remark Accumulate is used to calculate the total length of the buffer. This is used to reserve the correct
- * amount of memory for the packet. This is done to avoid reallocations.
+ *
+ * @param user The user to send the packet to.
  */
-void IRStream::sendPacket(User &user) {
+void IRStream::sendPacket(User *user) {
 	for (const auto &line : parts) {
-		user.addToBuffer(line);
+		user->addToBuffer(line);
 	}
 }
 

@@ -1,6 +1,8 @@
 #pragma once
 
-#include "User.hpp"
+#include <string>
+
+using namespace std;
 
 /** Determines if the user is a channel operator. (will be defaulted to true when the user is a server operator) */
 unsigned int const M_OPERATOR = 1 << 1;
@@ -9,20 +11,21 @@ unsigned int const M_VOICE = 1 << 2;
 /** Determines if the user is invisible to other users. */
 unsigned int const M_INVISIBLE = 1 << 3;
 
-class ChannelMember : public User {
+class Modes {
    private:
 	unsigned int modes;
 
    public:
-	ChannelMember(const User &user);
-	ChannelMember(const ChannelMember &member) noexcept;
-	auto operator=(const ChannelMember &member) noexcept -> ChannelMember &;
+	Modes();
+	Modes(unsigned int modes);
+	Modes(const Modes &modes) noexcept;
+	auto operator=(const Modes &modes) noexcept -> Modes &;
 
 	void setModes(unsigned int modes);
 	[[nodiscard]] unsigned int getModes() const;
 	void addModes(unsigned int modes);
 	void removeModes(unsigned int modes);
 	[[nodiscard]] bool hasModes(unsigned int modes) const;
-	void printModes() const;
+	string printModes() const;
 	void clearModes();
 };
