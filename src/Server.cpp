@@ -82,22 +82,24 @@ void Server::epollAdd(int socket_fd) {
 void Server::epollEvent(struct epoll_event &event) {
 	int socket_fd = event.data.fd;
 	User *user = server.getUser(socket_fd);
-	if (event.events & EPOLLERR) {	// Error on the socket
-		cerr << "Error: EPOLLERR" << '\n';
 
+	if (event.events & EPOLLERR) {
+		cerr << "Error: EPOLLERR" << '\n';
 		socklen_t len = sizeof(errno);
 		getsockopt(socket_fd, SOL_SOCKET, SO_ERROR, &errno, &len);
 		cerr << strerror(errno) << '\n';
-
 		server.removeUser(*user);
+		return;
 	}
 	if (event.events & EPOLLHUP) {
 		cerr << "Error: EPOLLHUP" << '\n';
 		server.removeUser(*user);
+		return;
 	}
 	if (event.events & EPOLLRDHUP) {
 		cerr << "Error: EPOLLRDHUP" << '\n';
 		server.removeUser(*user);
+		return;
 	}
 
 	if (event.events & EPOLLIN) {
@@ -105,31 +107,36 @@ void Server::epollEvent(struct epoll_event &event) {
 
 		if (ret > 0) {
 			if (!user->getOutBuffer().empty()) {
-				this->epollChange(socket_fd, EPOLLOUT);
+				// Monitor for both read and write events
+				this->epollChange(socket_fd, EPOLLIN | EPOLLOUT);
 			}
 			return;
 		}
 		if (ret == 0) {
 			cout << user << " gracefully disconnected" << '\n';
+			server.removeUser(*user);
+			return;
 		}
 		if (ret == -1) {
 			if (errno == EWOULDBLOCK || errno == EAGAIN) {
 				return;
 			}
-
 			cerr << "Error: recv failed" << '\n';
+			server.removeUser(*user);
+			return;
 		}
-		server.removeUser(*user);
 	}
+
 	if (event.events & EPOLLOUT) {
 		if (!user->getOutBuffer().empty()) {
 			int ret = user->sendToSocket();
 
 			if (ret > 0) {
 				if (user->getOutBuffer().empty()) {
-					// All data sent, switch back to EPOLLIN
+					// All data sent, switch back to EPOLLIN only
 					this->epollChange(socket_fd, EPOLLIN);
 				}
+				// If buffer is not empty, keep monitoring for EPOLLOUT
 				return;
 			}
 			if (ret == 0) {
@@ -146,9 +153,6 @@ void Server::epollEvent(struct epoll_event &event) {
 				server.removeUser(*user);
 				return;
 			}
-		} else {
-			// No data to send, switch back to EPOLLIN
-			this->epollChange(socket_fd, EPOLLIN);
 		}
 	}
 }

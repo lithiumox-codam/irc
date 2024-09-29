@@ -1,5 +1,6 @@
 #include "User.hpp"
 
+#include <sys/epoll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -111,7 +112,10 @@ int User::readFromSocket() {
 	return bytesRead;
 }
 
-void User::addToBuffer(const string &data) { this->out_buffer.append(data); };
+void User::addToBuffer(const string &data) {
+	this->out_buffer.append(data);
+	server.epollChange(this->socket, EPOLLIN | EPOLLOUT);
+};
 
 void User::clearInBuffer() { this->in_buffer.clear(); }
 

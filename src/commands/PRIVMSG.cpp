@@ -16,6 +16,11 @@ pair<string, string> parseMsg(string &args) {
 	}
 	string target = args.substr(0, found);
 	string message = args.substr(found + 1);
+
+	if (!message.empty() && message[0] == ':') {
+		message = message.substr(1);
+	}
+
 	return make_pair(target, message);
 }
 
