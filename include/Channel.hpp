@@ -50,6 +50,8 @@ class Channel {
 	void removeModes(unsigned int modes);
 	[[nodiscard]] bool hasModes(unsigned int modes) const;
 	void printModes() const;
+	[[nodiscard]] const string &getTopic() const;
+	void setTopic(const string &topic);
 	void broadcast(User *user, const string &message);
 };
 

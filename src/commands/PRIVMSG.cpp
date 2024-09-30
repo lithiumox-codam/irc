@@ -35,6 +35,14 @@ bool PRIVMSG(IRStream &stream, string &args, User *user) {
 		return false;
 	}
 	if (token.first[0] != '#') {
+		if (token.first == user->getNickname()) {
+			stream.prefix()
+				.code(ERR_NOSUCHNICK)
+				.param(user->getNickname())
+				.trail("Error: Talking to yourself is not allowed!")
+				.end();
+			return false;
+		}
 		try {
 			IRStream targetStream;
 			User *target = server.getUser(token.first);

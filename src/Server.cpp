@@ -28,10 +28,8 @@ void Server::setPassword(const string &password) { this->password = password; }
 const string &Server::getPassword() const { return this->password; }
 
 void Server::bindSocket(const string &portString) {
-	// Set the port
 	in_port_t port = htons(stoi(portString));
 
-	// Create a socket
 	this->socket = ::socket(AF_INET, SOCK_STREAM, 0);
 	int reuseAddr = 1;
 	setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr));
@@ -133,10 +131,8 @@ void Server::epollEvent(struct epoll_event &event) {
 
 			if (ret > 0) {
 				if (user->getOutBuffer().empty()) {
-					// All data sent, switch back to EPOLLIN only
 					this->epollChange(socket_fd, EPOLLIN);
 				}
-				// If buffer is not empty, keep monitoring for EPOLLOUT
 				return;
 			}
 			if (ret == 0) {
@@ -146,7 +142,6 @@ void Server::epollEvent(struct epoll_event &event) {
 			}
 			if (ret == -1) {
 				if (errno == EWOULDBLOCK || errno == EAGAIN) {
-					// Socket buffer full, try again later
 					return;
 				}
 				cerr << "Error: send failed" << '\n';
@@ -180,7 +175,7 @@ void Server::acceptNewConnection() {
 
 	if (clientSocket == -1) {
 		if (errno == EWOULDBLOCK) {
-			return;	 // Non-blocking, try again later
+			return;
 		}
 		cerr << strerror(errno) << '\n';
 		cerr << "Error: accept failed" << '\n';
@@ -207,7 +202,6 @@ void Server::handleEvents(array<struct epoll_event, (size_t)ServerConfig::BACKLO
 }
 
 void Server::start() {
-	// Listen for incoming connections, with a backlog of 10 pending connections
 	if (listen(this->socket, (int)ServerConfig::BACKLOG) != -1) {
 		cout << "Server started on socket fd " << socket << '\n';
 		cout << "Press Ctrl+C to stop the server" << '\n';

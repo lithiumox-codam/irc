@@ -41,6 +41,7 @@ bool PING(IRStream& stream, string& args, User* user);
 bool MOTD(IRStream& stream, string& args, User* user);
 bool PRIVMSG(IRStream& stream, string& args, User* user);
 bool WHO(IRStream& stream, string& args, User* user);
+bool TOPIC(IRStream& stream, string& args, User* user);
 
 /**
  * @brief The store array is a map of the key to look for in a message and the associated function to call.
@@ -49,7 +50,7 @@ bool WHO(IRStream& stream, string& args, User* user);
  */
 // have a function poitner to the function that will be called
 const std::map<string, bool (*)(IRStream&, string&, User*)> store = {
-	{"PASS", PASS}, {"CAP", CAP},	{"NICK", NICK}, {"MOTD", MOTD},		  {"USER", USER},
-	{"INFO", INFO}, {"JOIN", JOIN}, {"PING", PING}, {"PRIVMSG", PRIVMSG}, {"WHO", WHO}};
+	{"PASS", PASS}, {"CAP", CAP},	{"NICK", NICK},		  {"MOTD", MOTD}, {"USER", USER},  {"INFO", INFO},
+	{"JOIN", JOIN}, {"PING", PING}, {"PRIVMSG", PRIVMSG}, {"WHO", WHO},	  {"TOPIC", TOPIC}};
 
 bool parse(User* user);

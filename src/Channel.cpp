@@ -93,6 +93,10 @@ void Channel::broadcast(User *user, const string &message) {
 	}
 }
 
+const string &Channel::getTopic() const { return this->topic; }
+
+void Channel::setTopic(const string &topic) { this->topic = topic; }
+
 ostream &operator<<(ostream &stream, Channel &channel) {
 	stream << "Channel: " << channel.getName() << "\n";
 	stream << "Password: " << channel.getPassword() << "\n";
