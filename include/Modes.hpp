@@ -21,6 +21,8 @@ unsigned int const M_MODERATED = 1 << 4;
 unsigned int const M_INVITE_ONLY = 1 << 5;
 /** Determines if the channel has a password. */
 unsigned int const M_PASSWORD = 1 << 6;
+/** Determines if a user in the channel is the owner */
+unsigned int const M_OWNER = 1 << 7;
 
 class Modes {
    private:

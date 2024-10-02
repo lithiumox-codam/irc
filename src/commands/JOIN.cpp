@@ -80,7 +80,6 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 				channel->setPassword(token.second);
 				channel->modes.addModes(M_PASSWORD);
 			}
-			channel->getMembers()->front().second.addModes(M_OPERATOR);
 			stream.prefix(user).command().param(channel->getName()).end();
 		}
 	}

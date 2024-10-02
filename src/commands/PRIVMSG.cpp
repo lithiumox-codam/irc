@@ -64,7 +64,7 @@ bool PRIVMSG(IRStream &stream, string &args, User *user) {
 					.end();
 				return false;
 			}
-			cerr << "sending message: " << token.second << " to channel: " << token.first << "\n";
+			if (channel->)
 			channel->broadcast(user, token.second);
 		} catch (const runtime_error &e) {
 			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();

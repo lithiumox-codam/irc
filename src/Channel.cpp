@@ -35,7 +35,10 @@ void Channel::setPassword(const string &password) { this->password = password; }
 
 void Channel::setName(const string &name) { this->name = name; }
 
-void Channel::addUser(User *user) { this->members.push_back(make_pair(user, Modes())); }
+void Channel::addUser(User *user) {
+	this->members.push_back(make_pair(user, Modes()));
+	this->members.front().second.addModes(M_OWNER);
+}
 
 void Channel::removeUser(User *user) {
 	// NOLINTNEXTLINE

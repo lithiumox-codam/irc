@@ -23,7 +23,9 @@ bool Modes::hasModes(unsigned int modes) const { return (this->modes & modes) ==
 
 string Modes::getModesString() const {
 	string result;
-	if (hasModes(M_OPERATOR)) {
+	if (hasModes(M_OWNER)) {
+		result += "@";
+	} else if (hasModes(M_OPERATOR)) {
 		result += "@";
 	} else if (hasModes(M_VOICE)) {
 		result += "+";
