@@ -11,6 +11,17 @@ unsigned int const M_VOICE = 1 << 2;
 /** Determines if the user is invisible to other users. */
 unsigned int const M_INVISIBLE = 1 << 3;
 
+/**
+ * Channel only modes
+ */
+
+/** Determines if the channel is moderated. */
+unsigned int const M_MODERATED = 1 << 4;
+/** Determines if the channel is invite only. */
+unsigned int const M_INVITE_ONLY = 1 << 5;
+/** Determines if the channel has a password. */
+unsigned int const M_PASSWORD = 1 << 6;
+
 class Modes {
    private:
 	unsigned int modes;
