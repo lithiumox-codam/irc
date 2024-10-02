@@ -1,15 +1,14 @@
-#include <vector>
-
 #include "Codes.hpp"
 #include "General.hpp"
+#include "IRStream.hpp"
 
-bool PING(stringstream &stream, string &args, User &user) {
+bool PING(IRStream &stream, string &args, User *user) {
 	(void)user;
 	if (args.empty()) {
-		stream << startRes(ERR_NOORIGIN) << " " << user.getNickname() << " :No origin specified" << END;
-		return false;
+		stream.prefix().code(ERR_NOORIGIN).trail("No token specified").end();
 	}
-	const vector<string> tokens = split(args, ' ');
-	stream << "PONG :" << args << END;
+
+	stream.prefix().param("PONG").param(args).end();
+
 	return true;
 }

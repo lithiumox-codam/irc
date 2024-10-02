@@ -1,13 +1,15 @@
 #include <arpa/inet.h>
 
-#include <iostream>
-
 #include "Codes.hpp"
 #include "General.hpp"
+#include "IRStream.hpp"
 #include "Server.hpp"
 #include "User.hpp"
 
 extern Server server;
+
+#define CAPABILITIES ":multi-prefix sasl"
+
 /*
 	CAP LS: List supported capabilities.
 		client: CAP LS [VERSION]
@@ -21,19 +23,19 @@ extern Server server;
 		server: CAP * ACK :[CAPABILITIES]
 		server: CAP * NAK :[CAPABILITIES]
 
-	CAP END: End the capability negotiation phase.
-		client: CAP END
+	CAP "\r\n": End the capability negotiation phase.
+		client: CAP "\r\n"
 		server:
 
 	CAP [UNKNOWN COMMAND]: Unknown command.
 		server: 421 [NICK] CAP :Unknown command
 */
-bool CAP(stringstream &stream, string &args, User &user) {
+bool CAP(IRStream &stream, string &args, User *user) {
 	if (args.empty()) {
-		stream << "Error: CAP command is invalid" << "\n";
+		stream.prefix().param(user->getNickname()).param(" :Not enough parameters").end();
 		return false;
 	}
-	user.addHandshake(U_INFO);
+	user->addHandshake(U_INFO);
 
 	vector<string> tokens = split(args, ' ');
 
@@ -41,26 +43,20 @@ bool CAP(stringstream &stream, string &args, User &user) {
 	tokens.erase(tokens.begin());
 
 	if (command == "LS") {
-		stream << "CAP * LS :multi-prefix" << END;
+		stream.prefix().command().param("*").param("LS").param(CAPABILITIES).end();
 	} else if (command == "REQ") {
-		stream << "CAP * ACK :";
-		for (const string &token : tokens) {
-			stream << token << " ";
-		}
-		stream << END;
+		stream.prefix().command().param("*").param("ACK").params(tokens).end();
 	} else if (command == "END") {
-		if (user.hasHandshake(U_AUTHENTICATED)) {
+		if (user->hasHandshake(U_AUTHENTICATED)) {
 			string empty;
 			MOTD(stream, empty, user);
-			user.addHandshake(U_WELCOME);
-			cout << user << endl;
+			user->addHandshake(U_WELCOME);
 		} else {
-			stream << startRes(ERR_PASSWDMISMATCH) + user.getNickname() + " :Password incorrect" << END;
+			stream.prefix().code(ERR_PASSWDMISMATCH).param(user->getNickname()).trail("Password incorrect").end();
 		}
 		return true;
 	} else {
-		stream.str("");
-		stream << startRes(RPL_ISUPPORT) + user.getNickname() + " CAP :Unknown command" << END;
+		stream.prefix().code(ERR_UNKNOWNCOMMAND).param(user->getNickname()).trail("CAP :Unknown command").end();
 		return false;
 	}
 

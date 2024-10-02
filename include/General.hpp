@@ -1,10 +1,10 @@
 #pragma once
 
 #include <map>
-#include <sstream>
 #include <string>
 #include <vector>
 
+#include "IRStream.hpp"
 #include "User.hpp"
 
 using namespace std;
@@ -30,25 +30,25 @@ using namespace std;
 
 /* Utils */
 vector<string> split(const string& str, const char& delim);
-string startRes(const string& code);
 
-bool CAP(stringstream& stream, string& args, User& user);
-bool NICK(stringstream& stream, string& args, User& user);
-bool USER(stringstream& stream, string& args, User& user);
-bool PASS(stringstream& stream, string& args, User& user);
-bool INFO(stringstream& stream, string& args, User& user);
-bool JOIN(stringstream& stream, string& args, User& user);
-bool PING(stringstream& stream, string& args, User& user);
-bool MOTD(stringstream& stream, string& args, User& user);
+bool CAP(IRStream& stream, string& args, User* user);
+bool NICK(IRStream& stream, string& args, User* user);
+bool USER(IRStream& stream, string& args, User* user);
+bool PASS(IRStream& stream, string& args, User* user);
+bool INFO(IRStream& stream, string& args, User* user);
+bool JOIN(IRStream& stream, string& args, User* user);
+bool PING(IRStream& stream, string& args, User* user);
+bool MOTD(IRStream& stream, string& args, User* user);
+bool PRIVMSG(IRStream& stream, string& args, User* user);
+bool WHO(IRStream& stream, string& args, User* user);
+bool TOPIC(IRStream& stream, string& args, User* user);
 
 /**
- * @brief The store array is a map of PacketType and the key to look for in a message.
- * @note If you add a new PacketType, make sure to add it to the store array. If you don't, the parse function will
- * not be able to find the key in the message.
+ * @brief The store of all the commands. This is a map of strings to function pointers. Used by the parser to determine
+ * which function to call.
  */
-// have a function poitner to the function that will be called
-const std::map<string, bool (*)(stringstream&, string&, User&)> store = {{"PASS", PASS}, {"CAP", CAP},	 {"NICK", NICK},
-																		 {"MOTD", MOTD}, {"USER", USER}, {"INFO", INFO},
-																		 {"JOIN", JOIN}, {"PING", PING}};
+const std::map<string, bool (*)(IRStream&, string&, User*)> store = {
+	{"PASS", PASS}, {"CAP", CAP},	{"NICK", NICK},		  {"MOTD", MOTD}, {"USER", USER},  {"INFO", INFO},
+	{"JOIN", JOIN}, {"PING", PING}, {"PRIVMSG", PRIVMSG}, {"WHO", WHO},	  {"TOPIC", TOPIC}};
 
-bool parse(User& user);
+bool parse(User* user);

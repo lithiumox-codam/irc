@@ -1,12 +1,15 @@
 #include "User.hpp"
 
+#include <sys/epoll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include <cerrno>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <ostream>
 #include <vector>
 
 #include "General.hpp"
@@ -17,8 +20,6 @@ extern Server server;
 User::User(int socket) : socket(socket), handshake(0) { cout << "Creating user with socket: " << this->socket << "\n"; }
 
 User::User(const User &user) noexcept {
-	cout << "Copying user " << user.nickname << ": " << user.socket << endl;
-
 	this->socket = user.socket;
 	this->username = user.username;
 	this->nickname = user.nickname;
@@ -30,8 +31,6 @@ User::User(const User &user) noexcept {
 }
 
 auto User::operator=(const User &user) noexcept -> User & {
-	cout << "Copying user " << user.nickname << ": " << user.socket << endl;
-
 	if (this == &user) {
 		return *this;
 	}
@@ -108,12 +107,15 @@ int User::readFromSocket() {
 
 	this->in_buffer.append(buffer.data());
 
-	parse(*this);
+	parse(this);
 	this->in_buffer.clear();
 	return bytesRead;
 }
 
-void User::addToBuffer(const string &data) { this->out_buffer.append(data); };
+void User::addToBuffer(const string &data) {
+	this->out_buffer.append(data);
+	server.epollChange(this->socket, EPOLLIN | EPOLLOUT);
+};
 
 void User::clearInBuffer() { this->in_buffer.clear(); }
 
@@ -167,16 +169,27 @@ ostream &operator<<(std::ostream &stream, const User &user) {
 }
 
 int User::sendToSocket() {
-	int bytesRead = send(socket, out_buffer.data(), out_buffer.size(), 0);
-	if (bytesRead == -1) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			return 0;
+	size_t totalSent = 0;
+	while (!out_buffer.empty()) {
+		ssize_t bytesRead = send(socket, out_buffer.data(), out_buffer.size(), MSG_NOSIGNAL);
+		if (bytesRead > 0) {
+			out_buffer.erase(0, bytesRead);
+			totalSent += bytesRead;
+		} else if (bytesRead == 0) {
+			// Connection closed by peer
+			return -1;
+		} else if (bytesRead == -1) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+				// Socket buffer is full, try again later
+				return totalSent > 0 ? totalSent : 0;
+			} else {
+				// Other error occurred
+				cerr << "Error: send failed: " << strerror(errno) << "\n";
+				return -1;
+			}
 		}
-		cerr << "Error: send failed" << "\n";
-		return bytesRead;  // handle not being sent before this?
 	}
-	this->out_buffer.erase(0, bytesRead);
-	return bytesRead;
+	return totalSent;
 }
 
 bool User::checkPacket() { return this->in_buffer.find("\r\n") != string::npos; }

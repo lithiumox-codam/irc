@@ -39,7 +39,7 @@ bool getEnv() {
 				server.bindSocket(value);
 			} else if (key == "PASSWORD" && server.getPassword().empty()) {
 				server.setPassword(value);
-			} else if (key == "HOSTNAME" && server.getHostname().empty()) {
+			} else if (key == "HOSTNAME") {
 				server.setHostname(value);
 			}
 		}

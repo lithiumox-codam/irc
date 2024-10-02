@@ -1,6 +1,9 @@
+#include <iostream>
+#include <stdexcept>
 #include <string>
 
 #include "General.hpp"
+#include "IRStream.hpp"
 
 static string getArgs(string &buffer, size_t found) {
 	size_t start = buffer.find(' ', found);
@@ -23,20 +26,21 @@ static string getArgs(string &buffer, size_t found) {
  * @return bool Returns true if the message was parsed successfully, false when an error occurs during one of the called
  * functions.
  */
-bool parse(User &user) {
-	static stringstream stream;
+bool parse(User *user) {
+	IRStream stream;
 	try {
-		string &buffer = user.getInBuffer();
+		string &buffer = user->getInBuffer();
+		cout << "Buffer: " << buffer << "\n";
 		if (buffer.empty()) {
 			return true;
 		}
 		for (const auto &pair : store) {
 			size_t found = buffer.find(pair.first);
 			if (found != string::npos) {
+				stream.setCommand(pair.first);
 				string args = getArgs(buffer, found);
 				if (!pair.second(stream, args, user)) {
-					user.addToBuffer(stream.str());
-					stream.str("");
+					stream.sendPacket(user);
 					return false;
 				}
 			}
@@ -44,7 +48,6 @@ bool parse(User &user) {
 	} catch (const runtime_error &e) {
 		return false;
 	}
-	user.addToBuffer(stream.str());
-	stream.str("");
+	stream.sendPacket(user);
 	return true;
 }
