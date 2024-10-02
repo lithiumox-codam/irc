@@ -1,19 +1,33 @@
 #pragma once
 
-#include "General.hpp"
-#include "Server.hpp"
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include "User.hpp"
+
+using namespace std;
 
 class IRStream : public stringstream {
    private:
-	vector<string> buff;
+	vector<string> parts;
+	string currentCommand;
 
    public:
-	IRStream() {}
-	IRStream &command(const string &cmd);
-	IRStream &param(const string &param);
-	IRStream &trail(const string &trail);
-	void end();
+	IRStream();
+	~IRStream();
 
-	string getPacket();
+	IRStream &setCommand(const string &cmd);
+	IRStream &prefix();
+	IRStream &prefix(User *user);
+	IRStream &command();
+	IRStream &code(const string &code);
+	IRStream &param(const string &param);
+	IRStream &params(const vector<string> &params);
+	IRStream &trail(const string &trail);
+	IRStream &end();
+
+	void sendPacket(User *user);
+	string getString();
 	void clear();
 };

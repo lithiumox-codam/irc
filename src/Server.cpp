@@ -28,10 +28,8 @@ void Server::setPassword(const string &password) { this->password = password; }
 const string &Server::getPassword() const { return this->password; }
 
 void Server::bindSocket(const string &portString) {
-	// Set the port
 	in_port_t port = htons(stoi(portString));
 
-	// Create a socket
 	this->socket = ::socket(AF_INET, SOCK_STREAM, 0);
 	int reuseAddr = 1;
 	setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr));
@@ -81,67 +79,76 @@ void Server::epollAdd(int socket_fd) {
 
 void Server::epollEvent(struct epoll_event &event) {
 	int socket_fd = event.data.fd;
-	User &user = server.getUser(socket_fd);
-	if (event.events & EPOLLERR) {	// Error on the socket
-		cerr << "Error: EPOLLERR" << '\n';
+	User *user = server.getUser(socket_fd);
 
+	if (event.events & EPOLLERR) {
+		cerr << "Error: EPOLLERR" << '\n';
 		socklen_t len = sizeof(errno);
 		getsockopt(socket_fd, SOL_SOCKET, SO_ERROR, &errno, &len);
 		cerr << strerror(errno) << '\n';
-
-		server.removeUser(user);
+		server.removeUser(*user);
+		return;
 	}
 	if (event.events & EPOLLHUP) {
 		cerr << "Error: EPOLLHUP" << '\n';
-		server.removeUser(user);
+		server.removeUser(*user);
+		return;
 	}
 	if (event.events & EPOLLRDHUP) {
 		cerr << "Error: EPOLLRDHUP" << '\n';
-		server.removeUser(user);
+		server.removeUser(*user);
+		return;
 	}
 
 	if (event.events & EPOLLIN) {
-		int ret = user.readFromSocket();
+		int ret = user->readFromSocket();
 
 		if (ret > 0) {
-			if (!user.getOutBuffer().empty()) {
-				this->epollChange(socket_fd, EPOLLOUT);
+			if (!user->getOutBuffer().empty()) {
+				// Monitor for both read and write events
+				this->epollChange(socket_fd, EPOLLIN | EPOLLOUT);
 			}
 			return;
 		}
 		if (ret == 0) {
 			cout << user << " gracefully disconnected" << '\n';
+			server.removeUser(*user);
+			return;
 		}
 		if (ret == -1) {
 			if (errno == EWOULDBLOCK || errno == EAGAIN) {
 				return;
 			}
-
 			cerr << "Error: recv failed" << '\n';
+			server.removeUser(*user);
+			return;
 		}
-		server.removeUser(user);
 	}
+
 	if (event.events & EPOLLOUT) {
-		if (!user.getOutBuffer().empty()) {
-			int ret = user.sendToSocket();
+		if (!user->getOutBuffer().empty()) {
+			int ret = user->sendToSocket();
 
 			if (ret > 0) {
+				if (user->getOutBuffer().empty()) {
+					this->epollChange(socket_fd, EPOLLIN);
+				}
 				return;
 			}
 			if (ret == 0) {
 				cout << user << " gracefully disconnected" << '\n';
+				server.removeUser(*user);
+				return;
 			}
 			if (ret == -1) {
 				if (errno == EWOULDBLOCK || errno == EAGAIN) {
-					this->epollChange(socket_fd, EPOLLIN);
 					return;
 				}
-
 				cerr << "Error: send failed" << '\n';
+				server.removeUser(*user);
+				return;
 			}
-			server.removeUser(user);
 		}
-		this->epollChange(socket_fd, EPOLLIN);
 	}
 }
 
@@ -168,7 +175,7 @@ void Server::acceptNewConnection() {
 
 	if (clientSocket == -1) {
 		if (errno == EWOULDBLOCK) {
-			return;	 // Non-blocking, try again later
+			return;
 		}
 		cerr << strerror(errno) << '\n';
 		cerr << "Error: accept failed" << '\n';
@@ -186,18 +193,17 @@ void Server::handleEvents(array<struct epoll_event, (size_t)ServerConfig::BACKLO
 	for (int i = 0; i < numberOfEvents; i++) {
 		struct epoll_event &event = events[i];
 
-		if (event.data.fd == this->socket && (event.events & EPOLLIN)) {
+		if (event.data.fd == socket && (event.events & EPOLLIN)) {
 			acceptNewConnection();
 		} else {
-			this->epollEvent(event);
+			epollEvent(event);
 		}
 	}
 }
 
 void Server::start() {
-	// Listen for incoming connections, with a backlog of 10 pending connections
 	if (listen(this->socket, (int)ServerConfig::BACKLOG) != -1) {
-		cout << "Server started on socket fd " << this->socket << '\n';
+		cout << "Server started on socket fd " << socket << '\n';
 		cout << "Press Ctrl+C to stop the server" << '\n';
 		cout << "Password: " << this->password << '\n';
 		cout << "\nListening for incoming connections..." << '\n';
@@ -236,12 +242,22 @@ void Server::stop() {
 	cout << RED << "\rServer stopped" << RESET << '\n';
 }
 
-const vector<User> &Server::getUsers() const { return this->users; }
+vector<User> &Server::getUsers() { return this->users; }
 
-User &Server::getUser(const int socket) {
+User *Server::getUser(const int socket) {
 	for (auto &user : this->users) {
 		if (user.getSocket() == socket) {
-			return user;
+			return &user;
+		}
+	}
+	throw runtime_error("User not found");
+}
+
+User *Server::getUser(const string &nickname) {
+	for (auto &user : this->users) {
+		cout << "User: " << user.getNickname() << '\n';
+		if (user.getNickname() == nickname) {
+			return &user;
 		}
 	}
 	throw runtime_error("User not found");
@@ -276,10 +292,10 @@ void Server::removeChannel(Channel &channel) {
 
 vector<Channel> &Server::getChannels() { return this->channels; }
 
-Channel &Server::getChannel(const string &name) {
+Channel *Server::getChannel(const string &name) {
 	for (auto &channel : this->channels) {
 		if (channel.getName() == name) {
-			return channel;
+			return &channel;
 		}
 	}
 	throw runtime_error("Channel not found");

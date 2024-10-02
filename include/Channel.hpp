@@ -1,8 +1,14 @@
 #pragma once
 
+#include <iostream>
+#include <string>
+#include <utility>
 #include <vector>
 
-#include "ChannelMember.hpp"
+#include "Modes.hpp"
+#include "User.hpp"
+
+using namespace std;
 
 /** Determines if the channel is moderated. */
 unsigned int const M_MODERATED = 1 << 4;
@@ -13,7 +19,7 @@ unsigned int const M_PASSWORD = 1 << 6;
 
 class Channel {
    private:
-	vector<ChannelMember> members;
+	vector<pair<User *, Modes>> members;
 	string name;
 	string password;
 	string topic;
@@ -23,10 +29,8 @@ class Channel {
    public:
 	Channel();
 	Channel(const string &name);
-	// Channel(Channel &channel) = delete;
-	// auto operator=(Channel &channel) -> Channel;
 	Channel(const Channel &channel) noexcept;
-	auto operator=(const Channel &channel) noexcept -> Channel &;
+	Channel &operator=(const Channel &channel) noexcept;
 
 	[[nodiscard]] const string &getName() const;
 	void setName(const std::string &name);
@@ -34,11 +38,11 @@ class Channel {
 	[[nodiscard]] const string &getPassword() const;
 	void setPassword(const std::string &password);
 
-	void addUser(User &user);
-	void removeUser(User &user);
-	bool hasUser(User &user) const;
+	void addUser(User *user);
+	void removeUser(User *user);
+	bool hasUser(User *user) const;
 
-	[[nodiscard]] vector<ChannelMember> &getMembers();
+	[[nodiscard]] vector<pair<User *, Modes>> *getMembers();
 
 	void setModes(unsigned int modes);
 	[[nodiscard]] unsigned int getModes() const;
@@ -46,6 +50,9 @@ class Channel {
 	void removeModes(unsigned int modes);
 	[[nodiscard]] bool hasModes(unsigned int modes) const;
 	void printModes() const;
+	[[nodiscard]] const string &getTopic() const;
+	void setTopic(const string &topic);
+	void broadcast(User *user, const string &message);
 };
 
 ostream &operator<<(ostream &stream, Channel &channel);

@@ -63,13 +63,14 @@ class Server {
 
 	void addUser(unsigned int socket);
 	void removeUser(User &user);
-	[[nodiscard]] User &getUser(int socket);
-	[[nodiscard]] const vector<User> &getUsers() const;
+	[[nodiscard]] User *getUser(int socket);
+	[[nodiscard]] User *getUser(const string &nickname);
+	[[nodiscard]] vector<User> &getUsers();
 
 	Channel &addChannel(const string &channelName);
 	void removeChannel(Channel &channel);
 	[[nodiscard]] vector<Channel> &getChannels();
-	[[nodiscard]] Channel &getChannel(const string &name);
+	[[nodiscard]] Channel *getChannel(const string &name);
 	[[nodiscard]] const string &getHostname();
 
    private:

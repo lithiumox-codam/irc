@@ -3,30 +3,29 @@
 
 #include "Codes.hpp"
 #include "General.hpp"
+#include "IRStream.hpp"
 #include "Server.hpp"
-#include "User.hpp"
 
 extern Server server;
 
-bool NICK(stringstream &stream, string &args, User &user) {
+bool NICK(IRStream &stream, string &args, User *user) {
 	if (args.empty()) {
-		stream.str("");
-		stream << startRes(ERR_NEEDMOREPARAMS) + user.getNickname() + " NICK :Not enough parameters" << END;
+		stream.code(ERR_NEEDMOREPARAMS).trail("Not enough parameters").end();
 		return false;
 	}
 
-	const vector<User> &users = server.getUsers();
+	const auto &users = server.getUsers();
 
-	auto iter = find_if(users.begin(), users.end(), [&args](const User &user) { return user.getNickname() == args; });
+	auto iter = find_if(users.begin(), users.end(), [&args](const auto &user) { return user.getNickname() == args; });
 
 	if (iter != users.end()) {
-		stream.str("");
-		stream << startRes(ERR_NICKNAMEINUSE) + user.getNickname() + " " + args + " :Nickname is already in use" << END;
+		stream.code(ERR_NICKNAMEINUSE).param(user->getNickname()).param(args).trail("Nickname is already in use").end();
 		return false;
 	}
 
-	user.setNickname(args);
-	user.addHandshake(U_NICK);
-	stream << ":" << user.getNickname() << " NICK " << user.getNickname() << END;
+	user->setNickname(args);
+	user->addHandshake(U_NICK);
+
+	stream.prefix().command().param(user->getNickname()).end();
 	return true;
 }
