@@ -48,6 +48,19 @@ IRStream &IRStream::prefix(User *user) {
 }
 
 /**
+ * @brief Adds the modes the user possesses in a channel to the current command.
+ *
+ * @param user A pointer to the user to prefix the command with.
+ * @param channel A pointer to the channel the user is in.
+ * @return IRStream&
+ */
+IRStream &IRStream::prefix(User *user, Channel *channel) {
+	*this << ":" << channel->getUserModes(user) << user->getNickname() << "!" << user->getUsername() << "@"
+		  << user->getHostname();
+	return *this;
+}
+
+/**
  * @brief Add a code to the current command.
  * @code " <code>" cannot contain spaces.
  *

@@ -28,6 +28,7 @@ class Modes {
 
    public:
 	Modes();
+	~Modes() = default;
 	Modes(unsigned int modes);
 	Modes(const Modes &modes) noexcept;
 	auto operator=(const Modes &modes) noexcept -> Modes &;
@@ -37,6 +38,6 @@ class Modes {
 	void addModes(unsigned int modes);
 	void removeModes(unsigned int modes);
 	[[nodiscard]] bool hasModes(unsigned int modes) const;
-	string printModes() const;
+	string getModesString() const;
 	void clearModes();
 };

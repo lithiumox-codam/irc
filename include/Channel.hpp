@@ -39,6 +39,7 @@ class Channel {
 	[[nodiscard]] const string &getTopic() const;
 	void setTopic(const string &topic);
 	void broadcast(User *user, const string &message);
+	string getUserModes(User *user);
 };
 
 ostream &operator<<(ostream &stream, Channel &channel);

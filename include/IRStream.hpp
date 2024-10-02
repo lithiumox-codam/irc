@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "Channel.hpp"
 #include "User.hpp"
 
 using namespace std;
@@ -20,6 +21,7 @@ class IRStream : public stringstream {
 	IRStream &setCommand(const string &cmd);
 	IRStream &prefix();
 	IRStream &prefix(User *user);
+	IRStream &prefix(User *user, Channel *channel);
 	IRStream &command();
 	IRStream &code(const string &code);
 	IRStream &param(const string &param);

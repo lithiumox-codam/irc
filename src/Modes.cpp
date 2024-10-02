@@ -21,16 +21,12 @@ void Modes::removeModes(unsigned int modes) { this->modes &= ~modes; }
 
 bool Modes::hasModes(unsigned int modes) const { return (this->modes & modes) == modes; }
 
-string Modes::printModes() const {
+string Modes::getModesString() const {
 	string result;
 	if (hasModes(M_OPERATOR)) {
-		result += "o";
-	}
-	if (hasModes(M_VOICE)) {
-		result += "v";
-	}
-	if (hasModes(M_INVISIBLE)) {
-		result += "i";
+		result += "@";
+	} else if (hasModes(M_VOICE)) {
+		result += "+";
 	}
 	return result;
 }

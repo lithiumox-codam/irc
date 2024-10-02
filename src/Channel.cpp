@@ -61,26 +61,25 @@ std::vector<pair<User *, Modes>> *Channel::getMembers() { return &this->members;
 
 void Channel::broadcast(User *user, const string &message) {
 	IRStream stream;
-	stream.prefix(user).param("PRIVMSG").param(this->getName()).trail(message).end();
+	stream.prefix(user, this).param("PRIVMSG").param(this->getName()).trail(message).end();
 	for (auto &member : *this->getMembers()) {
 		if (member.first->getSocket() == user->getSocket()) {
 			continue;
 		}
+		cout << stream.getString();
 		stream.sendPacket(member.first);
 	}
+}
+
+string Channel::getUserModes(User *user) {
+	for (const auto &member : this->members) {
+		if (member.first->getSocket() == user->getSocket()) {
+			return member.second.getModesString();
+		}
+	}
+	return "";
 }
 
 const string &Channel::getTopic() const { return this->topic; }
 
 void Channel::setTopic(const string &topic) { this->topic = topic; }
-
-ostream &operator<<(ostream &stream, Channel &channel) {
-	stream << "Channel: " << channel.getName() << "\n";
-	stream << "Password: " << channel.getPassword() << "\n";
-	stream << "Members: " << "\n";
-	auto *members = channel.getMembers();
-	for (const auto &member : *members) {
-		stream << member.first->getNickname() << '{' + member.second.printModes() + '}' << "\n";
-	}
-	return stream;
-}
