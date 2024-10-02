@@ -44,8 +44,6 @@ class User {
 
    public:
 	User(int socket);
-	// User(User &user) = delete;
-	// auto operator=(User &user) -> User & = delete;
 	User(const User &user) noexcept;
 	auto operator=(const User &user) noexcept -> User &;
 	virtual ~User() = default;
