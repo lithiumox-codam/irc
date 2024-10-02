@@ -7,9 +7,9 @@
 
 using namespace std;
 
-Channel::Channel() : modes(0) {};
+Channel::Channel() {};
 
-Channel::Channel(const string &name) : name(name), modes(0) {}
+Channel::Channel(const string &name) : name(name) {}
 
 Channel::Channel(const Channel &channel) noexcept
 	: members(channel.members),
@@ -59,29 +59,6 @@ bool Channel::hasUser(User *user) const {
 
 std::vector<pair<User *, Modes>> *Channel::getMembers() { return &this->members; }
 
-void Channel::setModes(unsigned int modes) { this->modes = modes; }
-
-unsigned int Channel::getModes() const { return this->modes; }
-
-void Channel::addModes(unsigned int modes) { this->modes |= modes; }
-
-void Channel::removeModes(unsigned int modes) { this->modes &= ~modes; }
-
-bool Channel::hasModes(unsigned int modes) const { return (this->modes & modes) == modes; }
-
-void Channel::printModes() const {
-	if (hasModes(M_MODERATED)) {
-		cout << "m";
-	}
-	if (hasModes(M_INVITE_ONLY)) {
-		cout << "i";
-	}
-	if (hasModes(M_PASSWORD)) {
-		cout << "k";
-	}
-	cout << "\n";
-}
-
 void Channel::broadcast(User *user, const string &message) {
 	IRStream stream;
 	stream.prefix(user).param("PRIVMSG").param(this->getName()).trail(message).end();
@@ -100,7 +77,6 @@ void Channel::setTopic(const string &topic) { this->topic = topic; }
 ostream &operator<<(ostream &stream, Channel &channel) {
 	stream << "Channel: " << channel.getName() << "\n";
 	stream << "Password: " << channel.getPassword() << "\n";
-	stream << "Modes: " << channel.getModes() << "\n";
 	stream << "Members: " << "\n";
 	auto *members = channel.getMembers();
 	for (const auto &member : *members) {

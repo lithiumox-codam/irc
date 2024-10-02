@@ -5,6 +5,7 @@
 #include "Codes.hpp"
 #include "General.hpp"
 #include "IRStream.hpp"
+#include "Modes.hpp"
 #include "Server.hpp"
 #include "User.hpp"
 
@@ -59,7 +60,8 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 		}
 		try {
 			Channel *channel = server.getChannel(token.first);
-			if (!token.second.empty() && channel->hasModes(M_PASSWORD) && channel->getPassword() != token.second) {
+			if (!token.second.empty() && channel->modes.hasModes(M_PASSWORD) &&
+				channel->getPassword() != token.second) {
 				stream.prefix()
 					.code(ERR_BADCHANNELKEY)
 					.param(user->getNickname())
@@ -76,7 +78,7 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 			channel->addUser(user);
 			if (!token.second.empty()) {
 				channel->setPassword(token.second);
-				channel->addModes(M_PASSWORD);
+				channel->modes.addModes(M_PASSWORD);
 			}
 			channel->getMembers()->front().second.addModes(M_OPERATOR);
 			stream.prefix(user).command().param(channel->getName()).end();

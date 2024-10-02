@@ -17,9 +17,8 @@ class Channel {
 	string password;
 	string topic;
 
-	Modes modes;
-
    public:
+	Modes modes;
 	Channel();
 	Channel(const string &name);
 	Channel(const Channel &channel) noexcept;
@@ -37,12 +36,6 @@ class Channel {
 
 	[[nodiscard]] vector<pair<User *, Modes>> *getMembers();
 
-	void setModes(unsigned int modes);
-	[[nodiscard]] unsigned int getModes() const;
-	void addModes(unsigned int modes);
-	void removeModes(unsigned int modes);
-	[[nodiscard]] bool hasModes(unsigned int modes) const;
-	void printModes() const;
 	[[nodiscard]] const string &getTopic() const;
 	void setTopic(const string &topic);
 	void broadcast(User *user, const string &message);
