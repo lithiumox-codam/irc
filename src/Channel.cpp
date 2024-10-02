@@ -35,9 +35,15 @@ void Channel::setPassword(const string &password) { this->password = password; }
 
 void Channel::setName(const string &name) { this->name = name; }
 
+/**
+ * @brief Adds a user to the channel.
+ * @remark The oldest user will be assigned operator status. Or the first user to join the channel.
+ *
+ * @param user The user to add.
+ */
 void Channel::addUser(User *user) {
 	this->members.push_back(make_pair(user, Modes()));
-	this->members.front().second.addModes(M_OWNER);
+	this->members.front().second.addModes(M_OPERATOR);
 }
 
 void Channel::removeUser(User *user) {

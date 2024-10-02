@@ -39,6 +39,8 @@ class User {
 	int socket;
 	unsigned int handshake;
 
+	bool isServerOperator;
+
 	string in_buffer;
 	string out_buffer;
 
@@ -75,6 +77,9 @@ class User {
 	[[nodiscard]] string &getOutBuffer();
 	void clearInBuffer();
 	void clearOutBuffer();
+
+	void checkServerOperator();
+	bool isServerOp() const;
 };
 
 ostream &operator<<(ostream &stream, const User &user);

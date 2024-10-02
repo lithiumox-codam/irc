@@ -51,6 +51,7 @@ bool CAP(IRStream &stream, string &args, User *user) {
 			string empty;
 			MOTD(stream, empty, user);
 			user->addHandshake(U_WELCOME);
+			user->checkServerOperator();
 		} else {
 			stream.prefix().code(ERR_PASSWDMISMATCH).param(user->getNickname()).trail("Password incorrect").end();
 		}

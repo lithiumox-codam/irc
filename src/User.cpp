@@ -7,6 +7,7 @@
 
 #include <cerrno>
 #include <cstring>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <ostream>
@@ -17,7 +18,7 @@
 
 extern Server server;
 
-User::User(int socket) : socket(socket), handshake(0) { cout << "Creating user with socket: " << this->socket << "\n"; }
+User::User(int socket) : socket(socket), handshake(0) {}
 
 User::User(const User &user) noexcept {
 	this->socket = user.socket;
@@ -182,11 +183,10 @@ int User::sendToSocket() {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				// Socket buffer is full, try again later
 				return totalSent > 0 ? totalSent : 0;
-			} else {
-				// Other error occurred
-				cerr << "Error: send failed: " << strerror(errno) << "\n";
-				return -1;
 			}
+			// Other error occurred
+			cerr << "Error: send failed: " << strerror(errno) << "\n";
+			return -1;
 		}
 	}
 	return totalSent;
@@ -197,3 +197,30 @@ bool User::checkPacket() { return this->in_buffer.find("\r\n") != string::npos; 
 string &User::getInBuffer() { return this->in_buffer; }
 
 string &User::getOutBuffer() { return this->out_buffer; }
+
+void User::checkServerOperator() {
+	std::ifstream file("operators");
+	if (!file.is_open()) {
+		cerr << "Error: could not open operators file. Please create a file named 'operators' in the server directory"
+			 << "\n";
+		return;
+	}
+
+	string line;
+	while (getline(file, line)) {
+		if (line == this->getNickname()) {
+			this->isServerOperator = true;
+			break;
+		}
+	}
+
+	if (!this->isServerOperator) {
+		cerr << "Error: " << this->getNickname() << " is not a server operator" << "\n";
+	} else {
+		cout << this->getNickname() << " is a server operator" << "\n";
+	}
+
+	file.close();
+}
+
+bool User::isServerOp() const { return this->isServerOperator; }
