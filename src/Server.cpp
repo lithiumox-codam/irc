@@ -304,3 +304,18 @@ Channel *Server::getChannel(const string &name) {
 const string &Server::getHostname() { return this->hostname; }
 
 bool Server::isBound() const { return this->socket != 0; }
+
+void Server::addOperator(const string &nickname) { this->operators.push_back(nickname); }
+
+bool Server::operatorCheck(User *user) const {
+	if (this->operators.empty()) {
+		return false;
+	}
+	// NOLINTNEXTLINE
+	for (const string &oper : this->operators) {
+		if (oper == user->getNickname()) {
+			return true;
+		}
+	}
+	return false;
+}

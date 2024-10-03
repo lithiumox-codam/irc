@@ -197,30 +197,3 @@ bool User::checkPacket() { return this->in_buffer.find("\r\n") != string::npos; 
 string &User::getInBuffer() { return this->in_buffer; }
 
 string &User::getOutBuffer() { return this->out_buffer; }
-
-void User::checkServerOperator() {
-	std::ifstream file("operators");
-	if (!file.is_open()) {
-		cerr << "Error: could not open operators file. Please create a file named 'operators' in the server directory"
-			 << "\n";
-		return;
-	}
-
-	string line;
-	while (getline(file, line)) {
-		if (line == this->getNickname()) {
-			this->isServerOperator = true;
-			break;
-		}
-	}
-
-	if (!this->isServerOperator) {
-		cerr << "Error: " << this->getNickname() << " is not a server operator" << "\n";
-	} else {
-		cout << this->getNickname() << " is a server operator" << "\n";
-	}
-
-	file.close();
-}
-
-bool User::isServerOp() const { return this->isServerOperator; }

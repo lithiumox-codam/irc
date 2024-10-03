@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -53,6 +54,14 @@ static void checkEnv() {
 			server.setHostname(value);
 		}
 	}
+	if (getenv("OPERATORS") != nullptr) {
+		value = getenv("OPERATORS");
+		std::istringstream iss(value);
+		string oper;
+		while (std::getline(iss, oper, ',')) {
+			server.addOperator(oper);
+		}
+	}
 }
 
 bool getEnv() {
@@ -79,6 +88,12 @@ bool getEnv() {
 			} else if (key == "HOSTNAME") {
 				if (checkHostname(value)) {
 					server.setHostname(value);
+				}
+			} else if (key == "OPERATORS") {
+				std::istringstream iss(value);
+				string oper;
+				while (std::getline(iss, oper, ',')) {
+					server.addOperator(oper);
 				}
 			}
 		}
