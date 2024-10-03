@@ -30,6 +30,7 @@ using namespace std;
 
 /* Utils */
 vector<string> split(const string& str, const char& delim);
+pair<string, string> splitPair(const string &str, const char &delim);
 
 bool CAP(IRStream& stream, string& args, User* user);
 bool NICK(IRStream& stream, string& args, User* user);
@@ -43,6 +44,7 @@ bool PRIVMSG(IRStream& stream, string& args, User* user);
 bool WHO(IRStream& stream, string& args, User* user);
 bool TOPIC(IRStream& stream, string& args, User* user);
 bool PART(IRStream& stream, string& args, User* user);
+bool KICK(IRStream &stream, string &args, User *user);
 
 /**
  * @brief The store of all the commands. This is a map of strings to function pointers. Used by the parser to determine
@@ -50,6 +52,7 @@ bool PART(IRStream& stream, string& args, User* user);
  */
 const std::map<string, bool (*)(IRStream&, string&, User*)> store = {
 	{"PASS", PASS}, {"CAP", CAP},	{"NICK", NICK},		  {"MOTD", MOTD}, {"USER", USER},  {"INFO", INFO},
-	{"JOIN", JOIN}, {"PING", PING}, {"PRIVMSG", PRIVMSG}, {"WHO", WHO},	  {"TOPIC", TOPIC}, {"PART", PART}};
+	{"JOIN", JOIN}, {"PING", PING}, {"PRIVMSG", PRIVMSG}, {"WHO", WHO},	  {"TOPIC", TOPIC}, {"PART", PART}, 
+	{"KICK", KICK}};
 
 bool parse(User* user);

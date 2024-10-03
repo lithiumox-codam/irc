@@ -10,18 +10,6 @@
 
 extern Server server;
 
-pair<string, string>parseTopic(string &args) {
-	size_t found = args.find(' ');
-	
-	if (found == string::npos) {
-		return make_pair(args, "");
-	}
-	string target = args.substr(0, found);
-	string message = args.substr(found + 1);
-
-	return make_pair(target, message);
-}
-
 bool TOPIC(IRStream &stream, string &args, User *user) {
 	if (!user->hasHandshake(U_COMPLETED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
@@ -31,7 +19,7 @@ bool TOPIC(IRStream &stream, string &args, User *user) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 		return false;
 	}
-	pair<string, string> tokens = parseTopic(args);
+	pair<string, string> tokens = splitPair(args, ' ');
 	cerr << "parser gives: " << tokens.first << " and [" << tokens.second << "]\n";
 	try {
 		Channel *channel = server.getChannel(tokens.first);

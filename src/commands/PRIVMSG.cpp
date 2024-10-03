@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Codes.hpp"
+#include "General.hpp"
 #include "IRStream.hpp"
 #include "Server.hpp"
 #include "User.hpp"
@@ -9,27 +10,12 @@ extern Server server;
 
 using namespace std;
 
-pair<string, string> parseMsg(string &args) {
-	size_t found = args.find(' ');
-	if (found == string::npos) {
-		return make_pair(args, "");
-	}
-	string target = args.substr(0, found);
-	string message = args.substr(found + 1);
-
-	if (!message.empty() && message[0] == ':') {
-		message = message.substr(1);
-	}
-
-	return make_pair(target, message);
-}
-
 bool PRIVMSG(IRStream &stream, string &args, User *user) {
 	if (args.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 		return false;
 	}
-	pair<string, string> token = parseMsg(args);
+	pair<string, string> token = splitPair(args, ' ');
 	if (token.first.empty() || token.second.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 		return false;
