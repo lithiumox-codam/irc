@@ -59,6 +59,15 @@ bool Channel::hasUser(User *user) const {
 
 std::vector<pair<User *, Modes>> *Channel::getMembers() { return &this->members; }
 
+std::pair<User *, Modes> *Channel::getMember(User *user) {
+	for (auto &member : this->members) {
+		if (member.first->getSocket() == user->getSocket()) {
+			return &member;
+		}
+	}
+	return nullptr;
+}
+
 void Channel::broadcast(User *user, const string &message) {
 	IRStream stream;
 	stream.prefix(user).param("PRIVMSG").param(this->getName()).trail(message).end();

@@ -53,6 +53,7 @@
 #define RPL_CREATIONTIME "329"	   // Channel creation time
 #define RPL_NOTOPIC "331"		   // No topic set
 #define RPL_TOPIC "332"			   // Topic for the channel
+#define RPL_TOPICTIME "333"		   // Topic time
 #define RPL_INVITING "341"		   // Invitation sent
 #define RPL_SUMMONING "342"		   // Summoning user
 #define RPL_INVITELIST "346"	   // Invite list

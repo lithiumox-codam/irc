@@ -35,6 +35,7 @@ class Channel {
 	bool hasUser(User *user) const;
 
 	[[nodiscard]] vector<pair<User *, Modes>> *getMembers();
+	[[nodiscard]] pair<User *, Modes> *getMember(User *user);
 
 	[[nodiscard]] const string &getTopic() const;
 	void setTopic(const string &topic);
