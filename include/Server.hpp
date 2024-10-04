@@ -55,9 +55,9 @@ class Server {
 	void stop();
 
 	void epollCreate();
-	void epollAdd(int socket);
-	void epollRemove(int socket);
-	void epollChange(int socket, uint32_t events);
+	void epollAdd(int socket) const;
+	void epollRemove(int socket) const;
+	void epollChange(int socket, uint32_t events) const;
 	void epollEvent(struct epoll_event &event);
 	int epollWait();
 	void handleEvents(array<struct epoll_event, (size_t)ServerConfig::BACKLOG> &events, int numberOfEvents);

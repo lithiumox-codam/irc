@@ -43,13 +43,15 @@ bool PRIVMSG(IRStream& stream, string& args, User* user);
 bool WHO(IRStream& stream, string& args, User* user);
 bool TOPIC(IRStream& stream, string& args, User* user);
 bool PART(IRStream& stream, string& args, User* user);
+bool MODE(IRStream& stream, string& args, User* user);
 
 /**
  * @brief The store of all the commands. This is a map of strings to function pointers. Used by the parser to determine
  * which function to call.
  */
 const std::map<string, bool (*)(IRStream&, string&, User*)> store = {
-	{"PASS", PASS}, {"CAP", CAP},	{"NICK", NICK},		  {"MOTD", MOTD}, {"USER", USER},  {"INFO", INFO},
-	{"JOIN", JOIN}, {"PING", PING}, {"PRIVMSG", PRIVMSG}, {"WHO", WHO},	  {"TOPIC", TOPIC}, {"PART", PART}};
+	{"PASS", PASS},	  {"CAP", CAP},	  {"NICK", NICK}, {"MOTD", MOTD},		{"USER", USER},
+	{"INFO", INFO},	  {"JOIN", JOIN}, {"PING", PING}, {"PRIVMSG", PRIVMSG}, {"WHO", WHO},
+	{"TOPIC", TOPIC}, {"PART", PART}, {"MODE", MODE}};
 
 bool parse(User* user);

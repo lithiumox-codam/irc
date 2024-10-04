@@ -67,7 +67,7 @@ void Server::epollCreate() {
 	}
 }
 
-void Server::epollAdd(int socket_fd) {
+void Server::epollAdd(int socket_fd) const {
 	struct epoll_event event = {.events = EPOLLIN, .data = {.fd = socket_fd}};
 
 	if (epoll_ctl(this->epoll_fd, EPOLL_CTL_ADD, socket_fd, &event) == -1) {
@@ -152,7 +152,7 @@ void Server::epollEvent(struct epoll_event &event) {
 	}
 }
 
-void Server::epollRemove(int socket_fd) {
+void Server::epollRemove(int socket_fd) const {
 	if (epoll_ctl(this->epoll_fd, EPOLL_CTL_DEL, socket_fd, nullptr) == -1) {
 		cerr << strerror(errno) << '\n';
 		cerr << "Error: epoll_ctl failed" << '\n';
@@ -160,7 +160,7 @@ void Server::epollRemove(int socket_fd) {
 	}
 }
 
-void Server::epollChange(int socket_fd, uint32_t events) {
+void Server::epollChange(int socket_fd, uint32_t events) const {
 	struct epoll_event event = {.events = events, .data = {.fd = socket_fd}};
 
 	if (epoll_ctl(this->epoll_fd, EPOLL_CTL_MOD, socket_fd, &event) == -1) {

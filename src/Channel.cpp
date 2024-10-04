@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "IRStream.hpp"
+#include "Modes.hpp"
 
 using namespace std;
 
@@ -75,7 +76,6 @@ void Channel::broadcast(User *user, const string &message) {
 		if (member.first->getSocket() == user->getSocket()) {
 			continue;
 		}
-		cout << stream.getString();
 		stream.sendPacket(member.first);
 	}
 }
@@ -92,3 +92,5 @@ string Channel::getUserModes(User *user) {
 const string &Channel::getTopic() const { return this->topic; }
 
 void Channel::setTopic(const string &topic) { this->topic = topic; }
+
+chrono::time_point<chrono::system_clock> Channel::getCreated() const { return this->created; }

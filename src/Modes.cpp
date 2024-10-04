@@ -1,5 +1,9 @@
 #include "Modes.hpp"
 
+#include "Server.hpp"
+
+extern Server server;
+
 Modes::Modes() : modes(0) {}
 
 /**
@@ -73,10 +77,14 @@ bool Modes::hasModes(unsigned int modes) const { return (this->modes & modes) ==
  */
 string Modes::getModesString() const {
 	string result;
-	if (hasModes(M_OPERATOR)) {
-		result += "@";
-	} else if (hasModes(M_VOICE)) {
-		result += "+";
+	const std::string modeChars = "@+imiktl";
+	const unsigned int modeValues[] = {M_OPERATOR,	  M_VOICE,	  M_INVISIBLE,	M_MODERATED,
+									   M_INVITE_ONLY, M_PASSWORD, M_TOPIC_LOCK, M_LIMIT};
+
+	for (size_t i = 0; i < modeChars.size(); ++i) {
+		if (hasModes(modeValues[i])) {
+			result += modeChars[i];
+		}
 	}
 	return result;
 }

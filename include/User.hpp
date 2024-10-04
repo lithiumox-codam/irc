@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <string>
 
+#include "Modes.hpp"
+
 using namespace std;
 
 enum UserConfig : uint16_t {
@@ -43,6 +45,7 @@ class User {
 	string out_buffer;
 
    public:
+	Modes modes;
 	User(int socket);
 	User(const User &user) noexcept;
 	auto operator=(const User &user) noexcept -> User &;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <utility>
@@ -13,9 +14,12 @@ using namespace std;
 class Channel {
    private:
 	vector<pair<User *, Modes>> members;
+	vector<User *> operators;
 	string name;
 	string password;
 	string topic;
+
+	chrono::time_point<chrono::system_clock> created;
 
    public:
 	Modes modes;
@@ -40,6 +44,8 @@ class Channel {
 	void setTopic(const string &topic);
 	void broadcast(User *user, const string &message);
 	string getUserModes(User *user);
+
+	[[nodiscard]] chrono::time_point<chrono::system_clock> getCreated() const;
 };
 
 ostream &operator<<(ostream &stream, Channel &channel);

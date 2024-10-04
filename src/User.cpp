@@ -7,7 +7,6 @@
 
 #include <cerrno>
 #include <cstring>
-#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <ostream>
@@ -18,7 +17,11 @@
 
 extern Server server;
 
-User::User(int socket) : socket(socket), handshake(0) {}
+User::User(int socket) : socket(socket), handshake(0) {
+	if (server.operatorCheck(this)) {
+		modes.addModes(M_OPERATOR);
+	}
+}
 
 User::User(const User &user) noexcept {
 	this->socket = user.socket;
