@@ -76,6 +76,7 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 			server.addChannel(token.first);
 			Channel *channel = server.getChannel(token.first);
 			channel->addUser(user);
+			channel->addOperator(user);
 			if (!token.second.empty()) {
 				channel->setPassword(token.second);
 				channel->modes.addModes(M_PASSWORD);

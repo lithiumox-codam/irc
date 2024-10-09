@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdexcept>
+#include <string>
 
 #include "Channel.hpp"
 #include "Codes.hpp"
@@ -11,10 +12,20 @@
 
 extern Server server;
 
-bool MODE(IRStream &stream, string &args, User *user) {
-	// unsigned int added = 0;
-	// unsigned int removed = 0;
+void applyModeChanges(Modes &modes, string &modeChanges) {
+	const std::string modeChars = "@+imiktl";
+	const unsigned int modeValues[] = {M_OPERATOR,	  M_VOICE,	  M_INVISIBLE,	M_MODERATED,
+									   M_INVITE_ONLY, M_PASSWORD, M_TOPIC_LOCK, M_LIMIT};
+	for (size_t i = 0; i < modeChanges.size(); ++i) {
+		if (modeChanges[i] == '+') {
+			modes.addModes(modeValues[modeChars.find(modeChanges[i + 1])]);
+		} else if (modeChanges[i] == '-') {
+			modes.removeModes(modeValues[modeChars.find(modeChanges[i + 1])]);
+		}
+	}
+}
 
+bool MODE(IRStream &stream, string &args, User *user) {
 	if (args.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).trail("MODE :Not enough parameters").end();
 		return false;
@@ -37,12 +48,6 @@ bool MODE(IRStream &stream, string &args, User *user) {
 					.param(user->getNickname())
 					.param(channel->getName())
 					.trail("+" + channel->modes.getModesString())
-					.end();
-				stream.prefix()
-					.code(RPL_CREATIONTIME)
-					.param(user->getNickname())
-					.param(channel->getName())
-					.trail(channel->getCreated())
 					.end();
 				return true;
 			}

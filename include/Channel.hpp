@@ -1,6 +1,6 @@
 #pragma once
 
-#include <chrono>
+#include <ctime>
 #include <iostream>
 #include <string>
 #include <utility>
@@ -19,7 +19,7 @@ class Channel {
 	string password;
 	string topic;
 
-	chrono::time_point<chrono::system_clock> created;
+	time_t created;
 
    public:
 	Modes modes;
@@ -38,6 +38,10 @@ class Channel {
 	void removeUser(User *user);
 	bool hasUser(User *user) const;
 
+	void addOperator(User *user);
+	void removeOperator(User *user);
+	bool hasOperator(User *user) const;
+
 	[[nodiscard]] vector<pair<User *, Modes>> *getMembers();
 
 	[[nodiscard]] const string &getTopic() const;
@@ -45,7 +49,7 @@ class Channel {
 	void broadcast(User *user, const string &message);
 	string getUserModes(User *user);
 
-	[[nodiscard]] chrono::time_point<chrono::system_clock> getCreated() const;
+	[[nodiscard]] time_t getCreated() const;
 };
 
 ostream &operator<<(ostream &stream, Channel &channel);
