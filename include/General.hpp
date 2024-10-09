@@ -45,6 +45,8 @@ bool WHO(IRStream& stream, string& args, User* user);
 bool TOPIC(IRStream& stream, string& args, User* user);
 bool PART(IRStream& stream, string& args, User* user);
 bool KICK(IRStream &stream, string &args, User *user);
+bool INVITE(IRStream &stream, string &args, User *user);
+
 
 /**
  * @brief The store of all the commands. This is a map of strings to function pointers. Used by the parser to determine

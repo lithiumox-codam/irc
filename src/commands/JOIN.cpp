@@ -60,7 +60,7 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 		}
 		try {
 			Channel *channel = server.getChannel(token.first);
-			if (!token.second.empty() && channel->modes.hasModes(M_PASSWORD) &&
+			if (channel->modes.hasModes(M_PASSWORD) &&
 				channel->getPassword() != token.second) {
 				stream.prefix()
 					.code(ERR_BADCHANNELKEY)
