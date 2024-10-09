@@ -56,6 +56,6 @@ bool MODE(IRStream& stream, string& args, User* user);
 const std::map<string, bool (*)(IRStream&, string&, User*)> store = {
 	{"PASS", PASS}, {"CAP", CAP},	{"NICK", NICK},		  {"MOTD", MOTD}, {"USER", USER},  {"INFO", INFO},
 	{"JOIN", JOIN}, {"PING", PING}, {"PRIVMSG", PRIVMSG}, {"WHO", WHO},	  {"TOPIC", TOPIC}, {"PART", PART}, 
-	{"KICK", KICK}, {"INVITE", INVITE}, {"MODE", MODE};
+	{"KICK", KICK}, {"INVITE", INVITE}, {"MODE", MODE}};
 
 bool parse(User* user);

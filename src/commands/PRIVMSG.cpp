@@ -63,7 +63,7 @@ bool PRIVMSG(IRStream &stream, string &args, User *user) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 		return false;
 	}
-	pair<string, string> token = parseMsg(args);
+	pair<string, string> token = splitPair(args, ' ');
 	if (token.first.empty() || token.second.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 		return false;
