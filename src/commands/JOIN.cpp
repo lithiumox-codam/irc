@@ -60,8 +60,7 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 		}
 		try {
 			Channel *channel = server.getChannel(token.first);
-			if (channel->modes.hasModes(M_PASSWORD) &&
-				channel->getPassword() != token.second) {
+			if (channel->modes.hasModes(M_PASSWORD) && channel->getPassword() != token.second) {
 				stream.prefix()
 					.code(ERR_BADCHANNELKEY)
 					.param(user->getNickname())
@@ -75,12 +74,12 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 		} catch (const runtime_error &e) {
 			server.addChannel(token.first);
 			Channel *channel = server.getChannel(token.first);
+			channel->addOperator(user);
 			channel->addUser(user);
 			if (!token.second.empty()) {
 				channel->setPassword(token.second);
 				channel->modes.addModes(M_PASSWORD);
 			}
-			channel->getMembers()->front().second.addModes(M_OPERATOR);
 			stream.prefix(user).command().param(channel->getName()).end();
 		}
 	}

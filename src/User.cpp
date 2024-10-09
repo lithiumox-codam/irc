@@ -17,7 +17,11 @@
 
 extern Server server;
 
-User::User(int socket) : socket(socket), handshake(0) { cout << "Creating user with socket: " << this->socket << "\n"; }
+User::User(int socket) : socket(socket), handshake(0) {
+	if (server.operatorCheck(this)) {
+		modes.addModes(M_OPERATOR);
+	}
+}
 
 User::User(const User &user) noexcept {
 	this->socket = user.socket;
@@ -182,11 +186,10 @@ int User::sendToSocket() {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				// Socket buffer is full, try again later
 				return totalSent > 0 ? totalSent : 0;
-			} else {
-				// Other error occurred
-				cerr << "Error: send failed: " << strerror(errno) << "\n";
-				return -1;
 			}
+			// Other error occurred
+			cerr << "Error: send failed: " << strerror(errno) << "\n";
+			return -1;
 		}
 	}
 	return totalSent;
