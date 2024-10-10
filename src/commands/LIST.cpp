@@ -11,12 +11,40 @@ bool LIST(IRStream &stream, string &args, User *user) {
 		return false;
 	}
 	if (args.empty()) {
-		stream.prefix().code(RPL_LISTSTART).param(user->getNickname()).trail("Channel :Users Name").end();
 		for (auto &channel : server.getChannels()) {
-			stream.prefix().code(RPL_LIST).param(user->getNickname()).param(channel.getName()).trail("0 :").end();
+			stream.prefix()
+				.code(RPL_LIST)
+				.param(user->getNickname())
+				.param(channel.getName())
+				.param(to_string(channel.getMembers()->size()))
+				.trail(channel.getTopic())
+				.end();
 		}
-		stream.prefix().code(RPL_LISTEND).param(user->getNickname()).trail("End of /LIST").end();
+		stream.prefix().code(RPL_LISTEND).param(user->getNickname()).trail("End of LIST").end();
 		return true;
 	}
-	return false;
+
+	vector<string> channels = split(args, ',');
+
+	if (channels.empty()) {
+		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
+		return false;
+	}
+
+	for (const auto &channelName : channels) {
+		try {
+			Channel *channel = server.getChannel(channelName);
+			stream.prefix()
+				.code(RPL_LIST)
+				.param(user->getNickname())
+				.param(channel->getName())
+				.param(to_string(channel->getMembers()->size()))
+				.trail(channel->getTopic())
+				.end();
+		} catch (runtime_error &e) {
+			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail(e.what()).end();
+			return false;
+		}
+	}
+	return true;
 }

@@ -37,6 +37,7 @@ class Channel {
 	void addUser(User *user);
 	void removeUser(User *user);
 	bool hasUser(User *user) const;
+	pair<User *, Modes> &getMember(const string &nickname);
 
 	void addOperator(User *user);
 	void removeOperator(User *user);

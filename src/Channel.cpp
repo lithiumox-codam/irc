@@ -73,6 +73,16 @@ bool Channel::hasUser(User *user) const {
 	return false;
 }
 
+pair<User *, Modes> &Channel::getMember(const string &nickname) {
+	// NOLINTNEXTLINE
+	for (auto &member : this->members) {
+		if (member.first->getNickname() == nickname) {
+			return member;
+		}
+	}
+	throw runtime_error(nickname + " is not in the channel");
+}
+
 void Channel::addOperator(User *user) { operators.push_back(user); }
 
 void Channel::removeOperator(User *user) {
