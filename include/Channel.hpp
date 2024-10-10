@@ -15,6 +15,7 @@ class Channel {
    private:
 	vector<pair<User *, Modes>> members;
 	vector<User *> operators;
+	vector<User *> invited;
 	string name;
 	string password;
 	string topic;
@@ -41,6 +42,10 @@ class Channel {
 	void addOperator(User *user);
 	void removeOperator(User *user);
 	bool hasOperator(User *user) const;
+
+	void addInvited(User *user);
+	void removeInvited(User *user);
+	bool hasInvited(User *user) const;
 
 	[[nodiscard]] vector<pair<User *, Modes>> *getMembers();
 	[[nodiscard]] pair<User *, Modes> *getMember(User *user);

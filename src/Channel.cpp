@@ -95,6 +95,29 @@ bool Channel::hasOperator(User *user) const {
 	return false;
 }
 
+void Channel::addInvited(User *user) { this->invited.push_back(user); }
+
+void Channel::removeInvited(User *user) {
+	// NOLINTNEXTLINE
+	for (auto it = this->invited.begin(); it != this->invited.end(); ++it) {
+		if ((*it)->getSocket() == user->getSocket()) {
+			this->invited.erase(it);
+			return;
+		}
+	}
+}
+
+bool Channel::hasInvited(User *user) const {
+	// NOLINTNEXTLINE
+	for (const auto &member : this->invited) {
+		if (member->getSocket() == user->getSocket()) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
 std::vector<pair<User *, Modes>> *Channel::getMembers() { return &this->members; }
 
 std::pair<User *, Modes> *Channel::getMember(User *user) {

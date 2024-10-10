@@ -60,7 +60,12 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 		}
 		try {
 			Channel *channel = server.getChannel(token.first);
-			if (channel->modes.hasModes(M_PASSWORD) && channel->getPassword() != token.second) {
+			if (channel->hasInvited(user)) {
+				channel->removeInvited(user);
+			} else if (channel->modes.hasModes(M_INVITE_ONLY)) {
+				stream.prefix().code(ERR_INVITEONLYCHAN).param(user->getNickname()).trail("Cannot join channel (+i)").end();
+				return false;
+			} else if (channel->modes.hasModes(M_PASSWORD) && channel->getPassword() != token.second) {
 				stream.prefix()
 					.code(ERR_BADCHANNELKEY)
 					.param(user->getNickname())

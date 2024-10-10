@@ -24,7 +24,7 @@ bool INVITE(IRStream &stream, string &args, User *user) {
 			stream.prefix().code(ERR_NOTONCHANNEL).param(user->getNickname()).trail("You're not in that channel").end();
 			return false;
 		}
-		if (!inviter->second.hasModes(M_OPERATOR)) {
+		if (channel->modes.hasModes(M_INVITE_ONLY) && !inviter->second.hasModes(M_OPERATOR)) {
 			stream.prefix().code(ERR_CHANOPRIVSNEEDED).param(user->getNickname()).trail("You're not a channel operator").end();
 			return false;
 		}
@@ -33,7 +33,7 @@ bool INVITE(IRStream &stream, string &args, User *user) {
 			stream.prefix().code(ERR_USERONCHANNEL).param(user->getNickname()).trail("User is already on channel").end();
 			return false;
 		}
-		channel->addUser(invitee);
+		channel->addInvited(invitee);
 		stream.prefix().code(RPL_INVITING).param(user->getNickname()).param(tokens.second).param(tokens.first).end();
 		IRStream invStream;
 		invStream.prefix(user).param("INVITE").param(tokens.second).param(tokens.first).end().sendPacket(invitee);
@@ -45,7 +45,5 @@ bool INVITE(IRStream &stream, string &args, User *user) {
 		stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
 		return false;
 	}
-
 	return true;
 }
-
