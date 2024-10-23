@@ -17,13 +17,13 @@
 
 extern Server server;
 
-User::User(int socket) : socket(socket), handshake(0) {
+User::User(int socket) : socket(socket), handshake(0), modes(Type::USER) {
 	if (server.operatorCheck(this)) {
 		modes.addModes(M_OPERATOR);
 	}
 }
 
-User::User(const User &user) noexcept {
+User::User(const User &user) noexcept : modes(user.modes) {
 	this->socket = user.socket;
 	this->username = user.username;
 	this->nickname = user.nickname;

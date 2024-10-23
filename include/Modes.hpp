@@ -29,12 +29,15 @@ unsigned int const M_TOPIC_LOCK = 1 << 7;
 /** Determines if the channel has a limit. (+l) */
 unsigned int const M_LIMIT = 1 << 8;
 
+enum class Type { USER, CHANNEL };
+
 class Modes {
    private:
 	unsigned int modes;
+	Type type;
 
    public:
-	Modes();
+	Modes(Type type);
 	~Modes() = default;
 	Modes(unsigned int modes);
 	Modes(const Modes &modes) noexcept;
@@ -47,4 +50,5 @@ class Modes {
 	[[nodiscard]] bool hasModes(unsigned int modes) const;
 	string getModesString() const;
 	void clearModes();
+	Type getType() const;
 };
