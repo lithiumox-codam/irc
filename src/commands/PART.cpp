@@ -1,3 +1,4 @@
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "Server.hpp"
 #include "User.hpp"
@@ -24,7 +25,7 @@ bool PART(IRStream &stream, string &args, User *user) {
 			if (channel->getMembers()->empty()) {
 				server.removeChannel(*channel);
 			}
-		} catch (runtime_error &e) {
+		} catch (IrcException &e) {
 			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
 			return false;
 		}

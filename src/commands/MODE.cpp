@@ -4,6 +4,7 @@
 
 #include "Channel.hpp"
 #include "Codes.hpp"
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "IRStream.hpp"
 #include "Modes.hpp"
@@ -52,7 +53,7 @@ bool MODE(IRStream &stream, string &args, User *user) {
 				return true;
 			}
 
-		} catch (runtime_error &e) {
+		} catch (IrcException &e) {
 			stream.prefix().code(ERR_NOSUCHCHANNEL).trail(tokens.front() + " :No such channel").end();
 			return false;
 		}

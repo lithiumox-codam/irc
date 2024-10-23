@@ -16,6 +16,7 @@
 
 #include "General.hpp"
 #include "User.hpp"
+#include "Exceptions.hpp"
 
 extern Server server;
 
@@ -298,7 +299,7 @@ Channel *Server::getChannel(const string &name) {
 			return &channel;
 		}
 	}
-	throw runtime_error("Channel not found");
+	throw ;
 }
 
 const string &Server::getHostname() { return this->hostname; }

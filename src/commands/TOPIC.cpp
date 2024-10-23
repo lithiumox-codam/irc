@@ -3,6 +3,7 @@
 #include <string>
 
 #include "Codes.hpp"
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "IRStream.hpp"
 #include "Modes.hpp"
@@ -73,7 +74,7 @@ bool TOPIC(IRStream &stream, string &args, User *user) {
 			.trail(to_string(time(nullptr)))
 			.end();
 		return true;
-	} catch (runtime_error &e) {
+	} catch (IrcException &e) {
 		stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
 		return false;
 	}

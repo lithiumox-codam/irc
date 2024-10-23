@@ -1,4 +1,5 @@
 
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "IRStream.hpp"
 #include "Server.hpp"
@@ -72,7 +73,7 @@ bool KICK(IRStream &stream, string &args, User *user){
 		}
 		stream.end();
 		return true;
-	} catch (const runtime_error &e) {
+	} catch (const IrcException &e) {
 		if (std::string(e.what()) == "Channel not found") {
 			stream.prefix()
 			.code(ERR_NOSUCHCHANNEL)

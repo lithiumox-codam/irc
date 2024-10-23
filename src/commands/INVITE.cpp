@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "IRStream.hpp"
 #include "Server.hpp"
@@ -37,7 +38,7 @@ bool INVITE(IRStream &stream, string &args, User *user) {
 		stream.prefix().code(RPL_INVITING).param(user->getNickname()).param(tokens.second).param(tokens.first).end();
 		IRStream invStream;
 		invStream.prefix(user).param("INVITE").param(tokens.second).param(tokens.first).end().sendPacket(invitee);
-	} catch(runtime_error &e) {
+	} catch (IrcException &e) {
 		if (e.what() == string("User not found")) {
 			stream.prefix().code(ERR_NOSUCHNICK).param(user->getNickname()).trail("No such nickname").end();
 			return false;
