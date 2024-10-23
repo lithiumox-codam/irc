@@ -54,12 +54,16 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
 			return false;
 		}
-		if (token.first.size() > 50) {
+		if (token.first.size() >= CHANNEL_LIMIT) {
 			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
 			return false;
 		}
 		try {
 			Channel *channel = server.getChannel(token.first);
+			if (channel->getMembers()->size() >= CHANNEL_LIMIT) {
+				stream.prefix().code(ERR_CHANNELISFULL).param(user->getNickname()).trail("Channel is full").end();
+				return false;
+			}
 			if (channel->hasInvited(user)) {
 				channel->removeInvited(user);
 			} else if (channel->modes.hasModes(M_INVITE_ONLY)) {

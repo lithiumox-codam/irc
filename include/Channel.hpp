@@ -11,6 +11,8 @@
 
 using namespace std;
 
+#define CHANNEL_LIMIT 50
+
 class Channel {
    private:
 	vector<pair<User *, Modes>> members;
