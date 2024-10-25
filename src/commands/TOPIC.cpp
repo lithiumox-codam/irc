@@ -74,7 +74,7 @@ bool TOPIC(IRStream &stream, string &args, User *user) {
 			.trail(to_string(time(nullptr)))
 			.end();
 		return true;
-	} catch (IrcException &e) {
+	} catch (runtime_error &e) {
 		stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
 		return false;
 	}
