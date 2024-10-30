@@ -4,6 +4,7 @@
 
 #include "General.hpp"
 #include "IRStream.hpp"
+#include "Codes.hpp"
 
 /**
  * @brief The parse function takes a message and returns a map of PacketType and the message.
@@ -27,16 +28,31 @@ bool parse(User *user) {
 				continue;
 			}
 
+			bool found = false;
+
+			string baseCommand = command.substr(0, command.find(' '));
+
 			for (const auto &pair : store) {
-				if (command.starts_with(pair.first)) {
-					stream.setCommand(pair.first);
-					string args = command.substr(pair.first.size() + 1);
+				if (baseCommand == pair.first) {
+					found = true;
+
+					stream.setCommand(baseCommand);
+					string args = command.substr(baseCommand.size() + 1);
 
 					if (!pair.second(stream, args, user)) {
 						stream.sendPacket(user); // why?
 						return false;
 					}
 				}
+			}
+
+			if (!found) {
+				stream.prefix()
+				.code(ERR_UNKNOWNCOMMAND)
+				.param(user->getNickname())
+				.param(baseCommand)
+				.trail("Unknown Command")
+				.end();
 			}
 		}
 	} catch (const runtime_error &e) {
