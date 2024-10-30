@@ -45,7 +45,6 @@ bool parse(User *user) {
 
 					if (!pair.second(stream, args, user)) {
 						stream.sendPacket(user); // why?
-						return false;
 					}
 				}
 			}
@@ -53,7 +52,7 @@ bool parse(User *user) {
 			if (!found) {
 				stream.prefix()
 				.code(ERR_UNKNOWNCOMMAND)
-				.param(user->getNickname()) // if nick is not yet set, might have an issue
+				.param(user->getNickname())
 				.param(baseCommand)
 				.trail("Unknown Command")
 				.end();

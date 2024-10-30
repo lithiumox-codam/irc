@@ -37,7 +37,7 @@ bool MOTD(IRStream &stream, string &args, User *user) {
 	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail(":- Remember: In space, everyone can hear you type!").end();
 
 	// End of MOTD
-	stream.prefix().code(RPL_ENDOFMOTD).param(user->getNickname()).trail(":End of /MOTD command. Enjoy your cosmic journey!").end();
+	stream.prefix().code(RPL_ENDOFMOTD).param(user->getNickname()).trail(":- End of /MOTD command. Enjoy your cosmic journey!").end();
 
 	return true;
 }

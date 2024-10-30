@@ -111,7 +111,7 @@ int User::readFromSocket() {
 
 	this->in_buffer.append(buffer.data());
 
-	parse(this); // if this fails, need to remove user
+	parse(this);
 	this->in_buffer.clear();
 	return bytesRead;
 }
