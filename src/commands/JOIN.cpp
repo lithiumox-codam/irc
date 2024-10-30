@@ -36,7 +36,7 @@ map<string, string> ParseJoin(string &args) {
 }
 
 bool JOIN(IRStream &stream, string &args, User *user) {
-	if (!user->hasHandshake(U_COMPLETED)) {
+	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return false;
 	}
@@ -80,7 +80,7 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 			}
 			channel->addUser(user);
 			stream.prefix(user).command().param(channel->getName()).end();
-		} catch (const runtime_error &e) {
+		} catch (const runtime_error &e) { // Channel not found
 			server.addChannel(token.first);
 			Channel *channel = server.getChannel(token.first);
 			channel->addOperator(user);

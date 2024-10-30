@@ -111,7 +111,7 @@ int User::readFromSocket() {
 
 	this->in_buffer.append(buffer.data());
 
-	parse(this);
+	parse(this); // if this fails, need to remove user
 	this->in_buffer.clear();
 	return bytesRead;
 }
@@ -128,7 +128,7 @@ void User::clearOutBuffer() { this->out_buffer.clear(); }
 ostream &operator<<(std::ostream &stream, const User &user) {
 	const int WIDTH = 52;
 	const std::map<unsigned int, char> handshakeMap = {
-		{U_INFO, 'I'}, {U_USER, 'U'}, {U_NICK, 'N'}, {U_AUTHENTICATED, 'A'}, {U_WELCOME, 'W'}};
+		{USER_INFO, 'I'}, {USER_USER, 'U'}, {USER_NICK, 'N'}, {USER_PASS, 'P'}, {USER_WELCOME, 'W'}};
 
 	// NOLINTNEXTLINE
 	auto line = [](char l, char m, char r) { return l + std::string(WIDTH - 2, m) + r; };

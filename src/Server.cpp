@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -299,7 +300,7 @@ Channel *Server::getChannel(const string &name) {
 			return &channel;
 		}
 	}
-	throw ;
+	throw std::runtime_error("Channel not found");
 }
 
 const string &Server::getHostname() { return this->hostname; }

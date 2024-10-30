@@ -35,7 +35,6 @@ bool CAP(IRStream &stream, string &args, User *user) {
 		stream.prefix().param(user->getNickname()).param(" :Not enough parameters").end();
 		return false;
 	}
-	user->addHandshake(U_INFO);
 
 	vector<string> tokens = split(args, ' ');
 
@@ -57,16 +56,13 @@ bool CAP(IRStream &stream, string &args, User *user) {
 		.params(tokens)
 		.end();
 	} else if (command == "END") {
-		if (user->hasHandshake(U_AUTHENTICATED)) {
+		user->addHandshake(USER_INFO);
+
+		if (user->hasHandshake(USER_AUTHENTICATED) &&
+			!user->hasHandshake(USER_WELCOME)) {
 			string empty;
 			MOTD(stream, empty, user);
-			user->addHandshake(U_WELCOME);
-		} else {
-			stream.prefix()
-			.code(ERR_PASSWDMISMATCH)
-			.param(user->getNickname())
-			.trail("Password incorrect")
-			.end();
+			user->addHandshake(USER_WELCOME);
 		}
 		return true;
 	} else {

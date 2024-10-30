@@ -12,7 +12,7 @@
 extern Server server;
 
 bool TOPIC(IRStream &stream, string &args, User *user) {
-	if (!user->hasHandshake(U_COMPLETED)) {
+	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return false;
 	}
