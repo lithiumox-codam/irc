@@ -30,6 +30,7 @@ using namespace std;
 
 /* Utils */
 vector<string> split(const string& str, const char& delim);
+vector<string> split(const string &str, const string &delim);
 pair<string, string> splitPair(const string &str, const char &delim);
 
 bool CAP(IRStream& stream, string& args, User* user);

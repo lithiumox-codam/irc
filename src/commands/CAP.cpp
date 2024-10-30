@@ -43,20 +43,38 @@ bool CAP(IRStream &stream, string &args, User *user) {
 	tokens.erase(tokens.begin());
 
 	if (command == "LS") {
-		stream.prefix().command().param("*").param("LS").param(CAPABILITIES).end();
+		stream.prefix()
+		.command()
+		.param("*")
+		.param("LS")
+		.param(CAPABILITIES)
+		.end();
 	} else if (command == "REQ") {
-		stream.prefix().command().param("*").param("ACK").params(tokens).end();
+		stream.prefix()
+		.command()
+		.param("*")
+		.param("ACK")
+		.params(tokens)
+		.end();
 	} else if (command == "END") {
 		if (user->hasHandshake(U_AUTHENTICATED)) {
 			string empty;
 			MOTD(stream, empty, user);
 			user->addHandshake(U_WELCOME);
 		} else {
-			stream.prefix().code(ERR_PASSWDMISMATCH).param(user->getNickname()).trail("Password incorrect").end();
+			stream.prefix()
+			.code(ERR_PASSWDMISMATCH)
+			.param(user->getNickname())
+			.trail("Password incorrect")
+			.end();
 		}
 		return true;
 	} else {
-		stream.prefix().code(ERR_UNKNOWNCOMMAND).param(user->getNickname()).trail("CAP :Unknown command").end();
+		stream.prefix()
+		.code(ERR_UNKNOWNCOMMAND)
+		.param(user->getNickname())
+		.trail("CAP :Unknown command")
+		.end();
 		return false;
 	}
 

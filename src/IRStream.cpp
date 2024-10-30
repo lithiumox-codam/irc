@@ -138,6 +138,7 @@ IRStream &IRStream::end() {
  */
 void IRStream::sendPacket(User *user) {
 	for (const auto &line : parts) {
+		cout << "DEBUG: Line sent: " << line;
 		user->addToBuffer(line);
 	}
 }
