@@ -37,7 +37,11 @@ bool parse(User *user) {
 					found = true;
 
 					stream.setCommand(baseCommand);
-					string args = command.substr(baseCommand.size() + 1);
+
+					string args;
+					if (command.size() > baseCommand.size()) {
+						args = command.substr(baseCommand.size() + 1);
+					}
 
 					if (!pair.second(stream, args, user)) {
 						stream.sendPacket(user); // why?
@@ -49,7 +53,7 @@ bool parse(User *user) {
 			if (!found) {
 				stream.prefix()
 				.code(ERR_UNKNOWNCOMMAND)
-				.param(user->getNickname())
+				.param(user->getNickname()) // if nick is not yet set, might have an issue
 				.param(baseCommand)
 				.trail("Unknown Command")
 				.end();
