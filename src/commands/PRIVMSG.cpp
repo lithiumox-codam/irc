@@ -40,16 +40,22 @@ bool handleChannelMessage(IRStream &stream, const pair<string, string> &token, U
 				.end();
 			return false;
 		}
-		if (!channel->modes.hasModes(M_MODERATED) || channel->getUserModes(user).find('+') != string::npos || channel->hasOperator(user)) {
+		if (!channel->modes.hasModes(M_MODERATED)) {
 			channel->broadcast(user, token.second);
 		} else {
-			stream.prefix()
-				.code(ERR_CANNOTSENDTOCHAN)
-				.param(user->getNickname())
-				.param(token.first)
-				.trail("Cannot send to channel missing voice! (+m)")
-				.end();
-			return false;
+			if (channel->getMember(user->getNickname()).second.hasModes(M_VOICE)) {
+				channel->broadcast(user, token.second);
+			} else if (channel->hasOperator(user)) {
+				channel->broadcast(user, token.second);
+			} else {
+				stream.prefix()
+					.code(ERR_CANNOTSENDTOCHAN)
+					.param(user->getNickname())
+					.param(token.first)
+					.trail("Cannot send to channel missing voice! (+m)")
+					.end();
+				return false;
+			}
 		}
 	} catch (const runtime_error &e) {
 		stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();

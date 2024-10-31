@@ -4,7 +4,7 @@
 
 extern Server server;
 
-Modes::Modes() : modes(0) {}
+Modes::Modes(Type type) : modes(0) { this->type = type; }
 
 /**
  * @brief Construct a new Modes object
@@ -46,18 +46,37 @@ void Modes::setModes(unsigned int modes) { this->modes = modes; }
 unsigned int Modes::getModes() const { return modes; }
 
 /**
- * @brief Adds one or more modes to the user.
+ * @brief Adds one or more modes to the class. This function will only add the modes that are allowed for the user type.
+ * For example, a channel user cannot have the M_INVISIBLE mode. And a user cannot have the M_MODERATED mode.
  *
  * @param modes The modes to add.
  */
-void Modes::addModes(unsigned int modes) { this->modes |= modes; }
+void Modes::addModes(unsigned int modes) {
+	if (this->type == Type::CHANNEL) {
+		modes &= M_MODERATED | M_INVITE_ONLY | M_PASSWORD | M_TOPIC_LOCK | M_LIMIT;
+	}
+	if (this->type == Type::USER) {
+		modes &= M_OPERATOR | M_VOICE | M_INVISIBLE;
+	}
+	this->modes |= modes;
+}
 
 /**
- * @brief Removes one or more modes from the user.
+ * @brief Removes one or more modes from the class. This function will only remove the modes that are allowed for the
+ * user or channel. For example, a channel user cannot have the M_INVISIBLE mode. And a user cannot have the M_MODERATED
+ * mode.
  *
  * @param modes The modes to remove.
  */
-void Modes::removeModes(unsigned int modes) { this->modes &= ~modes; }
+void Modes::removeModes(unsigned int modes) {
+	if (this->type == Type::CHANNEL) {
+		modes &= M_MODERATED | M_INVITE_ONLY | M_PASSWORD | M_TOPIC_LOCK | M_LIMIT;
+	}
+	if (this->type == Type::USER) {
+		modes &= M_OPERATOR | M_VOICE | M_INVISIBLE;
+	}
+	this->modes &= ~modes;
+}
 
 /**
  * @brief Checks if the user has one or more modes.
@@ -77,13 +96,18 @@ bool Modes::hasModes(unsigned int modes) const { return (this->modes & modes) ==
  */
 string Modes::getModesString() const {
 	string result;
-	const std::string modeChars = "@+imiktl";
+	const std::string modeChars = "@vimiktl";
 	const unsigned int modeValues[] = {M_OPERATOR,	  M_VOICE,	  M_INVISIBLE,	M_MODERATED,
 									   M_INVITE_ONLY, M_PASSWORD, M_TOPIC_LOCK, M_LIMIT};
 
 	for (size_t i = 0; i < modeChars.size(); ++i) {
 		if (hasModes(modeValues[i])) {
 			result += modeChars[i];
+		}
+	}
+	for (size_t i = 0; i < modeChars.size(); ++i) {
+		if (hasModes(modeValues[i])) {
+			cout << modeChars[i] << " ";
 		}
 	}
 	return result;
@@ -93,3 +117,10 @@ string Modes::getModesString() const {
  * @brief Clears all modes.
  */
 void Modes::clearModes() { modes = 0; }
+
+/**
+ * @brief Returns the type of the modes.
+ *
+ * @return Type
+ */
+Type Modes::getType() const { return type; }

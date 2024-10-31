@@ -302,7 +302,7 @@ Channel *Server::getChannel(const string &name) {
 			return &channel;
 		}
 	}
-	throw std::runtime_error("Channel not found");
+	throw runtime_error("Channel " + name + " not found");
 }
 
 const string &Server::getHostname() { return this->hostname; }

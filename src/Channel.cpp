@@ -8,9 +8,9 @@
 
 using namespace std;
 
-Channel::Channel() {};
+Channel::Channel() : modes(Type::CHANNEL) {};
 
-Channel::Channel(const string &name) : name(name), created(time(nullptr)) {}
+Channel::Channel(const string &name) : name(name), created(time(nullptr)), modes(Type::CHANNEL) {}
 
 Channel::Channel(const Channel &channel) noexcept
 	: members(channel.members),
@@ -47,7 +47,7 @@ void Channel::setName(const string &name) { this->name = name; }
  * @param user The user to add.
  */
 void Channel::addUser(User *user) {
-	this->members.emplace_back(user, Modes());
+	this->members.emplace_back(user, Modes(Type::CHANNEL));
 	if (this->hasOperator(user)) {
 		this->getMembers()->back().second.addModes(M_OPERATOR);
 	}
@@ -71,6 +71,16 @@ bool Channel::hasUser(User *user) const {
 		}
 	}
 	return false;
+}
+
+pair<User *, Modes> &Channel::getMember(const string &nickname) {
+	// NOLINTNEXTLINE
+	for (auto &member : this->members) {
+		if (member.first->getNickname() == nickname) {
+			return member;
+		}
+	}
+	throw runtime_error(nickname + " is not in the channel");
 }
 
 void Channel::addOperator(User *user) { operators.push_back(user); }
