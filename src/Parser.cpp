@@ -43,9 +43,7 @@ bool parse(User *user) {
 						args = command.substr(baseCommand.size() + 1);
 					}
 
-					if (!pair.second(stream, args, user)) {
-						stream.sendPacket(user); // why?
-					}
+					pair.second(stream, args, user);
 				}
 			}
 
