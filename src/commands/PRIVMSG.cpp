@@ -40,7 +40,7 @@ bool handleChannelMessage(IRStream &stream, const pair<string, string> &token, U
 				.end();
 			return false;
 		}
-		if (!channel->modes.hasModes(M_MODERATED) || channel->getUserModes(user).find('+') != string::npos) {
+		if (!channel->modes.hasModes(M_MODERATED) || channel->getUserModes(user).find('+') != string::npos || channel->hasOperator(user)) {
 			channel->broadcast(user, token.second);
 		} else {
 			stream.prefix()

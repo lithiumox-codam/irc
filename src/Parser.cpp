@@ -17,7 +17,7 @@ bool parse(User *user) {
 	IRStream stream;
 	try {
 		string &buffer = user->getInBuffer();
-		cout << "DEBUG: Line recv: " << buffer << "\n";
+		cout << "DEBUG: " << user->getSocket() << " / " << user->getNickname() << " " << "Line recv: " << buffer << "\n";
 		if (buffer.empty()) {
 			return true;
 		}

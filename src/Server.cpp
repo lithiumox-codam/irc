@@ -21,7 +21,9 @@
 
 extern Server server;
 
-Server::Server() : socket(0), port(0), running(false) {}
+Server::Server() : socket(0), port(0), running(false) {
+	this->users.reserve(MAX_USERS);
+}
 
 Server::~Server() { this->stop(); }
 

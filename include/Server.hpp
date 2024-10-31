@@ -23,6 +23,8 @@ enum class ServerConfig : std::uint16_t {
 	BUFFER_SIZE = 1024,
 };
 
+constexpr unsigned long MAX_USERS = 1000;
+
 class Server {
    private:
 	vector<Channel> channels;  // List of channels
