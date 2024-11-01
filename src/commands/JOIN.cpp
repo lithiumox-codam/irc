@@ -12,6 +12,26 @@
 extern Server server;
 using namespace std;
 
+static void		addToChannel(IRStream &stream, Channel *channel, User *user) {
+	channel->addUser(user);
+
+	stream.prefix(user).command().param(channel->getName()).end();
+	if (channel->getTopic().empty()) {
+		stream.prefix().code(RPL_NOTOPIC).param(channel->getName()).trail("No topic is set").end();
+	} else {
+		stream.prefix().code(RPL_TOPIC).param(user->getNickname()).param(channel->getName()).trail(channel->getTopic()).end();
+	}
+
+	// Send the names list
+	string		namesList;
+	for (auto &member : *channel->getMembers()) {
+		namesList += member.first->getNickname() + " ";
+	}
+
+	stream.prefix().code(RPL_NAMREPLY).param(user->getNickname()).param("=").param(channel->getName()).trail(namesList).end();
+	stream.prefix().code(RPL_ENDOFNAMES).param(user->getNickname()).param(channel->getName()).trail("End of /NAMES list").end();
+}
+
 map<string, string> ParseJoin(string &args) {
 	map<string, string> channelPasswordMap;
 
@@ -78,8 +98,9 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 					.end();
 				return false;
 			}
-			channel->addUser(user);
-			stream.prefix(user).command().param(channel->getName()).end();
+
+			addToChannel(stream, channel, user);
+
 		} catch (const runtime_error &e) { // Channel not found
 			server.addChannel(token.first);
 			Channel *channel = server.getChannel(token.first);
