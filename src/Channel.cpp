@@ -143,10 +143,9 @@ void Channel::broadcast(User *user, const string &message) {
 	IRStream stream;
 	stream.prefix(user, this).param("PRIVMSG").param(this->getName()).trail(message).end();
 	for (auto &member : *this->getMembers()) {
-		if (member.first->getSocket() == user->getSocket()) {
-			continue;
+		if (member.first->getSocket() != user->getSocket()) {
+			stream.sendPacket(member.first);
 		}
-		stream.sendPacket(member.first);
 	}
 }
 

@@ -1,5 +1,6 @@
 #include <sstream>
 #include <stdexcept>
+#include <type_traits>
 
 #include "Channel.hpp"
 #include "Codes.hpp"
@@ -11,6 +12,19 @@
 
 extern Server server;
 using namespace std;
+
+static void	broadcast(Channel *channel, User *user) {
+	IRStream stream;
+
+	stream.setCommand("JOIN");
+
+	stream.prefix(user).command().trail(channel->getName()).end();
+	for (auto &member : *channel->getMembers()) {
+		if (member.first->getSocket() != user->getSocket()) {
+			stream.sendPacket(member.first);
+		}
+	}
+}
 
 static void		addToChannel(IRStream &stream, Channel *channel, User *user) {
 	channel->addUser(user);
@@ -30,32 +44,12 @@ static void		addToChannel(IRStream &stream, Channel *channel, User *user) {
 	stream.end();
 
 	stream.prefix().code(RPL_ENDOFNAMES).param(user->getNickname()).param(channel->getName()).trail("End of /NAMES list").end();
-}
 
-map<string, string> ParseJoin(string &args) {
-	map<string, string> channelPasswordMap;
-
-	stringstream sstr(args);
-	string channelsPart;
-	string passwordsPart;
-
-	getline(sstr, channelsPart, ' ');
-	getline(sstr, passwordsPart);
-
-	vector<string> channels = split(channelsPart, ',');
-	vector<string> passwords = split(passwordsPart, ',');
-
-	for (size_t i = 0; i < channels.size(); ++i) {
-		if (i < passwords.size()) {
-			channelPasswordMap[channels[i]] = passwords[i];
-		} else {
-			channelPasswordMap[channels[i]] = "";
-		}
-	}
-	return channelPasswordMap;
+	broadcast(channel, user);
 }
 
 bool JOIN(IRStream &stream, string &args, User *user) {
+	// Check if the user is registered
 	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return false;
@@ -64,52 +58,77 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 		return false;
 	}
-	map<string, string> tokens = ParseJoin(args);
-	for (auto &token : tokens) {
-		if (token.first.empty()) {
-			stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
-			return false;
+
+	// Parse the channels and passwords
+	vector<string>	parts = split(args, ' ');
+
+	if (parts.empty() || parts.size() > 2) {
+		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
+		return false;
+	}
+
+	vector<string>	channelNames = split(parts[0], ',');
+	vector<string>	passwords = (parts.size() > 1) ? split(parts[1], ',') : vector<string>();
+	auto			password = passwords.begin();
+
+	if (channelNames.empty()) {
+		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
+		return false;
+	}
+	
+	// Try joining the channels
+	for (string &channelName : channelNames) {
+		if (channelName[0] != '#') {
+			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).param(channelName).trail("No such channel").end(); // Channel names must start with #
+			continue ;
 		}
-		if (token.first[0] != '#') {
-			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end(); // Channel names must start with #
-			return false;
-		}
-		if (token.first.size() >= CHANNEL_LIMIT) {
-			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end(); // Why are we comparing the size of the channel name to the CHANNEL_LIMIT
-			return false;
-		}
+
 		try {
-			Channel *channel = server.getChannel(token.first);
-			if (channel->getMembers()->size() >= CHANNEL_LIMIT) {
-				stream.prefix().code(ERR_CHANNELISFULL).param(user->getNickname()).trail("Channel is full").end();
-				return false;
+			Channel *channel = server.getChannel(channelName);
+
+			if (channel->hasUser(user)) {
+				stream.prefix().code(ERR_USERONCHANNEL).param(user->getNickname()).param(channel->getName()).trail("You're already on that channel").end();
+				continue ;
 			}
+			if (channel->getMembers()->size() >= MEMBER_LIMIT) {
+				stream.prefix().code(ERR_CHANNELISFULL).param(user->getNickname()).param(channel->getName()).trail("Channel is full").end();
+				continue ;
+			}
+
 			if (channel->hasInvited(user)) {
 				channel->removeInvited(user);
 			} else if (channel->modes.hasModes(M_INVITE_ONLY)) {
-				stream.prefix().code(ERR_INVITEONLYCHAN).param(user->getNickname()).trail("Cannot join channel (+i)").end();
-				return false;
-			} else if (channel->modes.hasModes(M_PASSWORD) && channel->getPassword() != token.second) {
-				stream.prefix()
-					.code(ERR_BADCHANNELKEY)
-					.param(user->getNickname())
-					.param(token.first)
-					.trail("Cannot join channel (+k) - bad key")
-					.end();
-				return false;
+				stream.prefix().code(ERR_INVITEONLYCHAN).param(user->getNickname()).param(channel->getName()).trail("Cannot join channel (+i)").end();
+				continue ;
+			}
+
+			if (channel->modes.hasModes(M_PASSWORD)) {
+				if (password == passwords.end()) {
+					stream.prefix().code(ERR_BADCHANNELKEY).param(user->getNickname()).param(channelName).trail("Cannot join channel (+k) - bad key").end();
+					continue ;
+				}
+				if (*password != channel->getPassword()) {
+					stream.prefix().code(ERR_BADCHANNELKEY).param(user->getNickname()).param(channelName).trail("Cannot join channel (+k) - bad key").end();
+					password++;
+					continue ;
+				}
+				password++;
 			}
 
 			addToChannel(stream, channel, user);
 
 		} catch (const runtime_error &e) { // Channel not found
-			server.addChannel(token.first);
-			Channel *channel = server.getChannel(token.first);
+			server.addChannel(channelName);
+			Channel *channel = server.getChannel(channelName);
 			channel->addOperator(user);
 			channel->addUser(user);
-			if (!token.second.empty()) {
-				channel->setPassword(token.second);
+
+			if (password != passwords.end()) {
+				channel->setPassword(*password);
 				channel->modes.addModes(M_PASSWORD);
+				password++;
 			}
+
 			stream.prefix(user).command().param(channel->getName()).end();
 		}
 	}

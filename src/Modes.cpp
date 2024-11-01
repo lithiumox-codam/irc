@@ -105,11 +105,6 @@ string Modes::getModesString() const {
 			result += modeChars[i];
 		}
 	}
-	for (size_t i = 0; i < modeChars.size(); ++i) {
-		if (hasModes(modeValues[i])) {
-			cout << modeChars[i] << " ";
-		}
-	}
 	return result;
 }
 

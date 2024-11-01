@@ -11,7 +11,7 @@
 
 using namespace std;
 
-#define CHANNEL_LIMIT 50
+#define MEMBER_LIMIT 50
 
 class Channel {
    private:
