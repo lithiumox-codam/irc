@@ -23,13 +23,12 @@ static void		addToChannel(IRStream &stream, Channel *channel, User *user) {
 	}
 
 	// Send the names list
-	string		namesList;
-
+	stream.prefix().code(RPL_NAMREPLY).param(user->getNickname()).param("=").param(channel->getName()).trail("");
 	for (auto &member : *channel->getMembers()) {
-		namesList += member.first->getNickname() + " ";
+		stream.param(member.first->getNickname());
 	}
+	stream.end();
 
-	stream.prefix().code(RPL_NAMREPLY).param(user->getNickname()).param("=").param(channel->getName()).trail(namesList).end();
 	stream.prefix().code(RPL_ENDOFNAMES).param(user->getNickname()).param(channel->getName()).trail("End of /NAMES list").end();
 }
 
