@@ -12,6 +12,27 @@
 extern Server server;
 using namespace std;
 
+static void		addToChannel(IRStream &stream, Channel *channel, User *user) {
+	channel->addUser(user);
+
+	stream.prefix(user).command().param(channel->getName()).end();
+	if (channel->getTopic().empty()) {
+		stream.prefix().code(RPL_NOTOPIC).param(channel->getName()).trail("No topic is set").end();
+	} else {
+		stream.prefix().code(RPL_TOPIC).param(user->getNickname()).param(channel->getName()).trail(channel->getTopic()).end();
+	}
+
+	// Send the names list
+	string		namesList;
+
+	for (auto &member : *channel->getMembers()) {
+		namesList += member.first->getNickname() + " ";
+	}
+
+	stream.prefix().code(RPL_NAMREPLY).param(user->getNickname()).param("=").param(channel->getName()).trail(namesList).end();
+	stream.prefix().code(RPL_ENDOFNAMES).param(user->getNickname()).param(channel->getName()).trail("End of /NAMES list").end();
+}
+
 map<string, string> ParseJoin(string &args) {
 	map<string, string> channelPasswordMap;
 
@@ -36,7 +57,7 @@ map<string, string> ParseJoin(string &args) {
 }
 
 bool JOIN(IRStream &stream, string &args, User *user) {
-	if (!user->hasHandshake(U_COMPLETED)) {
+	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return false;
 	}
@@ -51,17 +72,25 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 			return false;
 		}
 		if (token.first[0] != '#') {
-			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
+			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end(); // Channel names must start with #
 			return false;
 		}
-		if (token.first.size() > 50) {
-			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
+		if (token.first.size() >= CHANNEL_LIMIT) {
+			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end(); // Why are we comparing the size of the channel name to the CHANNEL_LIMIT
 			return false;
 		}
 		try {
 			Channel *channel = server.getChannel(token.first);
-			if (!token.second.empty() && channel->modes.hasModes(M_PASSWORD) &&
-				channel->getPassword() != token.second) {
+			if (channel->getMembers()->size() >= CHANNEL_LIMIT) {
+				stream.prefix().code(ERR_CHANNELISFULL).param(user->getNickname()).trail("Channel is full").end();
+				return false;
+			}
+			if (channel->hasInvited(user)) {
+				channel->removeInvited(user);
+			} else if (channel->modes.hasModes(M_INVITE_ONLY)) {
+				stream.prefix().code(ERR_INVITEONLYCHAN).param(user->getNickname()).trail("Cannot join channel (+i)").end();
+				return false;
+			} else if (channel->modes.hasModes(M_PASSWORD) && channel->getPassword() != token.second) {
 				stream.prefix()
 					.code(ERR_BADCHANNELKEY)
 					.param(user->getNickname())
@@ -70,17 +99,18 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 					.end();
 				return false;
 			}
-			channel->addUser(user);
-			stream.prefix(user).command().param(channel->getName()).end();
-		} catch (const runtime_error &e) {
+
+			addToChannel(stream, channel, user);
+
+		} catch (const runtime_error &e) { // Channel not found
 			server.addChannel(token.first);
 			Channel *channel = server.getChannel(token.first);
+			channel->addOperator(user);
 			channel->addUser(user);
 			if (!token.second.empty()) {
 				channel->setPassword(token.second);
 				channel->modes.addModes(M_PASSWORD);
 			}
-			channel->getMembers()->front().second.addModes(M_OPERATOR);
 			stream.prefix(user).command().param(channel->getName()).end();
 		}
 	}

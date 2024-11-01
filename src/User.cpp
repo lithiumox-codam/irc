@@ -17,9 +17,13 @@
 
 extern Server server;
 
-User::User(int socket) : socket(socket), handshake(0) { cout << "Creating user with socket: " << this->socket << "\n"; }
+User::User(int socket) : socket(socket), handshake(0), modes(Type::USER) {
+	if (server.operatorCheck(this)) {
+		modes.addModes(M_OPERATOR);
+	}
+}
 
-User::User(const User &user) noexcept {
+User::User(const User &user) noexcept : modes(user.modes) {
 	this->socket = user.socket;
 	this->username = user.username;
 	this->nickname = user.nickname;
@@ -124,7 +128,7 @@ void User::clearOutBuffer() { this->out_buffer.clear(); }
 ostream &operator<<(std::ostream &stream, const User &user) {
 	const int WIDTH = 52;
 	const std::map<unsigned int, char> handshakeMap = {
-		{U_INFO, 'I'}, {U_USER, 'U'}, {U_NICK, 'N'}, {U_AUTHENTICATED, 'A'}, {U_WELCOME, 'W'}};
+		{USER_INFO, 'I'}, {USER_USER, 'U'}, {USER_NICK, 'N'}, {USER_PASS, 'P'}, {USER_WELCOME, 'W'}};
 
 	// NOLINTNEXTLINE
 	auto line = [](char l, char m, char r) { return l + std::string(WIDTH - 2, m) + r; };
@@ -182,11 +186,10 @@ int User::sendToSocket() {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				// Socket buffer is full, try again later
 				return totalSent > 0 ? totalSent : 0;
-			} else {
-				// Other error occurred
-				cerr << "Error: send failed: " << strerror(errno) << "\n";
-				return -1;
 			}
+			// Other error occurred
+			cerr << "Error: send failed: " << strerror(errno) << "\n";
+			return -1;
 		}
 	}
 	return totalSent;

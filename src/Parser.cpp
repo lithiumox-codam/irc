@@ -4,20 +4,7 @@
 
 #include "General.hpp"
 #include "IRStream.hpp"
-
-static string getArgs(string &buffer, size_t found) {
-	size_t start = buffer.find(' ', found);
-	if (start == string::npos) {
-		return "";
-	}
-	start++;
-	size_t end = buffer.find("\r\n", start);
-	if (end == string::npos) {
-		return "";
-	}
-
-	return buffer.substr(start, end - start);
-}
+#include "Codes.hpp"
 
 /**
  * @brief The parse function takes a message and returns a map of PacketType and the message.
@@ -30,24 +17,48 @@ bool parse(User *user) {
 	IRStream stream;
 	try {
 		string &buffer = user->getInBuffer();
-		cout << "Buffer: " << buffer << "\n";
+		cout << "DEBUG: " << user->getSocket() << " / " << user->getNickname() << " " << "Line recv: " << buffer << "\n";
 		if (buffer.empty()) {
 			return true;
 		}
-		for (const auto &pair : store) {
-			size_t found = buffer.find(pair.first);
-			if (found != string::npos) {
-				stream.setCommand(pair.first);
-				string args = getArgs(buffer, found);
-				if (!pair.second(stream, args, user)) {
-					stream.sendPacket(user);
-					return false;
+
+		vector<string> commands = split(buffer, "\r\n");
+		for (const string &command : commands) {
+			if (command.empty()) {
+				continue;
+			}
+
+			bool found = false;
+
+			string baseCommand = command.substr(0, command.find(' '));
+
+			for (const auto &pair : store) {
+				if (baseCommand == pair.first) {
+					found = true;
+
+					stream.setCommand(baseCommand);
+
+					string args;
+					if (command.size() > baseCommand.size()) {
+						args = command.substr(baseCommand.size() + 1);
+					}
+
+					pair.second(stream, args, user);
 				}
+			}
+
+			if (!found) {
+				stream.prefix()
+				.code(ERR_UNKNOWNCOMMAND)
+				.param(user->getNickname())
+				.param(baseCommand)
+				.trail("Unknown Command")
+				.end();
 			}
 		}
 	} catch (const runtime_error &e) {
 		return false;
 	}
-	stream.sendPacket(user);
+	stream.sendPacket(user); // why?
 	return true;
 }

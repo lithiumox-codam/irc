@@ -5,6 +5,7 @@
 #include "General.hpp"
 #include "IRStream.hpp"
 #include "Server.hpp"
+#include "User.hpp"
 
 extern Server server;
 
@@ -24,8 +25,16 @@ bool NICK(IRStream &stream, string &args, User *user) {
 	}
 
 	user->setNickname(args);
-	user->addHandshake(U_NICK);
+	user->addHandshake(USER_NICK);
 
 	stream.prefix().command().param(user->getNickname()).end();
+
+	if (user->hasHandshake(USER_AUTHENTICATED) &&
+		!user->hasHandshake(USER_WELCOME)) {
+		string empty;
+		MOTD(stream, empty, user);
+		user->addHandshake(USER_WELCOME);
+	}
+
 	return true;
 }

@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include <csignal>
+#include <deque>
 #include <string>
 
 #include "Channel.hpp"
@@ -19,13 +20,15 @@ bool getEnv();
 enum class ServerConfig : std::uint16_t {
 	BACKLOG = 10,
 	MAX_EVENTS = 10,
+	VECTOR_RESERVE = 10,
 	BUFFER_SIZE = 1024,
 };
 
 class Server {
    private:
-	vector<Channel> channels;  // List of channels
-	vector<User> users;		   // List of users
+	deque<Channel> channels;   // List of channels
+	deque<User> users;		   // List of users
+	vector<string> operators;  // List of operators (specifically server operators)
 
 	string password;  // Password for connecting to the server
 	string hostname;  // Hostname of the server
@@ -53,27 +56,28 @@ class Server {
 	void stop();
 
 	void epollCreate();
-	void epollAdd(int socket);
-	void epollRemove(int socket);
-	void epollChange(int socket, uint32_t events);
+	void epollAdd(int socket) const;
+	void epollRemove(int socket) const;
+	void epollChange(int socket, uint32_t events) const;
 	void epollEvent(struct epoll_event &event);
 	int epollWait();
-	void handleEvents(array<struct epoll_event, 10> &events, int numberOfEvents);
+	void handleEvents(array<struct epoll_event, (size_t)ServerConfig::BACKLOG> &events, int numberOfEvents);
 	void acceptNewConnection();
 
 	void addUser(unsigned int socket);
 	void removeUser(User &user);
 	[[nodiscard]] User *getUser(int socket);
 	[[nodiscard]] User *getUser(const string &nickname);
-	[[nodiscard]] vector<User> &getUsers();
+	[[nodiscard]] deque<User> &getUsers();
 
 	Channel &addChannel(const string &channelName);
 	void removeChannel(Channel &channel);
-	[[nodiscard]] vector<Channel> &getChannels();
 	[[nodiscard]] Channel *getChannel(const string &name);
-	[[nodiscard]] const string &getHostname();
+	[[nodiscard]] deque<Channel> &getChannels();
 
-   private:
+	[[nodiscard]] const string &getHostname();
+	void addOperator(const string &nickname);
+	bool operatorCheck(User *user) const;
 };
 
 ostream &operator<<(ostream &stream, Server &server);

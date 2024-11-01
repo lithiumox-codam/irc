@@ -35,7 +35,6 @@ bool CAP(IRStream &stream, string &args, User *user) {
 		stream.prefix().param(user->getNickname()).param(" :Not enough parameters").end();
 		return false;
 	}
-	user->addHandshake(U_INFO);
 
 	vector<string> tokens = split(args, ' ');
 
@@ -43,20 +42,35 @@ bool CAP(IRStream &stream, string &args, User *user) {
 	tokens.erase(tokens.begin());
 
 	if (command == "LS") {
-		stream.prefix().command().param("*").param("LS").param(CAPABILITIES).end();
+		stream.prefix()
+		.command()
+		.param("*")
+		.param("LS")
+		.param(CAPABILITIES)
+		.end();
 	} else if (command == "REQ") {
-		stream.prefix().command().param("*").param("ACK").params(tokens).end();
+		stream.prefix()
+		.command()
+		.param("*")
+		.param("ACK")
+		.params(tokens)
+		.end();
 	} else if (command == "END") {
-		if (user->hasHandshake(U_AUTHENTICATED)) {
+		user->addHandshake(USER_INFO);
+
+		if (user->hasHandshake(USER_AUTHENTICATED) &&
+			!user->hasHandshake(USER_WELCOME)) {
 			string empty;
 			MOTD(stream, empty, user);
-			user->addHandshake(U_WELCOME);
-		} else {
-			stream.prefix().code(ERR_PASSWDMISMATCH).param(user->getNickname()).trail("Password incorrect").end();
+			user->addHandshake(USER_WELCOME);
 		}
 		return true;
 	} else {
-		stream.prefix().code(ERR_UNKNOWNCOMMAND).param(user->getNickname()).trail("CAP :Unknown command").end();
+		stream.prefix()
+		.code(ERR_UNKNOWNCOMMAND)
+		.param(user->getNickname())
+		.trail("CAP :Unknown command")
+		.end();
 		return false;
 	}
 

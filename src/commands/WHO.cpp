@@ -8,21 +8,21 @@ extern Server server;
 
 static void sendWhoReply(IRStream& stream, User* user, Channel* channel, User* member) {
 	stream.prefix()
-		.code(RPL_WHOREPLY)			   // 352
-		.param(user->getNickname())	   // requesting user's nickname
-		.param(channel->getName())	   // channel name with '#'
-		.param(member->getUsername())  // username
-		.param(member->getHostname())  // hostname
-		.param(server.getHostname())   // servername
-		.param(member->getNickname())  // nickname
-		.param("H+")				   // status (H/G + * @ +)
-		.param("0")					   // hopcount without a colon
+		.code(RPL_WHOREPLY)							 // 352
+		.param(user->getNickname())					 // requesting user's nickname
+		.param(channel->getName())					 // channel name with '#'
+		.param(member->getUsername())				 // username
+		.param(member->getHostname())				 // hostname
+		.param(server.getHostname())					 // servername
+		.param(member->getNickname())				 // nickname
+		.params({"H", channel->getUserModes(user)})	 // status (H/G + * @ +)
+		.param("0")									 // hopcount without a colon
 		.trail(member->getRealname())
 		.end();
 }
 
 bool WHO(IRStream& stream, string& args, User* user) {
-	if (!user->hasHandshake(U_COMPLETED)) {
+	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).trail("You have not registered").end();
 		return false;
 	}
@@ -35,9 +35,9 @@ bool WHO(IRStream& stream, string& args, User* user) {
 				.param("*")					  // channel name with '*'
 				.param(usr.getUsername())	  // username
 				.param(usr.getHostname())	  // hostname
-				.param(server.getHostname())  // servername
+				.param(server.getHostname())	  // servername
 				.param(usr.getNickname())	  // nickname
-				.param("H+")				  // status (H/G + * @ +)
+				.param("H+")					  // status (H/G + * @ +)
 				.param("0")					  // hopcount without a colon
 				.trail(usr.getRealname())
 				.end();

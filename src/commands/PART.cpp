@@ -1,3 +1,5 @@
+#include <stdexcept>
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "Server.hpp"
 #include "User.hpp"

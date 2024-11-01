@@ -3,31 +3,39 @@
 #include <cstdint>
 #include <string>
 
+#include "Modes.hpp"
+
 using namespace std;
 
 enum UserConfig : uint16_t {
 	BUFFER_SIZE = 1024	// The size of the buffer that will be used to read from the socket.
 };
 
-unsigned int const U_INFO = 1 << 1;
-unsigned int const U_USER = 1 << 2;
-unsigned int const U_NICK = 1 << 3;
-unsigned int const U_AUTHENTICATED = 1 << 4;
-unsigned int const U_WELCOME = 1 << 5;
-
 /**
  * @brief Bitmask representing the completion status of a user.
  *
- * This constant is a combination of several user status flags:
- * - U_INFO: User information is available.
- * - U_USER: User is registered.
- * - U_NICK: User has a nickname.
- * - U_AUTHENTICATED: User is authenticated.
- * - U_WELCOME: User has received a welcome message.
+ * @details The UserFlags enum is a bitmask that represents the completion status of a user. The flags are used to determine
+ * if a user has completed all necessary steps to be considered registered.
+
+ * - The USER_INFO flag is set when the user has completed CAP negotiation.
+ * - The USER_USER flag is set when the user has user information.
+ * - The USER_NICK flag is set when the user has a nickname.
+ * - The USER_PASS flag is set when the user has entered the correct password.
+ * - The USER_WELCOME flag is set when the user has received a welcome message.
  *
- * When all these flags are set, the user is considered to have completed all necessary steps.
+ * - The USER_AUTHENTICATED flag is set when the user has completed all necessary steps, except for sending the welcome message.
+ * - The USER_REGISTERED flag is set when the user has completed all necessary steps.
  */
-unsigned int const U_COMPLETED = U_INFO | U_USER | U_NICK | U_AUTHENTICATED | U_WELCOME;
+enum UserFlags : uint8_t {
+	USER_INFO			= 1 << 0,				// User has completed CAP negotiation.
+	USER_USER			= 1 << 1,				// User has user information.
+	USER_NICK			= 1 << 2,				// User has a nickname.
+	USER_PASS 			= 1 << 3,				// User has entered the correct password.
+	USER_WELCOME		= 1 << 4,				// User has received a welcome message.
+
+	USER_AUTHENTICATED	= USER_USER | USER_NICK | USER_PASS | USER_INFO,	// User has completed all necessary steps, except for sending the welcome message.
+	USER_REGISTERED		= USER_AUTHENTICATED | USER_WELCOME,				// User has completed all necessary steps.
+};
 
 class User {
    private:
@@ -43,6 +51,7 @@ class User {
 	string out_buffer;
 
    public:
+	Modes modes;
 	User(int socket);
 	User(const User &user) noexcept;
 	auto operator=(const User &user) noexcept -> User &;

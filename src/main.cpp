@@ -27,11 +27,14 @@ int main(int argc, char **argv) {
 	signal(SIGINT, signalHandler);
 	signal(SIGTERM, signalHandler);
 	getEnv();
-	if (server.getPassword().empty() && server.getHostname().empty() && !server.isBound()) {
+	if (server.getPassword().empty() && !server.isBound()) {
 		if (argc != 3) {
-			cerr << "Error: Password, port, and hostname not set by env. Please provide them like:" << '\n';
+			cerr << "Error: Password and/or port not set by env. Please provide them like:" << '\n';
 			cerr << "./ircserver [port] [password]" << '\n';
 			return 1;
+		}
+		if (server.getHostname().empty()) {
+			server.setHostname("localhost");
 		}
 		server.bindSocket(argv[1]);
 		server.setPassword(argv[2]);

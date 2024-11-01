@@ -11,15 +11,17 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "General.hpp"
 #include "User.hpp"
+#include "Exceptions.hpp"
 
 extern Server server;
 
-Server::Server() : socket(0), port(0), running(false) {}
+Server::Server() : socket(0), port(0), running(false) { }
 
 Server::~Server() { this->stop(); }
 
@@ -67,7 +69,7 @@ void Server::epollCreate() {
 	}
 }
 
-void Server::epollAdd(int socket_fd) {
+void Server::epollAdd(int socket_fd) const {
 	struct epoll_event event = {.events = EPOLLIN, .data = {.fd = socket_fd}};
 
 	if (epoll_ctl(this->epoll_fd, EPOLL_CTL_ADD, socket_fd, &event) == -1) {
@@ -152,7 +154,7 @@ void Server::epollEvent(struct epoll_event &event) {
 	}
 }
 
-void Server::epollRemove(int socket_fd) {
+void Server::epollRemove(int socket_fd) const {
 	if (epoll_ctl(this->epoll_fd, EPOLL_CTL_DEL, socket_fd, nullptr) == -1) {
 		cerr << strerror(errno) << '\n';
 		cerr << "Error: epoll_ctl failed" << '\n';
@@ -160,7 +162,7 @@ void Server::epollRemove(int socket_fd) {
 	}
 }
 
-void Server::epollChange(int socket_fd, uint32_t events) {
+void Server::epollChange(int socket_fd, uint32_t events) const {
 	struct epoll_event event = {.events = events, .data = {.fd = socket_fd}};
 
 	if (epoll_ctl(this->epoll_fd, EPOLL_CTL_MOD, socket_fd, &event) == -1) {
@@ -242,7 +244,7 @@ void Server::stop() {
 	cout << RED << "\rServer stopped" << RESET << '\n';
 }
 
-vector<User> &Server::getUsers() { return this->users; }
+deque<User> &Server::getUsers() { return this->users; }
 
 User *Server::getUser(const int socket) {
 	for (auto &user : this->users) {
@@ -269,6 +271,17 @@ void Server::addUser(unsigned int socket) {
 }
 
 void Server::removeUser(User &user) {
+	//remove from channels
+	for (auto &channel : this->channels) {
+		if (channel.hasUser(&user)) {
+			channel.removeUser(&user);
+
+			if (channel.getMembers()->empty()) {
+				this->removeChannel(channel);
+			}
+		}
+	}
+
 	for (auto it = this->users.begin(); it != this->users.end(); ++it) {
 		if (it->getSocket() == user.getSocket()) {
 			this->epollRemove(user.getSocket());
@@ -290,7 +303,7 @@ void Server::removeChannel(Channel &channel) {
 	}
 }
 
-vector<Channel> &Server::getChannels() { return this->channels; }
+deque<Channel> &Server::getChannels() { return this->channels; }
 
 Channel *Server::getChannel(const string &name) {
 	for (auto &channel : this->channels) {
@@ -298,25 +311,24 @@ Channel *Server::getChannel(const string &name) {
 			return &channel;
 		}
 	}
-	throw runtime_error("Channel not found");
+	throw runtime_error("Channel " + name + " not found");
 }
 
 const string &Server::getHostname() { return this->hostname; }
 
 bool Server::isBound() const { return this->socket != 0; }
 
-ostream &operator<<(ostream &stream, Server &server) {
-	stream << "Server: " << server.getHostname() << '\n';
-	stream << "Password: " << server.getPassword() << '\n';
-	std::vector channels = server.getChannels();
-	stream << "Channels: " << '\n';
-	for (auto &channel : channels) {
-		stream << channel << '\n';
+void Server::addOperator(const string &nickname) { this->operators.push_back(nickname); }
+
+bool Server::operatorCheck(User *user) const {
+	if (this->operators.empty()) {
+		return false;
 	}
-	stream << "Users: " << '\n';
-	std::vector users = server.getUsers();
-	for (auto &user : users) {
-		stream << user << '\n';
+	// NOLINTNEXTLINE
+	for (const string &oper : this->operators) {
+		if (oper == user->getNickname()) {
+			return true;
+		}
 	}
-	return stream;
+	return false;
 }
