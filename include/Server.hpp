@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include <csignal>
+#include <deque>
 #include <string>
 
 #include "Channel.hpp"
@@ -23,12 +24,10 @@ enum class ServerConfig : std::uint16_t {
 	BUFFER_SIZE = 1024,
 };
 
-constexpr unsigned long MAX_USERS = 1000;
-
 class Server {
    private:
-	vector<Channel> channels;  // List of channels
-	vector<User> users;		   // List of users
+	deque<Channel> channels;   // List of channels
+	deque<User> users;		   // List of users
 	vector<string> operators;  // List of operators (specifically server operators)
 
 	string password;  // Password for connecting to the server
@@ -69,12 +68,13 @@ class Server {
 	void removeUser(User &user);
 	[[nodiscard]] User *getUser(int socket);
 	[[nodiscard]] User *getUser(const string &nickname);
-	[[nodiscard]] vector<User> &getUsers();
+	[[nodiscard]] deque<User> &getUsers();
 
 	Channel &addChannel(const string &channelName);
 	void removeChannel(Channel &channel);
-	[[nodiscard]] vector<Channel> &getChannels();
 	[[nodiscard]] Channel *getChannel(const string &name);
+	[[nodiscard]] deque<Channel> &getChannels();
+
 	[[nodiscard]] const string &getHostname();
 	void addOperator(const string &nickname);
 	bool operatorCheck(User *user) const;

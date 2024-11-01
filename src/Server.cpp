@@ -21,9 +21,7 @@
 
 extern Server server;
 
-Server::Server() : socket(0), port(0), running(false) {
-	this->users.reserve(MAX_USERS);
-}
+Server::Server() : socket(0), port(0), running(false) { }
 
 Server::~Server() { this->stop(); }
 
@@ -246,7 +244,7 @@ void Server::stop() {
 	cout << RED << "\rServer stopped" << RESET << '\n';
 }
 
-vector<User> &Server::getUsers() { return this->users; }
+deque<User> &Server::getUsers() { return this->users; }
 
 User *Server::getUser(const int socket) {
 	for (auto &user : this->users) {
@@ -273,6 +271,17 @@ void Server::addUser(unsigned int socket) {
 }
 
 void Server::removeUser(User &user) {
+	//remove from channels
+	for (auto &channel : this->channels) {
+		if (channel.hasUser(&user)) {
+			channel.removeUser(&user);
+
+			if (channel.getMembers()->empty()) {
+				this->removeChannel(channel);
+			}
+		}
+	}
+
 	for (auto it = this->users.begin(); it != this->users.end(); ++it) {
 		if (it->getSocket() == user.getSocket()) {
 			this->epollRemove(user.getSocket());
@@ -294,7 +303,7 @@ void Server::removeChannel(Channel &channel) {
 	}
 }
 
-vector<Channel> &Server::getChannels() { return this->channels; }
+deque<Channel> &Server::getChannels() { return this->channels; }
 
 Channel *Server::getChannel(const string &name) {
 	for (auto &channel : this->channels) {
