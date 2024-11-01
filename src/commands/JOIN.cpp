@@ -24,6 +24,7 @@ static void		addToChannel(IRStream &stream, Channel *channel, User *user) {
 
 	// Send the names list
 	string		namesList;
+
 	for (auto &member : *channel->getMembers()) {
 		namesList += member.first->getNickname() + " ";
 	}
@@ -71,11 +72,11 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 			return false;
 		}
 		if (token.first[0] != '#') {
-			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
+			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end(); // Channel names must start with #
 			return false;
 		}
 		if (token.first.size() >= CHANNEL_LIMIT) {
-			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
+			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end(); // Why are we comparing the size of the channel name to the CHANNEL_LIMIT
 			return false;
 		}
 		try {
