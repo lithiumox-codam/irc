@@ -3,6 +3,7 @@
 
 #include <sys/socket.h>
 #include <sys/epoll.h>
+#include <cstring>
 
 extern EpollClass	myEpoll;
 extern int			server;
@@ -36,7 +37,7 @@ void Bot::readFromServer(void) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return;
 		}
-		cerr << "Error: recv failed" << '\n';
+		cerr << "Error: recv(): " << strerror(errno) << '\n';
 		exit(EXIT_FAILURE);
 	}
 
@@ -61,7 +62,7 @@ void Bot::sendToServer(void) {
 			if (errno == EWOULDBLOCK || errno == EAGAIN) {
 				return;
 			}
-			cerr << "Error: send failed" << '\n';
+			cerr << "Error: send():" << strerror(errno) << '\n';
 			exit(EXIT_FAILURE);
 		}
 		this->out_buffer.erase(0, ret);

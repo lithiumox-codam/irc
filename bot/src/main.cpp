@@ -66,6 +66,16 @@ static void connectToServer(const string &hostname, const string &port) {
 }
 
 void	handleEvent(epoll_event& event) {
+	if (event.events & EPOLLIN) {
+		// Read from the socket
+		bot.readFromServer();
+	}
+
+	if (event.events & EPOLLOUT) {
+		// Write to the socket
+		bot.sendToServer();
+	}
+
 	if (event.events & EPOLLERR) {
 		cerr << "Error: EPOLLERR: " << strerror(errno) << '\n';
 		exit (EXIT_FAILURE);
@@ -79,16 +89,6 @@ void	handleEvent(epoll_event& event) {
 	if (event.events & EPOLLRDHUP) {
 		cerr << "Server shut down: EPOLLRDHUP" << '\n';
 		exit(EXIT_FAILURE);
-	}
-
-	if (event.events & EPOLLIN) {
-		// Read from the socket
-		bot.readFromServer();
-	}
-
-	if (event.events & EPOLLOUT) {
-		// Write to the socket
-		bot.sendToServer();
 	}
 }
 
