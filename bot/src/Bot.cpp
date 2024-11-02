@@ -4,6 +4,9 @@
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <cstring>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 extern EpollClass	myEpoll;
 extern int			server;
@@ -49,6 +52,8 @@ void Bot::readFromServer(void) {
 	buffer[ret] = '\0';
 	this->in_buffer.append(buffer, ret);
 	cout << "DEBUG: Received: " << this->in_buffer << '\n';
+
+	this->parse();
 }
 
 void Bot::sendToServer(void) {
@@ -94,6 +99,87 @@ void Bot::join(void) {
 }
 
 // Bot Functions
+
+/**
+ * @brief Splits a command into parts like the sender, command type, arguments and the message.
+ * 
+ * @param command The command to split
+ * 
+ * @return vector<string> A vector containing the parts of the command:
+	 * 	[0] 	- sender
+	 * 	[1] 	- command type
+	 * 	[2-...] - arguments
+	 * 	[end] 	- message
+ */
+static vector<string> getCommandParts(string &command) {
+	vector<string>	parts;
+
+	// Remove the : from the sender
+	command.erase(0, 1);
+
+	// Extract the message from the command
+	string message;
+	size_t messagePos = command.find(':');
+
+	if (messagePos != string::npos) {
+		message = command.substr(messagePos + 1);
+		command.erase(messagePos);
+	}
+
+	// Split the command into parts
+	while (!command.empty()) {
+		size_t pos = command.find(' ');
+		if (pos == string::npos) {
+			parts.push_back(command);
+			break;
+		}
+		parts.push_back(command.substr(0, pos));
+		command.erase(0, pos + 1);
+	}
+
+	// Add the message to the end of the parts
+	if (!message.empty()) {
+		parts.push_back(message);
+	}
+
+	return parts;
+}
+
+static vector<string> getCommands(string &buffer, const string &delim) {
+	vector<string> commands;
+	size_t delimPos = 0;
+
+	while (!buffer.empty())
+	{
+		delimPos = buffer.find(delim);
+		if (delimPos == string::npos) {
+			break;
+		}
+		commands.push_back(buffer.substr(0, delimPos));
+		buffer.erase(0, delimPos + delim.size());
+	}
+
+	return commands;
+}
+
+// :<server> 433 <username> <nickname> :Nickname is already in use
+// :ircbot!ircbot@localhost JOIN #bot
+// :opelser!olebol@localhost JOIN :#bot
+// :opelser!olebol@localhost PRIVMSG #bot :hello bot!
+// :opelser!olebol@localhost PART #bot :Leaving
+
+void Bot::parse(void) {
+	vector<string> commands = getCommands(this->in_buffer, "\r\n");
+	for (string &command : commands) {
+		vector<string> parts = getCommandParts(command);
+	
+		cout << "DEBUG: ";
+		for (string &part : parts) {
+			cout << "[" << part << "] ";
+		}
+		cout << '\n';
+	}
+}
 
 string Bot::getResponse(const string &query) {
 	(void) query;
