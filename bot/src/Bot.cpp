@@ -196,7 +196,7 @@ static string replyPRIVMSG(vector<string> &parts) {
 
 	cout << "DEBUG: " << nick << " said: " << message << '\n';
 
-	return "PRIVMSG " + parts[2] + " :Hello " + nick + "! How are you today?\r\n";
+	return "PRIVMSG " + parts[2] + " :" + getGPTResponse(message) + "\r\n";
 }
 
 static string replyPART(const vector<string> &parts) {
@@ -211,12 +211,6 @@ void Bot::parse(void) {
 	vector<string> commands = getCommands(this->in_buffer, "\r\n");
 	for (string &command : commands) {
 		vector<string> parts = getCommandParts(command);
-	
-		cout << "DEBUG: ";
-		for (string &part : parts) {
-			cout << "[" << part << "] ";
-		}
-		cout << '\n';
 
 		string response;
 
@@ -241,6 +235,5 @@ void Bot::parse(void) {
 			this->addToBuffer(response);
 			this->sendToServer();
 		}
-
 	}
 }

@@ -15,6 +15,9 @@ ifdef DEBUG
 	CFLAGS		+= -g -fsanitize=address
 endif
 
+# Linker flags
+LDFLAGS			:= -lcurl
+
 # Includes
 HDR		:= $(shell find $(HDR_DIR) -name '*.hpp')
 
@@ -34,7 +37,7 @@ all: ${NAME}
 
 $(NAME): $(OBJ)
 	@ printf "%b%s%b" "$(YELLOW)$(BOLD)" "Compiling $(NICKNAME)..." "$(RESET)"
-	@ $(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+	@ $(CC) $(OBJ) $(LDFLAGS) -o $(NAME)
 	@ printf "\t\t%b%s%b\n" "$(GREEN)$(BOLD)" "[OK]" "$(RESET)"
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HDR)

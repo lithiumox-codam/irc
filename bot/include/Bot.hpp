@@ -25,3 +25,5 @@ class Bot {
 		// Bot functions
 		void			parse(void);
 } ;
+
+string getGPTResponse(const string &query);
