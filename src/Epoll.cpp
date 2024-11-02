@@ -32,10 +32,18 @@ EpollClass::~EpollClass() {
 
 // Server functions
 
-void EpollClass::add(int socket_fd) const {
+void EpollClass::add(int socket_fd) {
 	struct epoll_event event = {.events = EPOLLIN, .data = {.fd = socket_fd}};
 
 	if (epoll_ctl(this->fd, EPOLL_CTL_ADD, socket_fd, &event) == -1) {
+		cerr << strerror(errno) << '\n';
+		cerr << "Error: epoll_ctl failed" << '\n';
+		exit(EXIT_FAILURE);
+	}
+}
+
+void EpollClass::remove(int socket_fd) {
+	if (epoll_ctl(this->fd, EPOLL_CTL_DEL, socket_fd, nullptr) == -1) {
 		cerr << strerror(errno) << '\n';
 		cerr << "Error: epoll_ctl failed" << '\n';
 		exit(EXIT_FAILURE);

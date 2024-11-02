@@ -42,36 +42,10 @@ void applyModeChanges(Modes &modes, string &modeChanges) {
 	}
 }
 
-// static void handleChannel(IRStream &stream, User *user, string &channelName, string &modeChanges) {
-// 	try {
-// 		auto *channel = server.getChannel(channelName);
-// 		if (modeChanges.size() == 1) {
-// 			stream.prefix()
-// 				.code(RPL_CHANNELMODEIS)
-// 				.param(user->getNickname())
-// 				.param(channel->getName())
-// 				.trail("+" + channel->modes.getModesString())
-// 				.end();
-// 			return;
-// 		}
-// 		applyModeChanges(channel->modes, modeChanges);
-// 		IRStream broadcast;
-// 		broadcast.prefix()
-// 			.param(user->getNickname())
-// 			.code(RPL_CHANNELMODEIS)
-// 			.param(channel->getName())
-// 			.trail("+" + channel->modes.getModesString())
-// 			.end();
-// 		channel->broadcast(user, broadcast.getString());
-// 	} catch (runtime_error &e) {
-// 		stream.prefix().code(ERR_NOSUCHCHANNEL).trail(channelName + " :No such channel").end();
-// 	}
-// }
-
-bool MODE(IRStream &stream, string &args, User *user) {
+void MODE(IRStream &stream, string &args, User *user) {
 	if (args.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).trail("MODE :Not enough parameters").end();
-		return false;
+		return ;
 	}
 
 	vector<string> tokens = split(args, ' ');
@@ -86,7 +60,7 @@ bool MODE(IRStream &stream, string &args, User *user) {
 					.param(channel->getName())
 					.trail("+" + channel->modes.getModesString())
 					.end();
-				return true;
+				return ;
 			}
 			if (tokens.size() == 2) {
 				if (tokens[1].starts_with("+") || tokens[1].starts_with("-")) {
@@ -97,7 +71,7 @@ bool MODE(IRStream &stream, string &args, User *user) {
 						.param(channel->getName())
 						.trail("+" + channel->modes.getModesString())
 						.end();
-					return true;
+					return ;
 				}
 				try {
 					auto &member = channel->getMember(tokens[1]);
@@ -109,7 +83,7 @@ bool MODE(IRStream &stream, string &args, User *user) {
 				} catch (runtime_error &e) {
 					string error = e.what();
 					stream.prefix().code(ERR_NOSUCHNICK).trail(error).end();
-					return false;
+					return ;
 				}
 			}
 			if (tokens.size() == 3) {
@@ -120,15 +94,13 @@ bool MODE(IRStream &stream, string &args, User *user) {
 				} catch (runtime_error &e) {
 					string error = e.what();
 					stream.prefix().code(ERR_NOSUCHNICK).trail(error).end();
-					return false;
+					return ;
 				}
 			}
 
 		} catch (IrcException &e) {
 			stream.prefix().code(ERR_NOSUCHCHANNEL).trail(tokens.front() + " :No such channel").end();
-			return false;
+			return ;
 		}
 	}
-
-	return true;
 }

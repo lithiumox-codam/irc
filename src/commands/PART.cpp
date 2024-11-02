@@ -21,11 +21,11 @@ static void	broadcast(Channel *channel, User *user, const string &message) {
 	}
 }
 
-bool PART(IRStream &stream, string &args, User *user) {
+void PART(IRStream &stream, string &args, User *user) {
 	// Check if the user is registered
 	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
-		return false;
+		return ;
 	}
 
 	// Parse the channels and passwords
@@ -33,7 +33,7 @@ bool PART(IRStream &stream, string &args, User *user) {
 
 	if (parts.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
-		return false;
+		return ;
 	}
 
 	vector<string>	channels = split(parts[0], ',');
@@ -43,7 +43,7 @@ bool PART(IRStream &stream, string &args, User *user) {
 			message = parts[1].substr(1);
 		} else {
 			stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
-			return false;
+			return ;
 		}
 		message = parts[1].substr(1);
 	} else {
@@ -72,5 +72,4 @@ bool PART(IRStream &stream, string &args, User *user) {
 			continue ;
 		}
 	}
-	return true;
 }

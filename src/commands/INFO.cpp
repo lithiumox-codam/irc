@@ -5,7 +5,7 @@
 
 extern Server server;
 
-bool INFO(IRStream &stream, string &args, User *user) {
+void INFO(IRStream &stream, string &args, User *user) {
 	(void)args;
 	const auto &nickname = user->getNickname();
 
@@ -18,6 +18,4 @@ bool INFO(IRStream &stream, string &args, User *user) {
 		.trail("You are known as " + user->getRealname() + " have fun chatting 😃")
 		.end();
 	stream.prefix().code(RPL_ENDOFINFO).param(nickname).trail("End of /INFO list").end();
-
-	return true;
 }

@@ -48,15 +48,15 @@ static void		addToChannel(IRStream &stream, Channel *channel, User *user) {
 	broadcast(channel, user);
 }
 
-bool JOIN(IRStream &stream, string &args, User *user) {
+void JOIN(IRStream &stream, string &args, User *user) {
 	// Check if the user is registered
 	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
-		return false;
+		return ;
 	}
 	if (args.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
-		return false;
+		return ;
 	}
 
 	// Parse the channels and passwords
@@ -64,7 +64,7 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 
 	if (parts.empty() || parts.size() > 2) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
-		return false;
+		return ;
 	}
 
 	vector<string>	channelNames = split(parts[0], ',');
@@ -73,7 +73,7 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 
 	if (channelNames.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
-		return false;
+		return ;
 	}
 	
 	// Try joining the channels
@@ -118,7 +118,7 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 			addToChannel(stream, channel, user);
 
 		} catch (const runtime_error &e) { // Channel not found
-			server.addChannel(channelName);
+			server.addChannel(channelName); // We're not running any checks on the channel name, maybe alpha-numeric only?
 			Channel *channel = server.getChannel(channelName);
 			channel->addOperator(user);
 			channel->addUser(user);
@@ -132,5 +132,4 @@ bool JOIN(IRStream &stream, string &args, User *user) {
 			stream.prefix(user).command().param(channel->getName()).end();
 		}
 	}
-	return true;
 }

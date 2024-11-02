@@ -9,10 +9,10 @@
 
 extern Server server;
 
-bool NICK(IRStream &stream, string &args, User *user) {
+void NICK(IRStream &stream, string &args, User *user) {
 	if (args.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).trail("Not enough parameters").end();
-		return false;
+		return ;
 	}
 
 	const auto &users = server.getUsers();
@@ -21,7 +21,7 @@ bool NICK(IRStream &stream, string &args, User *user) {
 
 	if (iter != users.end()) {
 		stream.prefix().code(ERR_NICKNAMEINUSE).param(user->getUsername()).param(args).param(args).param(" is already in use").end();
-		return false;
+		return ;
 	}
 
 	user->setNickname(args);
@@ -35,6 +35,4 @@ bool NICK(IRStream &stream, string &args, User *user) {
 		MOTD(stream, empty, user);
 		user->addHandshake(USER_WELCOME);
 	}
-
-	return true;
 }

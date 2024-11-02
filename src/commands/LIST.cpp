@@ -5,10 +5,10 @@
 
 extern Server server;
 
-bool LIST(IRStream &stream, string &args, User *user) {
+void LIST(IRStream &stream, string &args, User *user) {
 	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
-		return false;
+		return ;
 	}
 	if (args.empty()) {
 		for (auto &channel : server.getChannels()) {
@@ -21,14 +21,14 @@ bool LIST(IRStream &stream, string &args, User *user) {
 				.end();
 		}
 		stream.prefix().code(RPL_LISTEND).param(user->getNickname()).trail("End of LIST").end();
-		return true;
+		return ;
 	}
 
 	vector<string> channels = split(args, ',');
 
 	if (channels.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
-		return false;
+		return ;
 	}
 
 	for (const auto &channelName : channels) {
@@ -43,8 +43,7 @@ bool LIST(IRStream &stream, string &args, User *user) {
 				.end();
 		} catch (runtime_error &e) {
 			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail(e.what()).end();
-			return false;
+			return ;
 		}
 	}
-	return true;
 }

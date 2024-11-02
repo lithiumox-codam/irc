@@ -11,14 +11,14 @@
 
 extern Server server;
 
-bool TOPIC(IRStream &stream, string &args, User *user) {
+void TOPIC(IRStream &stream, string &args, User *user) {
 	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
-		return false;
+		return ;
 	}
 	if (args.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
-		return false;
+		return ;
 	}
 	pair<string, string> tokens = splitPair(args, ' ');
 	cerr << "parser gives: " << tokens.first << " and [" << tokens.second << "]\n";
@@ -30,7 +30,7 @@ bool TOPIC(IRStream &stream, string &args, User *user) {
 				.param(user->getNickname())
 				.trail("You're not in that channel")
 				.end();
-			return false;
+			return ;
 		}
 		if (tokens.second.empty()) {
 			if (channel->getTopic().empty()) {
@@ -40,7 +40,7 @@ bool TOPIC(IRStream &stream, string &args, User *user) {
 					.param(channel->getName())
 					.trail("No topic is set")
 					.end();
-				return true;
+				return ;
 			}
 			stream.prefix()
 				.code(RPL_TOPIC)
@@ -48,7 +48,7 @@ bool TOPIC(IRStream &stream, string &args, User *user) {
 				.param(channel->getName())
 				.trail(channel->getTopic())
 				.end();
-				return true;
+				return ;
 		}
 		if (tokens.second == "::") {
 			channel->setTopic("");
@@ -57,7 +57,7 @@ bool TOPIC(IRStream &stream, string &args, User *user) {
 				.param(channel->getName())
 				.trail(":")
 				.end();
-				return true;
+				return ;
 		}
 		channel->setTopic(tokens.second);
 		stream.prefix()
@@ -73,10 +73,8 @@ bool TOPIC(IRStream &stream, string &args, User *user) {
 			.param(user->getNickname())
 			.trail(to_string(time(nullptr)))
 			.end();
-		return true;
+		return ;
 	} catch (runtime_error &e) {
 		stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
-		return false;
 	}
-	return true;
 }

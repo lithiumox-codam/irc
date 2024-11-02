@@ -74,16 +74,16 @@ class User {
 	[[nodiscard]] bool hasHandshake(unsigned int handshake) const;
 	[[nodiscard]] unsigned int getHandshake() const;
 
-	[[nodiscard]] bool checkPacket();
-
-	int readFromSocket();
-	int sendToSocket();
-	void addToBuffer(const string &data);
-
 	[[nodiscard]] string &getInBuffer();
 	[[nodiscard]] string &getOutBuffer();
-	void clearInBuffer();
-	void clearOutBuffer();
+
+	// Socket I/O
+	bool	readFromSocket();
+	bool	sendToSocket();
+	void	addToBuffer(const string &data);
+
+	void	parse(void);
+
 };
 
 ostream &operator<<(ostream &stream, const User &user);

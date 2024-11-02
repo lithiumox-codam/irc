@@ -11,6 +11,7 @@
 
 #include "Channel.hpp"
 #include "User.hpp"
+#include "Epoll.hpp"
 
 using namespace std;
 
@@ -38,6 +39,7 @@ class Server {
 	bool running;  // Server running status
 
 	int epoll_fd;  // File descriptor for epoll
+	EpollClass myEpoll;
 
    public:
 	Server();
@@ -55,14 +57,10 @@ class Server {
 	void start();
 	void stop();
 
-	void epollCreate();
-	void epollAdd(int socket) const;
-	void epollRemove(int socket) const;
-	void epollChange(int socket, uint32_t events) const;
-	void epollEvent(struct epoll_event &event);
-	int epollWait();
-	void handleEvents(array<struct epoll_event, (size_t)ServerConfig::BACKLOG> &events, int numberOfEvents);
+	void userReadyToSend(User &user);
+
 	void acceptNewConnection();
+	void handleEvent(struct epoll_event &event);
 
 	void addUser(unsigned int socket);
 	void removeUser(User &user);

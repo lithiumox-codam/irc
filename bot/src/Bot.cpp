@@ -70,6 +70,12 @@ void Bot::sendToServer(void) {
 			cerr << "Error: send():" << strerror(errno) << '\n';
 			exit(EXIT_FAILURE);
 		}
+
+		if (ret == 0) {
+			cerr << "DEBUG: Server gracefully disconnected..." << '\n';
+			exit(EXIT_FAILURE);
+		}
+
 		this->out_buffer.erase(0, ret);
 	}
 

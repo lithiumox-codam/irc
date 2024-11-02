@@ -21,10 +21,10 @@ static void sendWhoReply(IRStream& stream, User* user, Channel* channel, User* m
 		.end();
 }
 
-bool WHO(IRStream& stream, string& args, User* user) {
+void WHO(IRStream& stream, string& args, User* user) {
 	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).trail("You have not registered").end();
-		return false;
+		return ;
 	}
 	if (args.empty()) {
 		const auto& users = server.getUsers();
@@ -48,18 +48,18 @@ bool WHO(IRStream& stream, string& args, User* user) {
 			.param("*")					 // channel name
 			.trail("End of WHO list")
 			.end();
-		return true;
+		return ;
 	}
 	auto tokens = split(args, ' ');
 	if (tokens.size() != 1) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).trail("WHO :Not enough parameters").end();
-		return false;
+		return ;
 	}
 	string channelName = tokens[0];
 	Channel* channel = server.getChannel(channelName);
 	if (channel == nullptr) {
 		stream.prefix().code(ERR_NOSUCHCHANNEL).trail("No such channel: " + channelName).end();
-		return false;
+		return ;
 	}
 	auto* users = channel->getMembers();
 	for (const auto& member : *users) {
@@ -74,5 +74,4 @@ bool WHO(IRStream& stream, string& args, User* user) {
 		.param(channelName)			 // channel name
 		.trail("End of WHO list")
 		.end();
-	return true;
 }

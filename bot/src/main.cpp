@@ -122,7 +122,9 @@ int main(int argc, char **argv) {
 		myEpoll.wait();
 
 		for (epoll_event &event : myEpoll.events) {
-			handleEvent(event);
+			if (event.events) {
+				handleEvent(event);
+			}
 		}
 	}
 

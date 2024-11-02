@@ -61,16 +61,16 @@ static void correct_realname(vector<string> &args) {
  * @brief The USER command is used at the beginning of connection to specify the username, hostname, servername and
  * realname of a new user.
  */
-bool USER(IRStream &stream, string &args, User *user) {
+void USER(IRStream &stream, string &args, User *user) {
 	if (user->hasHandshake(USER_USER)) {
 		stream.code(ERR_ALREADYREGISTRED).param(user->getNickname()).trail("You may not reregister").end();
-		return false;
+		return ;
 	}
 	vector<string> tokens = split(args, ' ');
 	correct_realname(tokens);
 	if (tokens.size() < 4) {
 		cerr << "Error: USER packet has less than 4 arguments" << "\n";
-		return false;
+		return ;
 	}
 	string hostname = getHostnameFromSocket(user->getSocket());
 
@@ -85,6 +85,4 @@ bool USER(IRStream &stream, string &args, User *user) {
 		MOTD(stream, empty, user);
 		user->addHandshake(USER_WELCOME);
 	}
-
-	return true;
 }

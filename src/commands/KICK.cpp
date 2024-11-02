@@ -24,7 +24,7 @@ string join(const vector<string>& tokens, size_t start) {
 	return result;
 }
 
-bool KICK(IRStream &stream, string &args, User *user){
+void KICK(IRStream &stream, string &args, User *user){
 	vector<string> tokens = split(args, ' ');
 	if (tokens.size() < 2) {
 		stream.prefix()
@@ -32,7 +32,7 @@ bool KICK(IRStream &stream, string &args, User *user){
 		.param(user->getNickname())
 		.trail("Not enough parameters")
 		.end();
-		return false;
+		return ;
 	}
 	try {
 		Channel *channel = server.getChannel(tokens[0]);
@@ -42,7 +42,7 @@ bool KICK(IRStream &stream, string &args, User *user){
 			.param(user->getNickname())
 			.trail("You're not in that channel")
 			.end();
-			return false;
+			return ;
 		}
 		pair<User *, Modes> *target = channel->getMember(server.getUser(tokens[1]));
 		if (target == nullptr){
@@ -51,7 +51,7 @@ bool KICK(IRStream &stream, string &args, User *user){
 			.param(user->getNickname())
 			.trail("User not in channel")
 			.end();
-			return false;
+			return ;
 		}
 		pair<User *, Modes> *kicker = channel->getMember(user);
 		if (!kicker->second.hasModes(M_OPERATOR)){
@@ -60,7 +60,7 @@ bool KICK(IRStream &stream, string &args, User *user){
 			.param(user->getNickname())
 			.trail("You're not a channel operator")
 			.end();
-			return false;
+			return ;
 		}
 		channel->removeUser(target->first);
 		stream.prefix(user)
@@ -73,22 +73,12 @@ bool KICK(IRStream &stream, string &args, User *user){
 			stream.param(kicker->first->getNickname());
 		}
 		stream.end();
-		return true;
 	} catch (const runtime_error &e) {
 		if (std::string(e.what()) == "Channel not found") {
-			stream.prefix()
-			.code(ERR_NOSUCHCHANNEL)
-			.param(user->getNickname())
-			.trail("No such channel")
-			.end();
-			return false;
+			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
+		} else {
+			stream.prefix().code(ERR_NOSUCHNICK).param(user->getNickname()).trail("No such nickname").end();
 		}
-		stream.prefix()
-		.code(ERR_NOSUCHNICK)
-		.param(user->getNickname())
-		.trail("No such nickname")
-		.end();
-		return false;
 	}
 }
 
