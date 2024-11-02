@@ -168,6 +168,45 @@ static vector<string> getCommands(string &buffer, const string &delim) {
 // :opelser!olebol@localhost PRIVMSG #bot :hello bot!
 // :opelser!olebol@localhost PART #bot :Leaving
 
+static string getNick(const string &sender) {
+	size_t nickEnd = sender.find('!');
+
+	if (nickEnd == string::npos) {
+		return sender;
+	}
+
+	return sender.substr(0, nickEnd);
+}
+
+static string replyJOIN(const vector<string> &parts) {
+	string nick = getNick(parts[0]);
+
+	if (nick == "ircbot") {
+		cout << "DEBUG: Joined the server" << '\n';
+	} else {
+		cout << "DEBUG: " << nick << " joined the channel" << '\n';
+		return "PRIVMSG " + parts[2] + " :Hello " + nick + ", welcome to the channel!\r\n";
+	}
+	return string();
+}
+
+static string replyPRIVMSG(vector<string> &parts) {
+	string nick = getNick(parts[0]);
+	string message = parts.back();
+
+	cout << "DEBUG: " << nick << " said: " << message << '\n';
+
+	return "PRIVMSG " + parts[2] + " :Hello " + nick + "! How are you today?\r\n";
+}
+
+static string replyPART(const vector<string> &parts) {
+	string nick = getNick(parts[0]);
+
+	cout << "DEBUG: " << nick << " left the channel" << '\n';
+
+	return "PRIVMSG " + parts[2] + " :Goodbye " + nick + "! Have a nice day!\r\n";
+}
+
 void Bot::parse(void) {
 	vector<string> commands = getCommands(this->in_buffer, "\r\n");
 	for (string &command : commands) {
@@ -178,10 +217,30 @@ void Bot::parse(void) {
 			cout << "[" << part << "] ";
 		}
 		cout << '\n';
-	}
-}
 
-string Bot::getResponse(const string &query) {
-	(void) query;
-	return "Hello!";
+		string response;
+
+		if (parts[1] == "433") {
+			cerr << "Error: Nickname is already in use" << '\n';
+			exit(EXIT_FAILURE);
+		}
+
+		else if (parts[1] == "JOIN") {
+			response = replyJOIN(parts);
+		}
+
+		else if (parts[1] == "PRIVMSG") {
+			response = replyPRIVMSG(parts);
+		}
+
+		else if (parts[1] == "PART") {
+			response = replyPART(parts);
+		}
+		
+		if (!response.empty()) {
+			this->addToBuffer(response);
+			this->sendToServer();
+		}
+
+	}
 }

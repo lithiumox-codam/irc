@@ -24,5 +24,4 @@ class Bot {
 
 		// Bot functions
 		void			parse(void);
-		static string	getResponse(const string &query);
 } ;
