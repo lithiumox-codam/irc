@@ -67,4 +67,4 @@ run: all
 bear: fclean
 	@ bear -- make
 
-.PHONY: all clean fclean re open
+.PHONY: all clean fclean re open format run bear

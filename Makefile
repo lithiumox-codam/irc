@@ -44,6 +44,10 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HDR)
 open: $(NAME)
 	@ ./$(NAME) 8080
 
+bonus:
+	@ make run -C bot
+
+
 clean:
 	@ echo "$(RED)$(BOLD)Cleaning $(NICKNAME)...$(RESET)"
 	@ rm -rf $(OBJ_DIR)
@@ -64,4 +68,4 @@ run: all
 bear: fclean
 	@ bear -- make
 
-.PHONY: all clean fclean re open
+.PHONY: all clean fclean re open format run bear bonus
