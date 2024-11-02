@@ -26,4 +26,4 @@ class Bot {
 		void			parse(void);
 } ;
 
-string getGPTResponse(const string &query);
+string getGPTResponse(const string &nick, const string &message);

@@ -196,7 +196,7 @@ static string replyPRIVMSG(vector<string> &parts) {
 
 	cout << "DEBUG: " << nick << " said: " << message << '\n';
 
-	return "PRIVMSG " + parts[2] + " :" + getGPTResponse(message) + "\r\n";
+	return "PRIVMSG " + parts[2] + " :" + getGPTResponse(nick, message) + "\r\n";
 }
 
 static string replyPART(const vector<string> &parts) {
