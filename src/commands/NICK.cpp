@@ -11,7 +11,7 @@ extern Server server;
 
 bool NICK(IRStream &stream, string &args, User *user) {
 	if (args.empty()) {
-		stream.code(ERR_NEEDMOREPARAMS).trail("Not enough parameters").end();
+		stream.prefix().code(ERR_NEEDMOREPARAMS).trail("Not enough parameters").end();
 		return false;
 	}
 
@@ -20,7 +20,7 @@ bool NICK(IRStream &stream, string &args, User *user) {
 	auto iter = find_if(users.begin(), users.end(), [&args](const auto &user) { return user.getNickname() == args; });
 
 	if (iter != users.end()) {
-		stream.code(ERR_NICKNAMEINUSE).param(user->getNickname()).param(args).trail("Nickname is already in use").end();
+		stream.prefix().code(ERR_NICKNAMEINUSE).param(user->getUsername()).param(args).param(args).param(" is already in use").end();
 		return false;
 	}
 
