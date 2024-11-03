@@ -1,7 +1,4 @@
 #include "IRStream.hpp"
-
-#include <iostream>
-
 #include "Server.hpp"
 
 extern Server server;

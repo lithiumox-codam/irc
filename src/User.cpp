@@ -10,7 +10,6 @@
 #include <iomanip>
 #include <iostream>
 #include <ostream>
-#include <vector>
 
 #include "General.hpp"
 #include "Server.hpp"

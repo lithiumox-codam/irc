@@ -5,7 +5,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include <array>
 #include <cerrno>
 #include <climits>
 #include <cstdio>
@@ -17,7 +16,6 @@
 
 #include "General.hpp"
 #include "User.hpp"
-#include "Exceptions.hpp"
 
 extern Server server;
 
@@ -84,7 +82,7 @@ void Server::acceptNewConnection() {
 }
 
 void	Server::handleEvent(epoll_event& event) {
-	if (event.data.fd == this->socket && event.events & EPOLLIN) {
+	if (event.data.fd == this->socket && (event.events & EPOLLIN) != 0) {
 		acceptNewConnection();
 		return ;
 	}
@@ -92,14 +90,14 @@ void	Server::handleEvent(epoll_event& event) {
 	try {
 		User *user = server.getUser(event.data.fd);
 
-		if (event.events & EPOLLIN) {
+		if ((event.events & EPOLLIN) != 0) {
 			if (!user->readFromSocket()) { 
 				server.removeUser(*user);
 				return ;
 			}
 		}
 
-		if (event.events & EPOLLOUT) {
+		if ((event.events & EPOLLOUT) != 0) {
 			if (!user->sendToSocket()) {
 				server.removeUser(*user);
 				return ;
@@ -110,19 +108,19 @@ void	Server::handleEvent(epoll_event& event) {
 			}
 		}
 
-		if (event.events & EPOLLERR) {
+		if ((event.events & EPOLLERR) != 0) {
 			cerr << "Error: EPOLLERR: " << strerror(errno) << '\n';
 			server.removeUser(*user);
 			return ;
 		}
 
-		if (event.events & EPOLLHUP) {
+		if ((event.events & EPOLLHUP) != 0) {
 			cerr << "Client shut down: EPOLLHUP" << '\n';
 			server.removeUser(*user);
 			return ;
 		}
 
-		if (event.events & EPOLLRDHUP) {
+		if ((event.events & EPOLLRDHUP) != 0) {
 			cerr << "client shut down: EPOLLRDHUP" << '\n';
 			server.removeUser(*user);
 			return ;
@@ -152,7 +150,7 @@ void Server::start() {
 		this->myEpoll.wait();
 
 		for (epoll_event &event : this->myEpoll.events) {
-			if (event.events) {
+			if (event.events != 0) {
 				handleEvent(event);
 			}
 		}

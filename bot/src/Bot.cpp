@@ -5,7 +5,6 @@
 #include <sys/epoll.h>
 #include <cstring>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 extern EpollClass	myEpoll;
