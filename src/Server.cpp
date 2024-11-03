@@ -89,42 +89,46 @@ void	Server::handleEvent(epoll_event& event) {
 		return ;
 	}
 
-	User *user = server.getUser(event.data.fd);
+	try {
+		User *user = server.getUser(event.data.fd);
 
-	if (event.events & EPOLLIN) {
-		if (!user->readFromSocket()) { 
+		if (event.events & EPOLLIN) {
+			if (!user->readFromSocket()) { 
+				server.removeUser(*user);
+				return ;
+			}
+		}
+
+		if (event.events & EPOLLOUT) {
+			if (!user->sendToSocket()) {
+				server.removeUser(*user);
+				return ;
+			}
+
+			if (user->getOutBuffer().empty()) {
+				this->myEpoll.change(event.data.fd, EPOLLIN);
+			}
+		}
+
+		if (event.events & EPOLLERR) {
+			cerr << "Error: EPOLLERR: " << strerror(errno) << '\n';
 			server.removeUser(*user);
 			return ;
 		}
-	}
 
-	if (event.events & EPOLLOUT) {
-		if (!user->sendToSocket()) {
+		if (event.events & EPOLLHUP) {
+			cerr << "Client shut down: EPOLLHUP" << '\n';
 			server.removeUser(*user);
 			return ;
 		}
 
-		if (user->getOutBuffer().empty()) {
-			this->myEpoll.change(event.data.fd, EPOLLIN);
+		if (event.events & EPOLLRDHUP) {
+			cerr << "client shut down: EPOLLRDHUP" << '\n';
+			server.removeUser(*user);
+			return ;
 		}
-	}
-
-	if (event.events & EPOLLERR) {
-		cerr << "Error: EPOLLERR: " << strerror(errno) << '\n';
-		server.removeUser(*user);
-		return ;
-	}
-
-	if (event.events & EPOLLHUP) {
-		cerr << "Client shut down: EPOLLHUP" << '\n';
-		server.removeUser(*user);
-		return ;
-	}
-
-	if (event.events & EPOLLRDHUP) {
-		cerr << "client shut down: EPOLLRDHUP" << '\n';
-		server.removeUser(*user);
-		return ;
+	} catch (const runtime_error &e) {
+		cerr << "Error: " << e.what() << '\n';
 	}
 }
 
