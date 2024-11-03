@@ -37,6 +37,7 @@ class Modes {
 	Type type;
 
    public:
+	Modes() = delete;
 	Modes(Type type);
 	~Modes() = default;
 	Modes(unsigned int modes);

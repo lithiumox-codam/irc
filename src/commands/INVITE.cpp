@@ -11,7 +11,7 @@
 
 extern Server server;
 
-void INVITE(IRStream &stream, string &args, User *user) {
+void INVITE(IRStream &stream, const string &args, User *user) {
 	pair<string, string> tokens = splitPair(args, ' ');
 
 	if (tokens.first.empty() || tokens.second.empty()) {
@@ -29,6 +29,7 @@ void INVITE(IRStream &stream, string &args, User *user) {
 			stream.prefix()
 				.code(ERR_CHANOPRIVSNEEDED)
 				.param(user->getNickname())
+				.param(channel->getName())
 				.trail("You're not a channel operator")
 				.end();
 			return;

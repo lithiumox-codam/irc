@@ -29,34 +29,34 @@ using namespace std;
 #define WHITE "\033[37m"
 
 /* Utils */
-vector<string> split(const string& str, const char& delim);
-vector<string> split(const string& str, const string& delim);
-pair<string, string> splitPair(const string& str, const char& delim);
+vector<string> split(const string &str, const char &delim);
+vector<string> split(const string &str, const string &delim);
+pair<string, string> splitPair(const string &str, const char &delim);
 
-void CAP(IRStream& stream, string& args, User* user);
-void NICK(IRStream& stream, string& args, User* user);
-void USER(IRStream& stream, string& args, User* user);
-void PASS(IRStream& stream, string& args, User* user);
-void INFO(IRStream& stream, string& args, User* user);
-void JOIN(IRStream& stream, string& args, User* user);
-void PING(IRStream& stream, string& args, User* user);
-void MOTD(IRStream& stream, string& args, User* user);
-void PRIVMSG(IRStream& stream, string& args, User* user);
-void WHO(IRStream& stream, string& args, User* user);
-void TOPIC(IRStream& stream, string& args, User* user);
-void PART(IRStream& stream, string& args, User* user);
-void KICK(IRStream& stream, string& args, User* user);
-void INVITE(IRStream& stream, string& args, User* user);
-void MODE(IRStream& stream, string& args, User* user);
-void LIST(IRStream& stream, string& args, User* user);
+void CAP(IRStream &stream, const string &args, User *user);
+void NICK(IRStream &stream, const string &args, User *user);
+void USER(IRStream &stream, const string &args, User *user);
+void PASS(IRStream &stream, const string &args, User *user);
+void INFO(IRStream &stream, const string &args, User *user);
+void JOIN(IRStream &stream, const string &args, User *user);
+void PING(IRStream &stream, const string &args, User *user);
+void MOTD(IRStream &stream, const string &args, User *user);
+void PRIVMSG(IRStream &stream, const string &args, User *user);
+void WHO(IRStream &stream, const string &args, User *user);
+void TOPIC(IRStream &stream, const string &args, User *user);
+void PART(IRStream &stream, const string &args, User *user);
+void KICK(IRStream &stream, const string &args, User *user);
+void INVITE(IRStream &stream, const string &args, User *user);
+void MODE(IRStream &stream, const string &args, User *user);
+void LIST(IRStream &stream, const string &args, User *user);
 
 /**
  * @brief The store of all the commands. This is a map of strings to function pointers. Used by the parser to determine
  * which function to call.
  */
-const map<string, void (*)(IRStream&, string&, User*)> store = {
+const map<string, void (*)(IRStream &, const string &, User *)> store = {
 	{"PASS", PASS}, {"CAP", CAP},		{"NICK", NICK},		  {"MOTD", MOTD}, {"USER", USER},	{"INFO", INFO},
 	{"JOIN", JOIN}, {"PING", PING},		{"PRIVMSG", PRIVMSG}, {"WHO", WHO},	  {"TOPIC", TOPIC}, {"PART", PART},
 	{"KICK", KICK}, {"INVITE", INVITE}, {"MODE", MODE},		  {"LIST", LIST}};
 
-void parse(User* user);
+void parse(User *user);

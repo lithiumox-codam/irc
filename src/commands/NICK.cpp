@@ -9,7 +9,7 @@
 
 extern Server server;
 
-void NICK(IRStream &stream, string &args, User *user) {
+void NICK(IRStream &stream, const string &args, User *user) {
 	if (args.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).trail("Not enough parameters").end();
 		return;
@@ -30,7 +30,8 @@ void NICK(IRStream &stream, string &args, User *user) {
 		return;
 	}
 
-	user->setNickname(args);
+	string nickname = args;
+	user->setNickname(nickname);
 	user->addHandshake(USER_NICK);
 
 	stream.prefix().command().param(user->getNickname()).end();

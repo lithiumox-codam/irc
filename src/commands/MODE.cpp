@@ -42,7 +42,7 @@ void applyModeChanges(Modes &modes, string &modeChanges) {
 	}
 }
 
-void MODE(IRStream &stream, string &args, User *user) {
+void MODE(IRStream &stream, const string &args, User *user) {
 	if (args.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).trail("MODE :Not enough parameters").end();
 		return;

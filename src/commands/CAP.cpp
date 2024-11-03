@@ -30,7 +30,7 @@ extern Server server;
 	CAP [UNKNOWN COMMAND]: Unknown command.
 		server: 421 [NICK] CAP :Unknown command
 */
-void CAP(IRStream &stream, string &args, User *user) {
+void CAP(IRStream &stream, const string &args, User *user) {
 	if (args.empty()) {
 		stream.prefix().param(user->getNickname()).param(" :Not enough parameters").end();
 		return;

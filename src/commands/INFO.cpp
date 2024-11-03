@@ -5,7 +5,7 @@
 
 extern Server server;
 
-void INFO(IRStream &stream, string &args, User *user) {
+void INFO(IRStream &stream, const string &args, User *user) {
 	(void)args;
 	const auto &nickname = user->getNickname();
 

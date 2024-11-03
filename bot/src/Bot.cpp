@@ -235,6 +235,10 @@ void Bot::parse(void) {
 		else if (parts[1] == "PART") {
 			response = replyPART(parts);
 		}
+
+		else if (parts[1] == "INVITE") {
+			response = "JOIN " + parts.back() + "\r\n";
+		}
 		
 		if (!response.empty()) {
 			this->addToBuffer(response);
