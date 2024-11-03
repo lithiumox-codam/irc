@@ -1,0 +1,3 @@
+[submodule "bot/include/openai-cpp"]
+	path = bot/include/openai-cpp
+	url = https://github.com/olrea/openai-cpp.git
