@@ -127,10 +127,9 @@ bool User::readFromSocket(void) {
 }
 
 bool User::sendToSocket() {
-	cout << GREEN << "DEBUG: Sending: " << this->out_buffer << RESET << '\n';
-
-	// Send the buffer
 	while (!this->out_buffer.empty()) {
+		cout << GREEN << "DEBUG: Sending: " << this->out_buffer << RESET << '\n';
+
 		int ret = send(this->socket, this->out_buffer.data(), this->out_buffer.size(), 0);
 
 		if (ret == -1) {
