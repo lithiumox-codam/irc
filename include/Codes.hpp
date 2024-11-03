@@ -77,7 +77,7 @@
 #define RPL_YOUREOPER "381"		   // You are now an IRC operator
 #define RPL_REHASHING "382"		   // Rehashing the server
 #define RPL_TIME "391"			   // Server time
-#define RPL_PART 
+#define RPL_PART
 
 #define ERR_UNKNOWNERROR "400"		// Unknown error
 #define ERR_NOSUCHNICK "401"		// Nickname not found

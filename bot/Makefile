@@ -1,13 +1,11 @@
-NAME			:= ircserv
-NICKNAME		:= IRC
+NAME			:= ircbot
+NICKNAME		:= BOT
 
 # Directories
 HDR_DIR			:= include
 LIB_DIR			:= lib
 SRC_DIR			:= src
 OBJ_DIR			:= build
-
-BONUS_DIR		:= bot
 
 # Compiler flags
 CC				:= c++
@@ -16,6 +14,9 @@ CFLAGS			:= -Wall -Werror -Wextra -std=c++20 -I./$(HDR_DIR) -I $(LIB_DIR)
 ifdef DEBUG
 	CFLAGS		+= -g -fsanitize=address
 endif
+
+# Linker flags
+LDFLAGS			:= -lcurl
 
 # Includes
 HDR		:= $(shell find $(HDR_DIR) -name '*.hpp')
@@ -36,7 +37,7 @@ all: ${NAME}
 
 $(NAME): $(OBJ)
 	@ printf "%b%s%b" "$(YELLOW)$(BOLD)" "Compiling $(NICKNAME)..." "$(RESET)"
-	@ $(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+	@ $(CC) $(OBJ) $(LDFLAGS) -o $(NAME)
 	@ printf "\t\t%b%s%b\n" "$(GREEN)$(BOLD)" "[OK]" "$(RESET)"
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HDR)
@@ -46,20 +47,14 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HDR)
 open: $(NAME)
 	@ ./$(NAME) 8080
 
-bonus:
-	@ make run -C $(BONUS_DIR)
-
-
 clean:
 	@ echo "$(RED)$(BOLD)Cleaning $(NICKNAME)...$(RESET)"
 	@ rm -rf $(OBJ_DIR)
-	@ make clean -C $(BONUS_DIR)
 
 fclean:
 	@ echo "$(RED)$(BOLD)Fully cleaning $(NICKNAME)...$(RESET)"
 	@ rm -rf $(OBJ_DIR)
 	@ rm -rf ${NAME}
-	@ make fclean -C $(BONUS_DIR)
 
 re: fclean ${NAME}
 
@@ -67,9 +62,9 @@ format:
 	@ clang-format -i $(SRC) $(HDR)
 
 run: all
-	@ ./$(NAME) 6667 test
+	@ ./$(NAME) localhost 6667
 
 bear: fclean
 	@ bear -- make
 
-.PHONY: all clean fclean re open format run bear bonus
+.PHONY: all clean fclean re open format run bear

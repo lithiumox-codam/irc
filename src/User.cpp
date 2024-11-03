@@ -10,7 +10,6 @@
 #include <iomanip>
 #include <iostream>
 #include <ostream>
-#include <vector>
 
 #include "General.hpp"
 #include "Server.hpp"
@@ -99,31 +98,59 @@ unsigned int User::getHandshake() const { return this->handshake; }
 
 bool User::hasHandshake(unsigned int handshake) const { return (this->handshake & handshake) == handshake; }
 
-int User::readFromSocket() {
-	vector<char> buffer(UserConfig::BUFFER_SIZE);
-	int bytesRead = recv(this->socket, buffer.data(), buffer.size(), 0);
+bool User::readFromSocket(void) {
+	char buffer[UserConfig::BUFFER_SIZE];
+	int ret;
 
-	if (bytesRead <= 0) {
-		return bytesRead;
+	ret = recv(this->socket, buffer, sizeof(buffer) + 1, 0);
+
+	if (ret == -1) {
+		if (errno == EWOULDBLOCK || errno == EAGAIN) {
+			return true;
+		}
+		cerr << "Error: recv(): " << strerror(errno) << '\n';
+		return false;
 	}
 
-	buffer.push_back('\0');
+	if (ret == 0) {
+		cerr << "Connection to user " << this->getNickname() << " lost..." << '\n';
+		return false;
+	}
 
-	this->in_buffer.append(buffer.data());
+	buffer[ret] = '\0';
+	this->in_buffer.append(buffer, ret);
+	cout << RED << "DEBUG: Received: " << this->in_buffer << RESET << '\n';
 
-	parse(this);
-	this->in_buffer.clear();
-	return bytesRead;
+	this->parse();
+	return true;
 }
 
-void User::addToBuffer(const string &data) {
-	this->out_buffer.append(data);
-	server.epollChange(this->socket, EPOLLIN | EPOLLOUT);
-};
+bool User::sendToSocket() {
+	while (!this->out_buffer.empty()) {
+		cout << GREEN << "DEBUG: Sending: " << this->out_buffer << RESET << '\n';
 
-void User::clearInBuffer() { this->in_buffer.clear(); }
+		int ret = send(this->socket, this->out_buffer.data(), this->out_buffer.size(), 0);
 
-void User::clearOutBuffer() { this->out_buffer.clear(); }
+		if (ret == -1) {
+			if (errno == EWOULDBLOCK || errno == EAGAIN) {
+				return true;
+			}
+			cerr << "Error: send():" << strerror(errno) << '\n';
+			return false;
+		}
+
+		if (ret == 0) {
+			cerr << "DEBUG: User " << this->getNickname() << " gracefully disconnected" << '\n';
+			return false;
+		}
+
+		this->out_buffer.erase(0, ret);
+	}
+
+	return true;
+}
+
+void User::addToBuffer(const string &data) { this->out_buffer.append(data); };
 
 ostream &operator<<(std::ostream &stream, const User &user) {
 	const int WIDTH = 52;
@@ -171,31 +198,6 @@ ostream &operator<<(std::ostream &stream, const User &user) {
 
 	return stream;
 }
-
-int User::sendToSocket() {
-	size_t totalSent = 0;
-	while (!out_buffer.empty()) {
-		ssize_t bytesRead = send(socket, out_buffer.data(), out_buffer.size(), MSG_NOSIGNAL);
-		if (bytesRead > 0) {
-			out_buffer.erase(0, bytesRead);
-			totalSent += bytesRead;
-		} else if (bytesRead == 0) {
-			// Connection closed by peer
-			return -1;
-		} else if (bytesRead == -1) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				// Socket buffer is full, try again later
-				return totalSent > 0 ? totalSent : 0;
-			}
-			// Other error occurred
-			cerr << "Error: send failed: " << strerror(errno) << "\n";
-			return -1;
-		}
-	}
-	return totalSent;
-}
-
-bool User::checkPacket() { return this->in_buffer.find("\r\n") != string::npos; }
 
 string &User::getInBuffer() { return this->in_buffer; }
 

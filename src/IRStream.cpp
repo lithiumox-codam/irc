@@ -1,7 +1,5 @@
 #include "IRStream.hpp"
 
-#include <iostream>
-
 #include "Server.hpp"
 
 extern Server server;
@@ -141,8 +139,11 @@ IRStream &IRStream::end() {
  */
 void IRStream::sendPacket(User *user) {
 	for (const auto &line : parts) {
-		cout << "DEBUG: " << user->getSocket() << " / " << user->getNickname() << " Line sent: " << line;
 		user->addToBuffer(line);
+	}
+
+	if (!user->getOutBuffer().empty()) {
+		server.userReadyToSend(*user);
 	}
 }
 

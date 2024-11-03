@@ -1,6 +1,5 @@
 #include "Channel.hpp"
 
-#include <iostream>
 #include <utility>
 
 #include "IRStream.hpp"
@@ -127,7 +126,6 @@ bool Channel::hasInvited(User *user) const {
 	return false;
 }
 
-
 std::vector<pair<User *, Modes>> *Channel::getMembers() { return &this->members; }
 
 std::pair<User *, Modes> *Channel::getMember(User *user) {
@@ -141,12 +139,13 @@ std::pair<User *, Modes> *Channel::getMember(User *user) {
 
 void Channel::broadcast(User *user, const string &message) {
 	IRStream stream;
+
 	stream.prefix(user, this).param("PRIVMSG").param(this->getName()).trail(message).end();
+
 	for (auto &member : *this->getMembers()) {
-		if (member.first->getSocket() == user->getSocket()) {
-			continue;
+		if (member.first->getSocket() != user->getSocket()) {
+			stream.sendPacket(member.first);
 		}
-		stream.sendPacket(member.first);
 	}
 }
 

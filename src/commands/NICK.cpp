@@ -9,10 +9,10 @@
 
 extern Server server;
 
-bool NICK(IRStream &stream, string &args, User *user) {
+void NICK(IRStream &stream, string &args, User *user) {
 	if (args.empty()) {
-		stream.code(ERR_NEEDMOREPARAMS).trail("Not enough parameters").end();
-		return false;
+		stream.prefix().code(ERR_NEEDMOREPARAMS).trail("Not enough parameters").end();
+		return;
 	}
 
 	const auto &users = server.getUsers();
@@ -20,8 +20,14 @@ bool NICK(IRStream &stream, string &args, User *user) {
 	auto iter = find_if(users.begin(), users.end(), [&args](const auto &user) { return user.getNickname() == args; });
 
 	if (iter != users.end()) {
-		stream.code(ERR_NICKNAMEINUSE).param(user->getNickname()).param(args).trail("Nickname is already in use").end();
-		return false;
+		stream.prefix()
+			.code(ERR_NICKNAMEINUSE)
+			.param(user->getUsername())
+			.param(args)
+			.param(args)
+			.param(" is already in use")
+			.end();
+		return;
 	}
 
 	user->setNickname(args);
@@ -29,12 +35,9 @@ bool NICK(IRStream &stream, string &args, User *user) {
 
 	stream.prefix().command().param(user->getNickname()).end();
 
-	if (user->hasHandshake(USER_AUTHENTICATED) &&
-		!user->hasHandshake(USER_WELCOME)) {
+	if (user->hasHandshake(USER_AUTHENTICATED) && !user->hasHandshake(USER_WELCOME)) {
 		string empty;
 		MOTD(stream, empty, user);
 		user->addHandshake(USER_WELCOME);
 	}
-
-	return true;
 }

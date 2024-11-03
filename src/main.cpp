@@ -26,6 +26,8 @@ void signalHandler(int signum) {
 int main(int argc, char **argv) {
 	signal(SIGINT, signalHandler);
 	signal(SIGTERM, signalHandler);
+	signal(SIGKILL, signalHandler);
+
 	getEnv();
 	if (server.getPassword().empty() && !server.isBound()) {
 		if (argc != 3) {

@@ -33,8 +33,8 @@ vector<string> split(const string &str, const char &delim) {
  * @return vector<string> A vector of strings that have been split by the delimiter.
  */
 vector<string> split(const string &str, const string &delim) {
-	vector<string>	tokens;
-	string			token;
+	vector<string> tokens;
+	string token;
 
 	for (size_t i = 0; i < str.size(); i++) {
 		if (str.substr(i, delim.size()) == delim) {
@@ -57,7 +57,7 @@ pair<string, string> splitPair(const string &str, const char &delim) {
 	}
 	string first = str.substr(0, found);
 	string second = str.substr(found + 1);
-	
+
 	if (!second.empty() && second[0] == ':') {
 		second = second.substr(1);
 	}
