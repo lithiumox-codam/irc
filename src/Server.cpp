@@ -19,7 +19,7 @@
 
 extern Server server;
 
-Server::Server() : socket(0), port(0), running(false) { }
+Server::Server() : socket(0), port(0), running(false) {}
 
 Server::~Server() { this->stop(); }
 
@@ -58,9 +58,7 @@ void Server::bindSocket(const string &portString) {
 
 void Server::setHostname(const string &hostString) { hostname = hostString; }
 
-void Server::userReadyToSend(User &user) {
-	this->myEpoll.change(user.getSocket(), EPOLLIN | EPOLLOUT);
-}
+void Server::userReadyToSend(User &user) { this->myEpoll.change(user.getSocket(), EPOLLIN | EPOLLOUT); }
 
 void Server::acceptNewConnection() {
 	const int clientSocket = accept(this->socket, nullptr, nullptr);
@@ -81,26 +79,26 @@ void Server::acceptNewConnection() {
 	cout << GREEN << "New connection on socket " << clientSocket << RESET << '\n';
 }
 
-void	Server::handleEvent(epoll_event& event) {
+void Server::handleEvent(epoll_event &event) {
 	if (event.data.fd == this->socket && (event.events & EPOLLIN) != 0) {
 		acceptNewConnection();
-		return ;
+		return;
 	}
 
 	try {
 		User *user = server.getUser(event.data.fd);
 
 		if ((event.events & EPOLLIN) != 0) {
-			if (!user->readFromSocket()) { 
+			if (!user->readFromSocket()) {
 				server.removeUser(*user);
-				return ;
+				return;
 			}
 		}
 
 		if ((event.events & EPOLLOUT) != 0) {
 			if (!user->sendToSocket()) {
 				server.removeUser(*user);
-				return ;
+				return;
 			}
 
 			if (user->getOutBuffer().empty()) {
@@ -111,19 +109,19 @@ void	Server::handleEvent(epoll_event& event) {
 		if ((event.events & EPOLLERR) != 0) {
 			cerr << "Error: EPOLLERR: " << strerror(errno) << '\n';
 			server.removeUser(*user);
-			return ;
+			return;
 		}
 
 		if ((event.events & EPOLLHUP) != 0) {
 			cerr << "Client shut down: EPOLLHUP" << '\n';
 			server.removeUser(*user);
-			return ;
+			return;
 		}
 
 		if ((event.events & EPOLLRDHUP) != 0) {
 			cerr << "client shut down: EPOLLRDHUP" << '\n';
 			server.removeUser(*user);
-			return ;
+			return;
 		}
 	} catch (const runtime_error &e) {
 		cerr << "Error: " << e.what() << '\n';
@@ -194,7 +192,7 @@ void Server::addUser(unsigned int socket) {
 }
 
 void Server::removeUser(User &user) {
-	//remove from channels
+	// remove from channels
 	for (auto &channel : this->channels) {
 		if (channel.hasUser(&user)) {
 			channel.removeUser(&user);

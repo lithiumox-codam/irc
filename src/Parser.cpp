@@ -2,16 +2,15 @@
 #include <stdexcept>
 #include <string>
 
+#include "Codes.hpp"
 #include "General.hpp"
 #include "IRStream.hpp"
-#include "Codes.hpp"
 
 static vector<string> getCommands(string &buffer, const string &delim) {
 	vector<string> commands;
 	size_t delimPos = 0;
 
-	while (!buffer.empty())
-	{
+	while (!buffer.empty()) {
 		delimPos = buffer.find(delim);
 		if (delimPos == string::npos) {
 			break;
@@ -37,7 +36,6 @@ void User::parse(void) {  // this would fail if the last command is partially re
 	try {
 		vector<string> commands = getCommands(this->getInBuffer(), "\r\n");
 		for (const string &command : commands) {
-
 			bool found = false;
 
 			string baseCommand = command.substr(0, command.find(' '));
@@ -58,11 +56,16 @@ void User::parse(void) {  // this would fail if the last command is partially re
 			}
 
 			if (!found) {
-				stream.prefix().code(ERR_UNKNOWNCOMMAND).param(this->getNickname()).param(baseCommand).trail("Unknown Command").end();
+				stream.prefix()
+					.code(ERR_UNKNOWNCOMMAND)
+					.param(this->getNickname())
+					.param(baseCommand)
+					.trail("Unknown Command")
+					.end();
 			}
 		}
 	} catch (const runtime_error &e) {
-		return ;
+		return;
 	}
 
 	stream.sendPacket(this);

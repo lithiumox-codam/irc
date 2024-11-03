@@ -45,7 +45,7 @@ void applyModeChanges(Modes &modes, string &modeChanges) {
 void MODE(IRStream &stream, string &args, User *user) {
 	if (args.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).trail("MODE :Not enough parameters").end();
-		return ;
+		return;
 	}
 
 	vector<string> tokens = split(args, ' ');
@@ -60,7 +60,7 @@ void MODE(IRStream &stream, string &args, User *user) {
 					.param(channel->getName())
 					.trail("+" + channel->modes.getModesString())
 					.end();
-				return ;
+				return;
 			}
 			if (tokens.size() == 2) {
 				if (tokens[1].starts_with("+") || tokens[1].starts_with("-")) {
@@ -71,7 +71,7 @@ void MODE(IRStream &stream, string &args, User *user) {
 						.param(channel->getName())
 						.trail("+" + channel->modes.getModesString())
 						.end();
-					return ;
+					return;
 				}
 				try {
 					auto &member = channel->getMember(tokens[1]);
@@ -83,7 +83,7 @@ void MODE(IRStream &stream, string &args, User *user) {
 				} catch (runtime_error &e) {
 					string error = e.what();
 					stream.prefix().code(ERR_NOSUCHNICK).trail(error).end();
-					return ;
+					return;
 				}
 			}
 			if (tokens.size() == 3) {
@@ -94,13 +94,13 @@ void MODE(IRStream &stream, string &args, User *user) {
 				} catch (runtime_error &e) {
 					string error = e.what();
 					stream.prefix().code(ERR_NOSUCHNICK).trail(error).end();
-					return ;
+					return;
 				}
 			}
 
 		} catch (IrcException &e) {
 			stream.prefix().code(ERR_NOSUCHCHANNEL).trail(tokens.front() + " :No such channel").end();
-			return ;
+			return;
 		}
 	}
 }

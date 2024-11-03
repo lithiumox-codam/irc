@@ -126,7 +126,6 @@ bool Channel::hasInvited(User *user) const {
 	return false;
 }
 
-
 std::vector<pair<User *, Modes>> *Channel::getMembers() { return &this->members; }
 
 std::pair<User *, Modes> *Channel::getMember(User *user) {

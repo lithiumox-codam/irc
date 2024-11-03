@@ -64,13 +64,13 @@ static void correct_realname(vector<string> &args) {
 void USER(IRStream &stream, string &args, User *user) {
 	if (user->hasHandshake(USER_USER)) {
 		stream.code(ERR_ALREADYREGISTRED).param(user->getNickname()).trail("You may not reregister").end();
-		return ;
+		return;
 	}
 	vector<string> tokens = split(args, ' ');
 	correct_realname(tokens);
 	if (tokens.size() < 4) {
 		cerr << "Error: USER packet has less than 4 arguments" << "\n";
-		return ;
+		return;
 	}
 	string hostname = getHostnameFromSocket(user->getSocket());
 
@@ -79,8 +79,7 @@ void USER(IRStream &stream, string &args, User *user) {
 	user->setRealname(tokens[3]);
 	user->addHandshake(USER_USER);
 
-	if (user->hasHandshake(USER_AUTHENTICATED) &&
-		!user->hasHandshake(USER_WELCOME)) {
+	if (user->hasHandshake(USER_AUTHENTICATED) && !user->hasHandshake(USER_WELCOME)) {
 		string empty;
 		MOTD(stream, empty, user);
 		user->addHandshake(USER_WELCOME);

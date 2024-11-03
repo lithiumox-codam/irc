@@ -14,35 +14,27 @@ extern Server server;
  * @param user The user that sent the PASS command.
  * @return true If the PASS command was successful.
  */
-void PASS(IRStream &stream, string &args, User *user) { // if pass fails, disconnect user
+void PASS(IRStream &stream, string &args, User *user) {	 // if pass fails, disconnect user
 	if (args.empty()) {
 		stream.str("");
 		stream.code(ERR_NEEDMOREPARAMS).trail("Not enough parameters").end();
 
-		return ;
+		return;
 	}
 	if (user->hasHandshake(USER_PASS)) {
 		stream.str("");
-		stream.code(ERR_ALREADYREGISTRED)
-		.param(user->getNickname())
-		.trail("You are already authenticated")
-		.end();
-		return ;
+		stream.code(ERR_ALREADYREGISTRED).param(user->getNickname()).trail("You are already authenticated").end();
+		return;
 	}
 
 	if (args == server.getPassword()) {
 		user->addHandshake(USER_PASS);
 	} else {
-		stream.prefix()
-		.code(ERR_PASSWDMISMATCH)
-		.param(user->getNickname())
-		.trail("Password incorrect")
-		.end();
-		return ;
+		stream.prefix().code(ERR_PASSWDMISMATCH).param(user->getNickname()).trail("Password incorrect").end();
+		return;
 	}
 
-	if (user->hasHandshake(USER_AUTHENTICATED) &&
-		!user->hasHandshake(USER_WELCOME)) {
+	if (user->hasHandshake(USER_AUTHENTICATED) && !user->hasHandshake(USER_WELCOME)) {
 		string empty;
 		MOTD(stream, empty, user);
 		user->addHandshake(USER_WELCOME);

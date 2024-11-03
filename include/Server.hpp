@@ -10,8 +10,8 @@
 #include <string>
 
 #include "Channel.hpp"
-#include "User.hpp"
 #include "Epoll.hpp"
+#include "User.hpp"
 
 using namespace std;
 

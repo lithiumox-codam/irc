@@ -1,9 +1,10 @@
 #include "../include/Epoll.hpp"
 
-#include <sys/epoll.h>
 #include <string.h>
-#include <iostream>
+#include <sys/epoll.h>
 #include <unistd.h>
+
+#include <iostream>
 
 using namespace std;
 
@@ -22,13 +23,9 @@ EpollClass &EpollClass::operator=(const EpollClass &other) {
 	return *this;
 }
 
-EpollClass::EpollClass(const EpollClass &other) {
-	*this = other;
-}
+EpollClass::EpollClass(const EpollClass &other) { *this = other; }
 
-EpollClass::~EpollClass() {
-	close(this->fd);
-}
+EpollClass::~EpollClass() { close(this->fd); }
 
 // Server functions
 
@@ -60,8 +57,8 @@ void EpollClass::change(int socket_fd, uint32_t events) {
 	}
 }
 
-void	EpollClass::wait() {
-	if (epoll_wait(this->fd, events.data(), (int) MAXEVENTS, -1) == -1) {
+void EpollClass::wait() {
+	if (epoll_wait(this->fd, events.data(), (int)MAXEVENTS, -1) == -1) {
 		cerr << strerror(errno) << '\n';
 		cerr << "Error: epoll_wait failed" << '\n';
 		exit(EXIT_FAILURE);

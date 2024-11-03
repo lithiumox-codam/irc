@@ -14,23 +14,19 @@ extern Server server;
 void TOPIC(IRStream &stream, string &args, User *user) {
 	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
-		return ;
+		return;
 	}
 	if (args.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
-		return ;
+		return;
 	}
 	pair<string, string> tokens = splitPair(args, ' ');
 	cerr << "parser gives: " << tokens.first << " and [" << tokens.second << "]\n";
 	try {
 		Channel *channel = server.getChannel(tokens.first);
 		if (!channel->hasUser(user)) {
-			stream.prefix()
-				.code(ERR_NOTONCHANNEL)
-				.param(user->getNickname())
-				.trail("You're not in that channel")
-				.end();
-			return ;
+			stream.prefix().code(ERR_NOTONCHANNEL).param(user->getNickname()).trail("You're not in that channel").end();
+			return;
 		}
 		if (tokens.second.empty()) {
 			if (channel->getTopic().empty()) {
@@ -40,7 +36,7 @@ void TOPIC(IRStream &stream, string &args, User *user) {
 					.param(channel->getName())
 					.trail("No topic is set")
 					.end();
-				return ;
+				return;
 			}
 			stream.prefix()
 				.code(RPL_TOPIC)
@@ -48,16 +44,12 @@ void TOPIC(IRStream &stream, string &args, User *user) {
 				.param(channel->getName())
 				.trail(channel->getTopic())
 				.end();
-				return ;
+			return;
 		}
 		if (tokens.second == "::") {
 			channel->setTopic("");
-			stream.prefix()
-				.param(user->getNickname())
-				.param(channel->getName())
-				.trail(":")
-				.end();
-				return ;
+			stream.prefix().param(user->getNickname()).param(channel->getName()).trail(":").end();
+			return;
 		}
 		channel->setTopic(tokens.second);
 		stream.prefix()
@@ -73,7 +65,7 @@ void TOPIC(IRStream &stream, string &args, User *user) {
 			.param(user->getNickname())
 			.trail(to_string(time(nullptr)))
 			.end();
-		return ;
+		return;
 	} catch (runtime_error &e) {
 		stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
 	}

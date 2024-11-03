@@ -99,8 +99,8 @@ unsigned int User::getHandshake() const { return this->handshake; }
 bool User::hasHandshake(unsigned int handshake) const { return (this->handshake & handshake) == handshake; }
 
 bool User::readFromSocket(void) {
-	char	buffer[UserConfig::BUFFER_SIZE];
-	int		ret;
+	char buffer[UserConfig::BUFFER_SIZE];
+	int ret;
 
 	ret = recv(this->socket, buffer, sizeof(buffer) + 1, 0);
 
@@ -150,9 +150,7 @@ bool User::sendToSocket() {
 	return true;
 }
 
-void User::addToBuffer(const string &data) {
-	this->out_buffer.append(data);
-};
+void User::addToBuffer(const string &data) { this->out_buffer.append(data); };
 
 ostream &operator<<(std::ostream &stream, const User &user) {
 	const int WIDTH = 52;
