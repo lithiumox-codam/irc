@@ -3,7 +3,8 @@
 #include "IRStream.hpp"
 
 void PING(IRStream &stream, string &args, User *user) {
-	(void)user;
+	(void) user;
+
 	if (args.empty()) {
 		stream.prefix().code(ERR_NOORIGIN).trail("No token specified").end();
 	}

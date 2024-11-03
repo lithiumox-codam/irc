@@ -11,7 +11,6 @@
 #include "User.hpp"
 
 extern Server server;
-using namespace std;
 
 static void	broadcast(Channel *channel, User *user) {
 	IRStream stream;

@@ -10,13 +10,10 @@ using namespace std;
 
 void handleUserMessage(IRStream &stream, const pair<string, string> &token, User *user) {
 	if (token.first == user->getNickname()) {
-		stream.prefix()
-			.code(ERR_NOSUCHNICK)
-			.param(user->getNickname())
-			.trail("Error: Talking to yourself is not allowed!")
-			.end();
+		stream.prefix().code(ERR_NOSUCHNICK).param(user->getNickname()).trail("Error: Talking to yourself is not allowed!").end();
 		return ;
 	}
+
 	try {
 		IRStream targetStream;
 		User *target = server.getUser(token.first);
@@ -29,15 +26,12 @@ void handleUserMessage(IRStream &stream, const pair<string, string> &token, User
 void handleChannelMessage(IRStream &stream, const pair<string, string> &token, User *user) {
 	try {
 		Channel *channel = server.getChannel(token.first);
+
 		if (!channel->hasUser(user)) {
-			stream.prefix()
-				.code(ERR_NOTONCHANNEL)
-				.param(user->getNickname())
-				.param(token.first)
-				.trail("You're not on that channel")
-				.end();
+			stream.prefix().code(ERR_NOTONCHANNEL).param(user->getNickname()).param(token.first).trail("You're not on that channel").end();
 			return ;
 		}
+
 		if (!channel->modes.hasModes(M_MODERATED)) {
 			channel->broadcast(user, token.second);
 		} else {
@@ -46,12 +40,7 @@ void handleChannelMessage(IRStream &stream, const pair<string, string> &token, U
 			} else if (channel->hasOperator(user)) {
 				channel->broadcast(user, token.second);
 			} else {
-				stream.prefix()
-					.code(ERR_CANNOTSENDTOCHAN)
-					.param(user->getNickname())
-					.param(token.first)
-					.trail("Cannot send to channel missing voice! (+m)")
-					.end();
+				stream.prefix().code(ERR_CANNOTSENDTOCHAN).param(user->getNickname()).param(token.first).trail("Cannot send to channel missing voice! (+m)").end();
 				return ;
 			}
 		}
@@ -65,11 +54,14 @@ void PRIVMSG(IRStream &stream, string &args, User *user) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 		return ;
 	}
+
 	pair<string, string> token = splitPair(args, ' ');
+
 	if (token.first.empty() || token.second.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 		return ;
 	}
+
 	if (token.first[0] != '#') {
 		handleUserMessage(stream, token, user);
 	} else {
