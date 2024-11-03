@@ -11,7 +11,7 @@
 
 extern Server server;
 
-void TOPIC(IRStream &stream, string &args, User *user) {
+void TOPIC(IRStream &stream, const string &args, User *user) {
 	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;

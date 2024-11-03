@@ -2,7 +2,7 @@
 #include "General.hpp"
 #include "IRStream.hpp"
 
-void PING(IRStream &stream, string &args, User *user) {
+void PING(IRStream &stream, const string &args, User *user) {
 	(void)user;
 
 	if (args.empty()) {

@@ -8,7 +8,7 @@ extern Server server;
 /**
  * @brief The MOTD command sends the Message of the Day to the user.
  */
-void MOTD(IRStream &stream, string &args, User *user) {
+void MOTD(IRStream &stream, const string &args, User *user) {
 	(void)args;
 
 	if (!user->hasHandshake(USER_AUTHENTICATED)) {

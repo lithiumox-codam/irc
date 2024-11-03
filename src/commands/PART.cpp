@@ -22,7 +22,7 @@ static void broadcast(Channel *channel, User *user, const string &message) {
 	}
 }
 
-void PART(IRStream &stream, string &args, User *user) {
+void PART(IRStream &stream, const string &args, User *user) {
 	// Check if the user is registered
 	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
@@ -38,7 +38,7 @@ void PART(IRStream &stream, string &args, User *user) {
 	}
 
 	vector<string> channels = split(parts[0], ',');
-	string message;
+	string message = "Leaving";
 	if (parts.size() > 1) {
 		if (parts[1].starts_with(':')) {
 			message = parts[1].substr(1);
@@ -46,9 +46,6 @@ void PART(IRStream &stream, string &args, User *user) {
 			stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 			return;
 		}
-		message = parts[1].substr(1);
-	} else {
-		message = "Leaving";
 	}
 
 	// Try leaving the channels

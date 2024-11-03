@@ -61,7 +61,7 @@ static void correct_realname(vector<string> &args) {
  * @brief The USER command is used at the beginning of connection to specify the username, hostname, servername and
  * realname of a new user.
  */
-void USER(IRStream &stream, string &args, User *user) {
+void USER(IRStream &stream, const string &args, User *user) {
 	if (user->hasHandshake(USER_USER)) {
 		stream.code(ERR_ALREADYREGISTRED).param(user->getNickname()).trail("You may not reregister").end();
 		return;

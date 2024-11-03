@@ -63,7 +63,7 @@ void handleChannelMessage(IRStream &stream, const pair<string, string> &token, U
 	}
 }
 
-void PRIVMSG(IRStream &stream, string &args, User *user) {
+void PRIVMSG(IRStream &stream, const string &args, User *user) {
 	if (args.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 		return;

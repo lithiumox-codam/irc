@@ -57,7 +57,7 @@ static void addToChannel(IRStream &stream, Channel *channel, User *user) {
 	broadcast(channel, user);
 }
 
-void JOIN(IRStream &stream, string &args, User *user) {
+void JOIN(IRStream &stream, const string &args, User *user) {
 	// Check if the user is registered
 	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();

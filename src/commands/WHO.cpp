@@ -21,7 +21,7 @@ static void sendWhoReply(IRStream& stream, User* user, Channel* channel, User* m
 		.end();
 }
 
-void WHO(IRStream& stream, string& args, User* user) {
+void WHO(IRStream& stream, const string& args, User* user) {
 	if (!user->hasHandshake(USER_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).trail("You have not registered").end();
 		return;
@@ -68,10 +68,5 @@ void WHO(IRStream& stream, string& args, User* user) {
 		}
 		sendWhoReply(stream, user, channel, member.first);
 	}
-	stream.prefix()
-		.code("315")				 // 315
-		.param(user->getNickname())	 // requesting user's nickname
-		.param(channelName)			 // channel name
-		.trail("End of WHO list")
-		.end();
+	stream.prefix().code("315").param(user->getNickname()).param(channelName).trail("End of WHO list").end();
 }
