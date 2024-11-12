@@ -18,6 +18,7 @@ class IrcException : public exception {
 	~IrcException() {}
 
    public:
+	const string &GetCode() const { return code; }
 	virtual void e_stream(IRStream &stream, User *user) const = 0;
 	const char *what() const noexcept override { return message.c_str(); }
 };
@@ -49,6 +50,46 @@ class NotOnChannelException : public IrcException {
 class UserNotOperatorException : public IrcException {
    public:
 	UserNotOperatorException() : IrcException("You're not a channel operator", ERR_CHANOPRIVSNEEDED) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
+
+class UserAlreadyOnChannelException : public IrcException {
+   public:
+	UserAlreadyOnChannelException() : IrcException("User is already on channel", ERR_USERONCHANNEL) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
+
+class ChannelFullException : public IrcException {
+   public:
+	ChannelFullException() : IrcException("Channel is full", ERR_CHANNELISFULL) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
+
+class InviteOnlyChannelException : public IrcException {
+   public:
+	InviteOnlyChannelException() : IrcException("Cannot join channel (Invite only)", ERR_INVITEONLYCHAN) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
+
+class BadChannelKeyException : public IrcException {
+   public:
+	BadChannelKeyException() : IrcException("Cannot join channel (+k) - bad key", ERR_BADCHANNELKEY) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
+
+class NotEnoughParametersException : public IrcException {
+   public:
+	NotEnoughParametersException() : IrcException("Not enough parameters", ERR_NEEDMOREPARAMS) {}
 	void e_stream(IRStream &stream, User *user) const override {
 		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
 	}

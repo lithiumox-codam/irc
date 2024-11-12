@@ -9,6 +9,7 @@
 #include "Modes.hpp"
 #include "Server.hpp"
 #include "User.hpp"
+#include "Exceptions.hpp"
 
 extern Server server;
 
@@ -95,68 +96,77 @@ void JOIN(IRStream &stream, string &args, User *user) {
 				.trail("No such channel")
 				.end();	 // Channel names must start with #
 			continue;
+		// 	throw NoSuchChannelException();
 		}
-
 		try {
 			Channel *channel = server.getChannel(channelName);
 
 			if (channel->hasUser(user)) {
-				stream.prefix()
-					.code(ERR_USERONCHANNEL)
-					.param(user->getNickname())
-					.param(channel->getName())
-					.trail("You're already on that channel")
-					.end();
-				continue;
+				// stream.prefix()
+				// 	.code(ERR_USERONCHANNEL)
+				// 	.param(user->getNickname())
+				// 	.param(channel->getName())
+				// 	.trail("You're already on that channel")
+				// 	.end();
+				// continue;
+				throw UserAlreadyOnChannelException();
 			}
 			if (channel->getMembers()->size() >= MEMBER_LIMIT) {
-				stream.prefix()
-					.code(ERR_CHANNELISFULL)
-					.param(user->getNickname())
-					.param(channel->getName())
-					.trail("Channel is full")
-					.end();
-				continue;
+				// stream.prefix()
+				// 	.code(ERR_CHANNELISFULL)
+				// 	.param(user->getNickname())
+				// 	.param(channel->getName())
+				// 	.trail("Channel is full")
+				// 	.end();
+				// continue;
+				throw ChannelFullException();
 			}
 
 			if (channel->hasInvited(user)) {
 				channel->removeInvited(user);
 			} else if (channel->modes.hasModes(M_INVITE_ONLY)) {
-				stream.prefix()
-					.code(ERR_INVITEONLYCHAN)
-					.param(user->getNickname())
-					.param(channel->getName())
-					.trail("Cannot join channel (+i)")
-					.end();
-				continue;
+				// stream.prefix()
+				// 	.code(ERR_INVITEONLYCHAN)
+				// 	.param(user->getNickname())
+				// 	.param(channel->getName())
+				// 	.trail("Cannot join channel (+i)")
+				// 	.end();
+				// continue;
+				throw InviteOnlyChannelException();
 			}
 
 			if (channel->modes.hasModes(M_PASSWORD)) {
 				if (password == passwords.end()) {
-					stream.prefix()
-						.code(ERR_BADCHANNELKEY)
-						.param(user->getNickname())
-						.param(channelName)
-						.trail("Cannot join channel (+k) - bad key")
-						.end();
-					continue;
+					// stream.prefix()
+					// 	.code(ERR_BADCHANNELKEY)
+					// 	.param(user->getNickname())
+					// 	.param(channelName)
+					// 	.trail("Cannot join channel (+k) - bad key")
+					// 	.end();
+					// continue;
+					throw BadChannelKeyException();
 				}
 				if (*password != channel->getPassword()) {
-					stream.prefix()
-						.code(ERR_BADCHANNELKEY)
-						.param(user->getNickname())
-						.param(channelName)
-						.trail("Cannot join channel (+k) - bad key")
-						.end();
+					// stream.prefix()
+					// 	.code(ERR_BADCHANNELKEY)
+					// 	.param(user->getNickname())
+					// 	.param(channelName)
+					// 	.trail("Cannot join channel (+k) - bad key")
+					// 	.end();
 					password++;
-					continue;
+					throw BadChannelKeyException();
+					// continue;
 				}
 				password++;
 			}
 
 			addToChannel(stream, channel, user);
 
-		} catch (const runtime_error &e) {	// Channel not found
+		} catch (const IrcException &e) {	// Channel not found
+			if (e.GetCode() != ERR_NOSUCHCHANNEL) {
+				e.e_stream(stream, user);
+				continue;
+			}
 			server.addChannel(
 				channelName);  // We're not running any checks on the channel name, maybe alpha-numeric only?
 			Channel *channel = server.getChannel(channelName);

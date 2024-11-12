@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "User.hpp"
 
@@ -227,12 +228,15 @@ void Server::removeChannel(Channel &channel) {
 deque<Channel> &Server::getChannels() { return this->channels; }
 
 Channel *Server::getChannel(const string &name) {
+	if (name[0] != '#') {
+		throw NoSuchChannelException();
+	}
 	for (auto &channel : this->channels) {
 		if (channel.getName() == name) {
 			return &channel;
 		}
 	}
-	throw runtime_error("Channel " + name + " not found");
+	throw NoSuchChannelException();
 }
 
 const string &Server::getHostname() { return this->hostname; }
