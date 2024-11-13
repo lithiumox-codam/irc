@@ -98,7 +98,7 @@ unsigned int User::getHandshake() const { return this->handshake; }
 
 bool User::hasHandshake(unsigned int handshake) const { return (this->handshake & handshake) == handshake; }
 
-bool User::readFromSocket(void) {
+bool User::readFromSocket() {
 	char buffer[UserConfig::BUFFER_SIZE];
 	int ret;
 
@@ -150,7 +150,10 @@ bool User::sendToSocket() {
 	return true;
 }
 
-void User::addToBuffer(const string &data) { this->out_buffer.append(data); };
+void User::addToBuffer(const string &data) {
+	this->out_buffer.append(data);
+	server.epollChange(this->socket, EPOLLIN | EPOLLOUT);
+};
 
 ostream &operator<<(std::ostream &stream, const User &user) {
 	const int WIDTH = 52;

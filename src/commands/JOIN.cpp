@@ -89,12 +89,7 @@ void JOIN(IRStream &stream, string &args, User *user) {
 	// Try joining the channels
 	for (string &channelName : channelNames) {
 		if (channelName[0] != '#') {
-			stream.prefix()
-				.code(ERR_NOSUCHCHANNEL)
-				.param(user->getNickname())
-				.param(channelName)
-				.trail("No such channel")
-				.end();	 // Channel names must start with #
+			NoSuchChannelException().e_stream(stream, user);
 			continue;
 		// 	throw NoSuchChannelException();
 		}
