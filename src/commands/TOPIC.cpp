@@ -25,8 +25,7 @@ void TOPIC(IRStream &stream, string &args, User *user) {
 	try {
 		Channel *channel = server.getChannel(tokens.first);
 		if (!channel->hasUser(user)) {
-			stream.prefix().code(ERR_NOTONCHANNEL).param(user->getNickname()).trail("You're not in that channel").end();
-			return;
+			throw NotOnChannelException();
 		}
 		if (tokens.second.empty()) {
 			if (channel->getTopic().empty()) {
@@ -66,7 +65,7 @@ void TOPIC(IRStream &stream, string &args, User *user) {
 			.trail(to_string(time(nullptr)))
 			.end();
 		return;
-	} catch (runtime_error &e) {
-		stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
+	} catch (const IrcException &e) {
+		e.e_stream(stream, user);
 	}
 }

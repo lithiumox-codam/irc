@@ -4,6 +4,8 @@
 
 #include "IRStream.hpp"
 #include "Modes.hpp"
+#include "User.hpp"
+#include "Exceptions.hpp"
 
 using namespace std;
 
@@ -79,7 +81,7 @@ pair<User *, Modes> &Channel::getMember(const string &nickname) {
 			return member;
 		}
 	}
-	throw runtime_error(nickname + " is not in the channel");
+	throw UserNotOnChannelException();
 }
 
 void Channel::addOperator(User *user) { operators.push_back(user); }
@@ -126,7 +128,7 @@ bool Channel::hasInvited(User *user) const {
 	return false;
 }
 
-std::vector<pair<User *, Modes>> *Channel::getMembers() { return &this->members; }
+std::deque<pair<User *, Modes>> *Channel::getMembers() { return &this->members; }
 
 std::pair<User *, Modes> *Channel::getMember(User *user) {
 	for (auto &member : this->members) {
@@ -142,6 +144,14 @@ void Channel::broadcast(User *user, const string &message) {
 
 	stream.prefix(user, this).param("PRIVMSG").param(this->getName()).trail(message).end();
 
+	for (auto &member : *this->getMembers()) {
+		if (member.first->getSocket() != user->getSocket()) {
+			stream.sendPacket(member.first);
+		}
+	}
+}
+
+void Channel::broadcast2(IRStream &stream, User *user){
 	for (auto &member : *this->getMembers()) {
 		if (member.first->getSocket() != user->getSocket()) {
 			stream.sendPacket(member.first);

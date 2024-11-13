@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+class Channel;
 #include "Channel.hpp"
 #include "User.hpp"
 

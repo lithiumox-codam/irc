@@ -253,7 +253,7 @@ User *Server::getUser(const int socket) {
 			return &user;
 		}
 	}
-	throw runtime_error("User not found");
+	throw NoSuchUserException();
 }
 
 User *Server::getUser(const string &nickname) {
@@ -263,7 +263,7 @@ User *Server::getUser(const string &nickname) {
 			return &user;
 		}
 	}
-	throw runtime_error("User not found");
+	throw NoSuchUserException();
 }
 
 void Server::addUser(unsigned int socket) {

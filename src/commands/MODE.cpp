@@ -80,9 +80,8 @@ void MODE(IRStream &stream, string &args, User *user) {
 						.param(user->getNickname())
 						.trail(member.first->getNickname() + " User modes: +" + member.second.getModesString())
 						.end();
-				} catch (runtime_error &e) {
-					string error = e.what();
-					stream.prefix().code(ERR_NOSUCHNICK).trail(error).end();
+				} catch (const IrcException &e) {
+					e.e_stream(stream, user);
 					return;
 				}
 			}
@@ -91,15 +90,14 @@ void MODE(IRStream &stream, string &args, User *user) {
 					auto &member = channel->getMember(tokens[2]);
 					applyModeChanges(member.second, tokens[1]);
 
-				} catch (runtime_error &e) {
-					string error = e.what();
-					stream.prefix().code(ERR_NOSUCHNICK).trail(error).end();
+				} catch (const IrcException &e) {
+					e.e_stream(stream, user);
 					return;
 				}
 			}
 
-		} catch (IrcException &e) {
-			stream.prefix().code(ERR_NOSUCHCHANNEL).trail(tokens.front() + " :No such channel").end();
+		} catch (const IrcException &e) {
+			e.e_stream(stream, user);
 			return;
 		}
 	}

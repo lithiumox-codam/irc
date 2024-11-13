@@ -3,6 +3,7 @@
 #include "IRStream.hpp"
 #include "Server.hpp"
 #include "User.hpp"
+#include "Exceptions.hpp"
 
 extern Server server;
 
@@ -22,8 +23,8 @@ void handleUserMessage(IRStream &stream, const pair<string, string> &token, User
 		IRStream targetStream;
 		User *target = server.getUser(token.first);
 		targetStream.prefix(user).param("PRIVMSG").param(token.first).trail(token.second).end().sendPacket(target);
-	} catch (const runtime_error &e) {
-		stream.prefix().code(ERR_NOSUCHNICK).param(user->getNickname()).trail("No such nick/channel").end();
+	} catch (const IrcException &e) {
+		e.e_stream(stream, user);
 	}
 }
 
@@ -32,13 +33,7 @@ void handleChannelMessage(IRStream &stream, const pair<string, string> &token, U
 		Channel *channel = server.getChannel(token.first);
 
 		if (!channel->hasUser(user)) {
-			stream.prefix()
-				.code(ERR_NOTONCHANNEL)
-				.param(user->getNickname())
-				.param(token.first)
-				.trail("You're not on that channel")
-				.end();
-			return;
+			throw NotOnChannelException();
 		}
 
 		if (!channel->modes.hasModes(M_MODERATED)) {
@@ -49,17 +44,11 @@ void handleChannelMessage(IRStream &stream, const pair<string, string> &token, U
 			} else if (channel->hasOperator(user)) {
 				channel->broadcast(user, token.second);
 			} else {
-				stream.prefix()
-					.code(ERR_CANNOTSENDTOCHAN)
-					.param(user->getNickname())
-					.param(token.first)
-					.trail("Cannot send to channel missing voice! (+m)")
-					.end();
-				return;
+				throw CannotSendToChannelException();
 			}
 		}
-	} catch (const runtime_error &e) {
-		stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
+	} catch (const IrcException &e) {
+		e.e_stream(stream, user);
 	}
 }
 

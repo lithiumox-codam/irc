@@ -63,3 +63,14 @@ pair<string, string> splitPair(const string &str, const char &delim) {
 	}
 	return make_pair(first, second);
 }
+
+string join(const vector<string> &tokens, size_t start) {
+	string result;
+	for (size_t i = start; i < tokens.size(); ++i) {
+		if (i > start) {
+			result += " ";
+		}
+		result += tokens[i];
+	}
+	return result;
+}

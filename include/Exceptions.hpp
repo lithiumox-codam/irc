@@ -94,3 +94,21 @@ class NotEnoughParametersException : public IrcException {
 		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
 	}
 };
+
+class UserNotOnChannelException : public IrcException {
+   public:
+	UserNotOnChannelException() : IrcException("User not in channel", ERR_USERNOTINCHANNEL) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
+
+class CannotSendToChannelException : public IrcException {
+   public:
+	CannotSendToChannelException() : IrcException("Cannot send to channel missing voice! (+m)", ERR_CANNOTSENDTOCHAN) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
+
+

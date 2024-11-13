@@ -9,19 +9,6 @@
 
 extern Server server;
 
-static void broadcast(Channel *channel, User *user, const string &message) {
-	IRStream stream;
-
-	stream.setCommand("PART");
-
-	stream.prefix(user).command().param(channel->getName()).trail(message).end();
-	for (auto &member : *channel->getMembers()) {
-		if (member.first->getSocket() != user->getSocket()) {
-			stream.sendPacket(member.first);
-		}
-	}
-}
-
 void PART(IRStream &stream, string &args, User *user) {
 	// Check if the user is registered
 	if (!user->hasHandshake(USER_REGISTERED)) {
@@ -38,44 +25,28 @@ void PART(IRStream &stream, string &args, User *user) {
 	}
 
 	vector<string> channels = split(parts[0], ',');
-	string message;
-	if (parts.size() > 1) {
-		if (parts[1].starts_with(':')) {
-			message = parts[1].substr(1);
-		} else {
-			stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
-			return;
-		}
-		message = parts[1].substr(1);
-	} else {
-		message = "Leaving";
-	}
 
 	// Try leaving the channels
 	for (const auto &channelName : channels) {
 		try {
 			Channel *channel = server.getChannel(channelName);
 			if (!channel->hasUser(user)) {
-				stream.prefix()
-					.code(ERR_NOTONCHANNEL)
-					.param(user->getNickname())
-					.param(channelName)
-					.trail("You're not in that channel")
-					.end();
-				continue;
+				throw NotOnChannelException();
 			}
-
+			stream.prefix(user).command().param(channel->getName());
+			cerr << "stream before end: " << stream.str() << '\n';
+			if (parts.size() > 1) {
+				stream.param(join(parts, 1)).end();
+			} else {
+				stream.param("Leaving").end();
+			}
+			channel->broadcast2(stream, user);
 			channel->removeUser(user);
-
 			if (channel->getMembers()->empty()) {
 				server.removeChannel(*channel);
-			} else {
-				broadcast(channel, user, message);
 			}
-
-		} catch (runtime_error &e) {
-			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
-			continue;
+		} catch (const IrcException &e) {
+			e.e_stream(stream, user);
 		}
 	}
 }

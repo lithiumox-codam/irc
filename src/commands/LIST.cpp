@@ -1,4 +1,5 @@
 #include "Codes.hpp"
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "IRStream.hpp"
 #include "Server.hpp"
@@ -41,9 +42,8 @@ void LIST(IRStream &stream, string &args, User *user) {
 				.param(to_string(channel->getMembers()->size()))
 				.trail(channel->getTopic())
 				.end();
-		} catch (runtime_error &e) {
-			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail(e.what()).end();
-			return;
+		} catch (const IrcException &e) {
+			e.e_stream(stream, user);
 		}
 	}
 }

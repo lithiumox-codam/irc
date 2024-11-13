@@ -4,8 +4,10 @@
 #include <iostream>
 #include <string>
 #include <utility>
-#include <vector>
+#include <deque>
 
+class IRStream;
+#include "IRStream.hpp"
 #include "Modes.hpp"
 #include "User.hpp"
 
@@ -15,9 +17,9 @@ using namespace std;
 
 class Channel {
    private:
-	vector<pair<User *, Modes>> members;
-	vector<User *> operators;
-	vector<User *> invited;
+	deque<pair<User *, Modes>> members;
+	deque<User *> operators;
+	deque<User *> invited;
 	string name;
 	string password;
 	string topic;
@@ -50,12 +52,14 @@ class Channel {
 	void removeInvited(User *user);
 	bool hasInvited(User *user) const;
 
-	[[nodiscard]] vector<pair<User *, Modes>> *getMembers();
+	[[nodiscard]] deque<pair<User *, Modes>> *getMembers();
 	[[nodiscard]] pair<User *, Modes> *getMember(User *user);
 
 	[[nodiscard]] const string &getTopic() const;
 	void setTopic(const string &topic);
 	void broadcast(User *user, const string &message);
+	void broadcast2(IRStream &stream, User *user);
+
 	string getUserModes(User *user);
 
 	[[nodiscard]] time_t getCreated() const;
