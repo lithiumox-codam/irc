@@ -80,36 +80,51 @@ void Server::epollAdd(int socket_fd) const {
 	}
 }
 
-void Server::epollEvent(struct epoll_event &event) {
-	int socket_fd = event.data.fd;
-	User *user = server.getUser(socket_fd);
+void Server::HandleEpollError(int socket_fd, User *user) {
+	cerr << "Error: EPOLLERR" << '\n';
+	socklen_t len = sizeof(errno);
+	getsockopt(socket_fd, SOL_SOCKET, SO_ERROR, &errno, &len);
+	cerr << strerror(errno) << '\n';
+	server.removeUser(*user);
+}
 
-	if (event.events & EPOLLERR) {
-		cerr << "Error: EPOLLERR" << '\n';
-		socklen_t len = sizeof(errno);
-		getsockopt(socket_fd, SOL_SOCKET, SO_ERROR, &errno, &len);
-		cerr << strerror(errno) << '\n';
-		server.removeUser(*user);
-		return;
-	}
-	if (event.events & EPOLLHUP) {
-		cerr << "Error: EPOLLHUP" << '\n';
-		server.removeUser(*user);
-		return;
-	}
-	if (event.events & EPOLLRDHUP) {
-		cerr << "Error: EPOLLRDHUP" << '\n';
-		server.removeUser(*user);
-		return;
-	}
+void Server::handleEpollDisconnect(User *user) {
+	cerr << "Error: EPOLLHUP or EPOLLRDHUP" << '\n';
+	server.removeUser(*user);
+}
 
-	if (event.events & EPOLLIN) {
-		int ret = user->readFromSocket();
+void Server::handleEpollRead(int socket_fd, User *user){
+	int ret = user->readFromSocket();
+
+	if (ret == -1) {
+		if (errno == EWOULDBLOCK || errno == EAGAIN) {
+			return;
+		}
+		cerr << "Error: recv failed" << '\n';
+		server.removeUser(*user);
+		return;
+	}
+	if (ret == 0) {
+		cout << user << " gracefully disconnected" << '\n';
+		server.removeUser(*user);
+		return;
+	}
+	if (ret > 0) {
+		if (!user->getOutBuffer().empty()) {
+			// Monitor for both read and write events
+			server.epollChange(socket_fd, EPOLLIN | EPOLLOUT);
+		}
+		return;
+	}
+}
+
+void HandleEpollWrite(int socket_fd, User *user){
+	if (!user->getOutBuffer().empty()) {
+		int ret = user->sendToSocket();
 
 		if (ret > 0) {
-			if (!user->getOutBuffer().empty()) {
-				// Monitor for both read and write events
-				this->epollChange(socket_fd, EPOLLIN | EPOLLOUT);
+			if (user->getOutBuffer().empty()) {
+				server.epollChange(socket_fd, EPOLLIN);
 			}
 			return;
 		}
@@ -122,36 +137,36 @@ void Server::epollEvent(struct epoll_event &event) {
 			if (errno == EWOULDBLOCK || errno == EAGAIN) {
 				return;
 			}
-			cerr << "Error: recv failed" << '\n';
+			cerr << "Error: send failed" << '\n';
 			server.removeUser(*user);
 			return;
 		}
 	}
+}
 
+void Server::epollEvent(struct epoll_event &event) {
+	int socket_fd = event.data.fd;
+	User *user = server.getUser(socket_fd);
+
+	if (event.events & EPOLLERR) {
+		HandleEpollError(socket_fd, user);
+		return;
+	}
+	if (event.events & EPOLLHUP) {
+		handleEpollDisconnect(user);
+		return;
+	}
+	if (event.events & EPOLLRDHUP) {
+		handleEpollDisconnect(user);
+		return;
+	}
+	if (event.events & EPOLLIN) {
+		handleEpollRead(socket_fd, user);
+		return;
+	}
 	if (event.events & EPOLLOUT) {
-		if (!user->getOutBuffer().empty()) {
-			int ret = user->sendToSocket();
-
-			if (ret > 0) {
-				if (user->getOutBuffer().empty()) {
-					this->epollChange(socket_fd, EPOLLIN);
-				}
-				return;
-			}
-			if (ret == 0) {
-				cout << user << " gracefully disconnected" << '\n';
-				server.removeUser(*user);
-				return;
-			}
-			if (ret == -1) {
-				if (errno == EWOULDBLOCK || errno == EAGAIN) {
-					return;
-				}
-				cerr << "Error: send failed" << '\n';
-				server.removeUser(*user);
-				return;
-			}
-		}
+		HandleEpollWrite(socket_fd, user);
+		return;
 	}
 }
 
