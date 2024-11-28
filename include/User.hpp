@@ -76,14 +76,14 @@ class User {
 
 	[[nodiscard]] bool checkPacket();
 
-	int readFromSocket();
-	int sendToSocket();
-	void addToBuffer(const string &data);
+	bool readFromSocket();
+	bool sendToSocket();
 
 	[[nodiscard]] string &getInBuffer();
+
 	[[nodiscard]] string &getOutBuffer();
-	void clearInBuffer();
-	void clearOutBuffer();
+	void addToBuffer(const string &data);
+
 	void parse(void);
 };
 

@@ -60,12 +60,7 @@ class Server {
 	void epollRemove(int socket) const;
 	void epollChange(int socket, uint32_t events) const;
 	int epollWait();
-	static void epollEvent(struct epoll_event &event);
 
-	static void HandleEpollError(int socket_fd, User *user);
-	static void handleEpollDisconnect(User *user);
-	static void handleEpollRead(int socket_fd, User *user);
-	static void handleEpollWrite(int socket_fd, User *user);
 	void handleEvents(array<struct epoll_event, (size_t)ServerConfig::BACKLOG> &events, int numberOfEvents);
 	void acceptNewConnection();
 
