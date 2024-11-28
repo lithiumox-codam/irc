@@ -23,24 +23,14 @@ void KICK(IRStream &stream, string &args, User *user) {
 	try {
 		Channel *channel = server.getChannel(tokens[0]);
 		if (!channel->hasUser(user)) {
-			// stream.prefix().code(ERR_NOTONCHANNEL).param(user->getNickname()).trail("You're not in that channel").end();
-			// return;
 			throw NotOnChannelException();
 		}
 		pair<User *, Modes> *target = channel->getMember(server.getUser(tokens[1]));
 		if (target == nullptr) {
-			// stream.prefix().code(ERR_USERNOTINCHANNEL).param(user->getNickname()).trail("User not in channel").end();
-			// return;
 			throw UserNotOnChannelException();
 		}
 		pair<User *, Modes> *kicker = channel->getMember(user);
 		if (!kicker->second.hasModes(M_OPERATOR)) {
-			// stream.prefix()
-			// 	.code(ERR_CHANOPRIVSNEEDED)
-			// 	.param(user->getNickname())
-			// 	.trail("You're not a channel operator")
-			// 	.end();
-			// return;
 			throw UserNotOperatorException();
 		}
 

@@ -98,7 +98,7 @@ unsigned int User::getHandshake() const { return this->handshake; }
 
 bool User::hasHandshake(unsigned int handshake) const { return (this->handshake & handshake) == handshake; }
 
-bool User::readFromSocket() {
+int User::readFromSocket() {
 	char buffer[UserConfig::BUFFER_SIZE];
 	int ret;
 
@@ -106,15 +106,15 @@ bool User::readFromSocket() {
 
 	if (ret == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
-			return true;
+			return ret;
 		}
 		cerr << "Error: recv(): " << strerror(errno) << '\n';
-		return false;
+		return ret;
 	}
 
 	if (ret == 0) {
 		cerr << "Connection to user " << this->getNickname() << " lost..." << '\n';
-		return false;
+		return ret;
 	}
 
 	buffer[ret] = '\0';
@@ -122,32 +122,32 @@ bool User::readFromSocket() {
 	cout << RED << "DEBUG: Received: " << this->in_buffer << RESET << '\n';
 
 	this->parse();
-	return true;
+	return ret;
 }
 
-bool User::sendToSocket() {
+int User::sendToSocket() {
+	int ret = 0;
 	while (!this->out_buffer.empty()) {
 		cout << GREEN << "DEBUG: Sending: " << this->out_buffer << RESET << '\n';
 
-		int ret = send(this->socket, this->out_buffer.data(), this->out_buffer.size(), 0);
+		ret = send(this->socket, this->out_buffer.data(), this->out_buffer.size(), 0);
 
 		if (ret == -1) {
 			if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				return true;
+				return ret;
 			}
 			cerr << "Error: send():" << strerror(errno) << '\n';
-			return false;
+			return ret;
 		}
 
 		if (ret == 0) {
 			cerr << "DEBUG: User " << this->getNickname() << " gracefully disconnected" << '\n';
-			return false;
+			return ret;
 		}
 
 		this->out_buffer.erase(0, ret);
 	}
-
-	return true;
+	return ret;
 }
 
 void User::addToBuffer(const string &data) {

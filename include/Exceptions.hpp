@@ -111,4 +111,12 @@ class CannotSendToChannelException : public IrcException {
 	}
 };
 
+class NoRecipientException : public IrcException {
+   public:
+	NoRecipientException() : IrcException("No recipient", ERR_NORECIPIENT) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
+
 

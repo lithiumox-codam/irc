@@ -97,60 +97,25 @@ void JOIN(IRStream &stream, string &args, User *user) {
 			Channel *channel = server.getChannel(channelName);
 
 			if (channel->hasUser(user)) {
-				// stream.prefix()
-				// 	.code(ERR_USERONCHANNEL)
-				// 	.param(user->getNickname())
-				// 	.param(channel->getName())
-				// 	.trail("You're already on that channel")
-				// 	.end();
-				// continue;
 				throw UserAlreadyOnChannelException();
 			}
 			if (channel->getMembers()->size() >= MEMBER_LIMIT) {
-				// stream.prefix()
-				// 	.code(ERR_CHANNELISFULL)
-				// 	.param(user->getNickname())
-				// 	.param(channel->getName())
-				// 	.trail("Channel is full")
-				// 	.end();
-				// continue;
 				throw ChannelFullException();
 			}
 
 			if (channel->hasInvited(user)) {
 				channel->removeInvited(user);
 			} else if (channel->modes.hasModes(M_INVITE_ONLY)) {
-				// stream.prefix()
-				// 	.code(ERR_INVITEONLYCHAN)
-				// 	.param(user->getNickname())
-				// 	.param(channel->getName())
-				// 	.trail("Cannot join channel (+i)")
-				// 	.end();
-				// continue;
 				throw InviteOnlyChannelException();
 			}
 
 			if (channel->modes.hasModes(M_PASSWORD)) {
 				if (password == passwords.end()) {
-					// stream.prefix()
-					// 	.code(ERR_BADCHANNELKEY)
-					// 	.param(user->getNickname())
-					// 	.param(channelName)
-					// 	.trail("Cannot join channel (+k) - bad key")
-					// 	.end();
-					// continue;
 					throw BadChannelKeyException();
 				}
 				if (*password != channel->getPassword()) {
-					// stream.prefix()
-					// 	.code(ERR_BADCHANNELKEY)
-					// 	.param(user->getNickname())
-					// 	.param(channelName)
-					// 	.trail("Cannot join channel (+k) - bad key")
-					// 	.end();
 					password++;
 					throw BadChannelKeyException();
-					// continue;
 				}
 				password++;
 			}

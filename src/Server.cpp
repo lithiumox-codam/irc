@@ -148,25 +148,22 @@ void Server::epollEvent(struct epoll_event &event) {
 	int socket_fd = event.data.fd;
 	User *user = server.getUser(socket_fd);
 
-	if (event.events & EPOLLERR) {
-		HandleEpollError(socket_fd, user);
-		return;
-	}
-	if (event.events & EPOLLHUP) {
-		handleEpollDisconnect(user);
-		return;
-	}
-	if (event.events & EPOLLRDHUP) {
-		handleEpollDisconnect(user);
-		return;
-	}
-	if (event.events & EPOLLIN) {
-		handleEpollRead(socket_fd, user);
-		return;
-	}
-	if (event.events & EPOLLOUT) {
-		HandleEpollWrite(socket_fd, user);
-		return;
+	switch (event.events) {
+		case EPOLLERR:
+			HandleEpollError(socket_fd, user);
+			break;
+		case EPOLLHUP:
+		case EPOLLRDHUP:
+			handleEpollDisconnect(user);
+			break;
+		case EPOLLIN:
+			handleEpollRead(socket_fd, user);
+			break;
+		case EPOLLOUT:
+			HandleEpollWrite(socket_fd, user);
+			break;
+		default:
+			break;
 	}
 }
 
