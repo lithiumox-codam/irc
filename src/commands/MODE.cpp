@@ -13,6 +13,36 @@
 
 extern Server server;
 
+string applyModeChanges(Modes &modes, const std::string &modeChanges) {
+	static constexpr std::pair<char, unsigned int> modePairs[] = {
+		{'o', M_OPERATOR}, {'v', M_VOICE},		{'i', M_INVISIBLE}, {'m', M_MODERATED},
+		{'k', M_PASSWORD}, {'t', M_TOPIC_LOCK}, {'l', M_LIMIT}};
+
+	string unsupportedModes;
+	bool addMode = false;
+
+	for (char modeChar : modeChanges) {
+		if (modeChar == '+' || modeChar == '-') {
+			addMode = (modeChar == '+');
+			continue;
+		}
+
+		const auto *iter = ranges::find_if(modePairs, [modeChar](const auto &pair) { return pair.first == modeChar; });
+
+		if (iter != std::end(modePairs)) {
+			if (addMode) {
+				modes.addModes(iter->second);
+			} else {
+				modes.removeModes(iter->second);
+			}
+		} else {
+			unsupportedModes.push_back(modeChar);
+		}
+	}
+
+	return unsupportedModes;
+}
+
 void handleUserMode(IRStream &stream, vector<string> &tokens, User *user) {
 	if (tokens.size() == 2 && tokens[1] != user->getNickname()) {
 		stream.prefix()
@@ -41,12 +71,9 @@ void handleUserMode(IRStream &stream, vector<string> &tokens, User *user) {
 		}
 	}
 	if (tokens.size() == 2) {
-		auto [changedModes, unsupportedModes] = applyModeChanges(user->modes, tokens[1]);
+		auto unsupportedModes = applyModeChanges(user->modes, tokens[1]);
 		if (!unsupportedModes.empty()) {
-			stream.prefix()
-				.code(ERR_UNKNOWNMODE)
-				.trail("Unsupported modes: " + std::string(unsupportedModes.begin(), unsupportedModes.end()))
-				.end();
+			stream.prefix().code(ERR_UNKNOWNMODE).trail("Unsupported modes: " + unsupportedModes).end();
 		}
 		stream.prefix()
 			.code(RPL_UMODEIS)
@@ -78,7 +105,7 @@ void handleChannelMode(IRStream &stream, vector<string> &tokens, User *user) {
 		}
 		if (tokens.size() == 2) {
 			if (tokens[1].starts_with("+") || tokens[1].starts_with("-")) {
-				auto [changedModes, unsupportedModes] = applyModeChanges(channel->modes, tokens[1]);
+				applyModeChanges(channel->modes, tokens[1]);
 				stream.prefix()
 					.code(RPL_CHANNELMODEIS)
 					.param(user->getNickname())
@@ -102,12 +129,9 @@ void handleChannelMode(IRStream &stream, vector<string> &tokens, User *user) {
 		if (tokens.size() == 3) {
 			try {
 				auto &member = channel->getMember(tokens[2]);
-				auto [changedModes, unsupportedModes] = applyModeChanges(member.second, tokens[1]);
+				auto unsupportedModes = applyModeChanges(member.second, tokens[1]);
 				if (!unsupportedModes.empty()) {
-					stream.prefix()
-						.code(ERR_UNKNOWNMODE)
-						.trail("Unsupported modes: " + std::string(unsupportedModes.begin(), unsupportedModes.end()))
-						.end();
+					stream.prefix().code(ERR_UNKNOWNMODE).trail("Unsupported modes: " + unsupportedModes).end();
 					return;
 				}
 			} catch (const IrcException &e) {

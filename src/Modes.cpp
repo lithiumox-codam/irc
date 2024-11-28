@@ -90,19 +90,17 @@ bool Modes::hasModes(unsigned int modes) const { return (this->modes & modes) ==
 
 /**
  * @brief Returns a string representation of the modes.
- * @warning This function will return an empty string if the user is not a channel operator or voice. And please note
- * that this is mainly used for channel prefixes.
  * @return string
  */
 string Modes::getModesString() const {
 	string result;
-	const std::string modeChars = "@vimiktl";
-	const unsigned int modeValues[] = {M_OPERATOR,	  M_VOICE,	  M_INVISIBLE,	M_MODERATED,
-									   M_INVITE_ONLY, M_PASSWORD, M_TOPIC_LOCK, M_LIMIT};
+	const pair<unsigned int, char> modePairs[] = {{M_OPERATOR, 'o'},   {M_VOICE, 'v'},		 {M_INVISIBLE, 'i'},
+												  {M_MODERATED, 'm'},  {M_INVITE_ONLY, 'i'}, {M_PASSWORD, 'k'},
+												  {M_TOPIC_LOCK, 't'}, {M_LIMIT, 'l'}};
 
-	for (size_t i = 0; i < modeChars.size(); ++i) {
-		if (hasModes(modeValues[i])) {
-			result += modeChars[i];
+	for (const auto &modePair : modePairs) {
+		if (hasModes(modePair.first)) {
+			result += modePair.second;
 		}
 	}
 	return result;
@@ -119,3 +117,15 @@ void Modes::clearModes() { modes = 0; }
  * @return Type
  */
 Type Modes::getType() const { return type; }
+
+/**
+ * @brief Overloaded stream operator.
+ *
+ * @param stream The stream to output to.
+ * @param modes The modes to output.
+ * @return ostream&
+ */
+ostream &operator<<(ostream &stream, const Modes &modes) {
+	stream << modes.getModesString();
+	return stream;
+}

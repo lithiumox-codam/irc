@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 using namespace std;
@@ -29,7 +30,7 @@ unsigned int const M_TOPIC_LOCK = 1 << 7;
 /** Determines if the channel has a limit. (+l) */
 unsigned int const M_LIMIT = 1 << 8;
 
-enum class Type { USER, CHANNEL };
+enum class Type : uint8_t { USER, CHANNEL };
 
 class Modes {
    private:
@@ -51,4 +52,6 @@ class Modes {
 	string getModesString() const;
 	void clearModes();
 	Type getType() const;
+
+	friend ostream &operator<<(ostream &stream, const Modes &modes);
 };
