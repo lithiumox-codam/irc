@@ -21,7 +21,7 @@ void TOPIC(IRStream &stream, string &args, User *user) {
 		return;
 	}
 	pair<string, string> tokens = splitPair(args, ' ');
-	cerr << "parser gives: " << tokens.first << " and [" << tokens.second << "]\n";
+	// cerr << "parser gives: " << tokens.first << " and [" << tokens.second << "]\n";
 	try {
 		Channel *channel = server.getChannel(tokens.first);
 		if (!channel->hasUser(user)) {
@@ -51,6 +51,8 @@ void TOPIC(IRStream &stream, string &args, User *user) {
 			return;
 		}
 		channel->setTopic(tokens.second);
+		channel->setTopicTime(time(nullptr));
+		channel->setTopicSetter(user);
 		stream.prefix()
 			.code(RPL_TOPIC)
 			.param(user->getNickname())
@@ -62,8 +64,9 @@ void TOPIC(IRStream &stream, string &args, User *user) {
 			.param(user->getNickname())
 			.param(channel->getName())
 			.param(user->getNickname())
-			.trail(to_string(time(nullptr)))
+			.trail(to_string(channel->getTopicTime()))
 			.end();
+		channel->broadcast(stream, user);
 		return;
 	} catch (const IrcException &e) {
 		e.e_stream(stream, user);

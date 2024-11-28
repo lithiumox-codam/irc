@@ -119,4 +119,3 @@ class NoRecipientException : public IrcException {
 	}
 };
 
-

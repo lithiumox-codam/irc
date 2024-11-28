@@ -40,7 +40,7 @@ void PART(IRStream &stream, string &args, User *user) {
 			} else {
 				stream.param("Leaving").end();
 			}
-			channel->broadcast2(stream, user);
+			channel->broadcast(stream, user);
 			channel->removeUser(user);
 			if (channel->getMembers()->empty()) {
 				server.removeChannel(*channel);

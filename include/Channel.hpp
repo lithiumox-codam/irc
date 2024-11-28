@@ -25,6 +25,8 @@ class Channel {
 	string topic;
 
 	time_t created;
+	string topicsetter;
+	time_t topictime;
 
    public:
 	Modes modes;
@@ -38,6 +40,15 @@ class Channel {
 
 	[[nodiscard]] const string &getPassword() const;
 	void setPassword(const std::string &password);
+
+	void setTopic(const string &topic);
+	[[nodiscard]] const string &getTopic() const;
+
+	void setTopicTime(time_t time);
+	[[nodiscard]] time_t getTopicTime() const;
+
+	void setTopicSetter(User *user);
+	[[nodiscard]] string getTopicSetter() const;
 
 	void addUser(User *user);
 	void removeUser(User *user);
@@ -55,10 +66,10 @@ class Channel {
 	[[nodiscard]] deque<pair<User *, Modes>> *getMembers();
 	[[nodiscard]] pair<User *, Modes> *getMember(User *user);
 
-	[[nodiscard]] const string &getTopic() const;
-	void setTopic(const string &topic);
 	void broadcast(User *user, const string &message);
-	void broadcast2(IRStream &stream, User *user);
+	void broadcast(IRStream &stream, User *user);
+	void broadcast(IRStream &stream);
+
 
 	string getUserModes(User *user);
 
