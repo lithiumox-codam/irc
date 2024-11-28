@@ -80,87 +80,55 @@ void Server::epollAdd(int socket_fd) const {
 	}
 }
 
-void Server::HandleEpollError(int socket_fd, User *user) {
+static void HandleEpollError(User *user) {
 	cerr << "Error: EPOLLERR" << '\n';
+
 	socklen_t len = sizeof(errno);
-	getsockopt(socket_fd, SOL_SOCKET, SO_ERROR, &errno, &len);
+	getsockopt(user->getSocket(), SOL_SOCKET, SO_ERROR, &errno, &len);
 	cerr << strerror(errno) << '\n';
+
 	server.removeUser(*user);
 }
 
-void Server::handleEpollDisconnect(User *user) {
+static void handleEpollDisconnect(User *user) {
 	cerr << "Error: EPOLLHUP or EPOLLRDHUP" << '\n';
 	server.removeUser(*user);
 }
 
-void Server::handleEpollRead(int socket_fd, User *user){
-	int ret = user->readFromSocket();
-
-	if (ret == -1) {
-		if (errno == EWOULDBLOCK || errno == EAGAIN) {
-			return;
-		}
-		cerr << "Error: recv failed" << '\n';
+static void handleEpollRead(User *user){
+	if (!user->readFromSocket()) {
 		server.removeUser(*user);
-		return;
-	}
-	if (ret == 0) {
-		cout << user << " gracefully disconnected" << '\n';
-		server.removeUser(*user);
-		return;
-	}
-	if (ret > 0) {
-		if (!user->getOutBuffer().empty()) {
-			// Monitor for both read and write events
-			server.epollChange(socket_fd, EPOLLIN | EPOLLOUT);
-		}
-		return;
 	}
 }
 
-void HandleEpollWrite(int socket_fd, User *user){
-	if (!user->getOutBuffer().empty()) {
-		int ret = user->sendToSocket();
-
-		if (ret > 0) {
-			if (user->getOutBuffer().empty()) {
-				server.epollChange(socket_fd, EPOLLIN);
-			}
-			return;
-		}
-		if (ret == 0) {
-			cout << user << " gracefully disconnected" << '\n';
-			server.removeUser(*user);
-			return;
-		}
-		if (ret == -1) {
-			if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				return;
-			}
-			cerr << "Error: send failed" << '\n';
-			server.removeUser(*user);
-			return;
-		}
+static void HandleEpollWrite(User *user){
+	if (!user->sendToSocket()) {
+		server.removeUser(*user);
 	}
 }
 
-void Server::epollEvent(struct epoll_event &event) {
+static void epollEvent(struct epoll_event &event) {
 	int socket_fd = event.data.fd;
 	User *user = server.getUser(socket_fd);
 
-	if (event.events & EPOLLIN) {
-		handleEpollRead(socket_fd, user);
+	if ((event.events & EPOLLIN) != 0) {
+		handleEpollRead(user);
 	}
-	if (event.events & EPOLLOUT) {
-		HandleEpollWrite(socket_fd, user);
+
+	if ((event.events & EPOLLOUT) != 0) {
+		HandleEpollWrite(user);
 	}
-	if (event.events & EPOLLERR) {
-		HandleEpollError(socket_fd, user);
-		return;
+
+	if ((event.events & EPOLLERR) != 0) {
+		HandleEpollError(user);
 	}
-	if (event.events & (EPOLLHUP | EPOLLRDHUP)) {
+
+	if ((event.events & EPOLLHUP) != 0) {
 		handleEpollDisconnect(user);
-		return;
+	}
+
+	if ((event.events & EPOLLRDHUP) != 0) {
+		handleEpollDisconnect(user);
 	}
 }
 

@@ -114,7 +114,7 @@
 #define ERR_YOUREBANNEDCREEP "465"	// You're banned
 #define ERR_KEYSET "467"			// Key set
 #define ERR_CHANNELISFULL "471"		// Channel is full
-#define ERR_UNKNOWNMODE "472"		// Unknown mode
+#define ERR_UNKNOWNMODE "501"		// Unknown mode
 #define ERR_INVITEONLYCHAN "473"	// Invite only channel
 #define ERR_BANNEDFROMCHAN "474"	// Banned from channel
 #define ERR_BADCHANNELKEY "475"		// Bad channel key

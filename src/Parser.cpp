@@ -30,42 +30,38 @@ static vector<string> getCommands(string &buffer, const string &delim) {
  * @return bool Returns true if the message was parsed successfully, false when an error occurs during one of the called
  * functions.
  */
-void User::parse(void) {  // this would fail if the last command is partially received
+void User::parse(void) {
 	IRStream stream;
 
-	try {
-		vector<string> commands = getCommands(this->getInBuffer(), "\r\n");
-		for (const string &command : commands) {
-			bool found = false;
+	vector<string> commands = getCommands(this->getInBuffer(), "\r\n");
+	for (const string &command : commands) {
+		bool found = false;
 
-			string baseCommand = command.substr(0, command.find(' '));
+		string baseCommand = command.substr(0, command.find(' '));
 
-			for (const auto &pair : store) {
-				if (baseCommand == pair.first) {
-					found = true;
+		for (const auto &pair : store) {
+			if (baseCommand == pair.first) {
+				found = true;
 
-					stream.setCommand(baseCommand);
+				stream.setCommand(baseCommand);
 
-					string args;
-					if (command.size() > baseCommand.size()) {
-						args = command.substr(baseCommand.size() + 1);
-					}
-
-					pair.second(stream, args, this);
+				string args;
+				if (command.size() > baseCommand.size()) {
+					args = command.substr(baseCommand.size() + 1);
 				}
-			}
 
-			if (!found) {
-				stream.prefix()
-					.code(ERR_UNKNOWNCOMMAND)
-					.param(this->getNickname())
-					.param(baseCommand)
-					.trail("Unknown Command")
-					.end();
+				pair.second(stream, args, this);
 			}
 		}
-	} catch (const runtime_error &e) {
-		return;
+
+		if (!found) {
+			stream.prefix()
+				.code(ERR_UNKNOWNCOMMAND)
+				.param(this->getNickname())
+				.param(baseCommand)
+				.trail("Unknown Command")
+				.end();
+		}
 	}
 
 	stream.sendPacket(this);

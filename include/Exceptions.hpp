@@ -119,3 +119,10 @@ class NoRecipientException : public IrcException {
 	}
 };
 
+class NoOtherUserModeException : public IrcException {
+   public:
+	NoOtherUserModeException() : IrcException("Cannot see modes for other users", ERR_USERSDONTMATCH) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
