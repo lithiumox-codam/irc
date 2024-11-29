@@ -1,5 +1,6 @@
 #include "Channel.hpp"
 
+#include <cstddef>
 #include <utility>
 
 #include "Exceptions.hpp"
@@ -61,7 +62,7 @@ void Channel::removeUser(User *user) {
 	// NOLINTNEXTLINE
 	for (auto it = this->members.begin(); it != this->members.end(); ++it) {
 		if (it->first->getSocket() == user->getSocket()) {
-			broadcast2(stream, user);
+			broadcast(stream, user);
 
 			this->members.erase(it);
 			return;
@@ -156,11 +157,18 @@ void Channel::broadcast(User *user, const string &message) {
 	}
 }
 
-void Channel::broadcast2(IRStream &stream, User *user) {
+void Channel::broadcast(IRStream &stream, User *user){
 	for (auto &member : *this->getMembers()) {
-		if (member.first->getSocket() != user->getSocket()) {
+
+		if (user != NULL && (member.first->getSocket() != user->getSocket())) {
 			stream.sendPacket(member.first);
 		}
+	}
+}
+
+void Channel::broadcast(IRStream &stream) {
+	for (auto &member : *this->getMembers()) {
+		stream.sendPacket(member.first);
 	}
 }
 
@@ -176,5 +184,13 @@ string Channel::getUserModes(User *user) {
 const string &Channel::getTopic() const { return this->topic; }
 
 void Channel::setTopic(const string &topic) { this->topic = topic; }
+
+void Channel::setTopicTime(time_t time) { this->topictime = time; }
+
+time_t Channel::getTopicTime() const { return this->topictime; }
+
+void Channel::setTopicSetter(User *user) { this->topicsetter = user->getNickname(); }
+
+string Channel::getTopicSetter() const { return this->topicsetter; }
 
 time_t Channel::getCreated() const { return this->created; }

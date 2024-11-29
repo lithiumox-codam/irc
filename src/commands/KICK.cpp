@@ -41,7 +41,7 @@ void KICK(IRStream &stream, string &args, User *user) {
 			stream.param(kicker->first->getNickname());
 		}
 		stream.end();
-		channel->broadcast2(stream, kicker->first);
+		channel->broadcast(stream, kicker->first);
 		channel->removeUser(target->first);
 	} catch (const IrcException &e) {
 		e.e_stream(stream, user);
