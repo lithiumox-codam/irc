@@ -11,14 +11,14 @@ Modes::Modes(Type type) : modes(0) { this->type = type; }
  *
  * @param modes The modes to set.
  */
-Modes::Modes(unsigned int modes) : modes(modes) {}
+Modes::Modes(unsigned int modes, Type type) : modes(modes), type(type) {}
 
 /**
  * @brief Copy constructor.
  *
  * @param modes The modes to copy.
  */
-Modes::Modes(const Modes &modes) noexcept : modes(modes.modes) {}
+Modes::Modes(const Modes &modes) noexcept : modes(modes.modes), type(modes.type) {}
 
 /**
  * @brief Copy assignment operator.
@@ -28,6 +28,7 @@ Modes::Modes(const Modes &modes) noexcept : modes(modes.modes) {}
  */
 auto Modes::operator=(const Modes &modes) noexcept -> Modes & {
 	this->modes = modes.modes;
+	this->type = modes.type;
 	return *this;
 }
 
@@ -51,15 +52,7 @@ unsigned int Modes::getModes() const { return modes; }
  *
  * @param modes The modes to add.
  */
-void Modes::addModes(unsigned int modes) {
-	if (this->type == Type::CHANNEL) {
-		modes &= M_MODERATED | M_INVITE_ONLY | M_PASSWORD | M_TOPIC_LOCK | M_LIMIT;
-	}
-	if (this->type == Type::USER) {
-		modes &= M_OPERATOR | M_VOICE | M_INVISIBLE;
-	}
-	this->modes |= modes;
-}
+void Modes::addModes(unsigned int modes) { this->modes |= modes; }
 
 /**
  * @brief Removes one or more modes from the class. This function will only remove the modes that are allowed for the
@@ -68,15 +61,7 @@ void Modes::addModes(unsigned int modes) {
  *
  * @param modes The modes to remove.
  */
-void Modes::removeModes(unsigned int modes) {
-	if (this->type == Type::CHANNEL) {
-		modes &= M_MODERATED | M_INVITE_ONLY | M_PASSWORD | M_TOPIC_LOCK | M_LIMIT;
-	}
-	if (this->type == Type::USER) {
-		modes &= M_OPERATOR | M_VOICE | M_INVISIBLE;
-	}
-	this->modes &= ~modes;
-}
+void Modes::removeModes(unsigned int modes) { this->modes &= ~modes; }
 
 /**
  * @brief Checks if the user has one or more modes.
@@ -100,7 +85,7 @@ string Modes::getModesString() const {
 
 	for (const auto &modePair : modePairs) {
 		if (hasModes(modePair.first)) {
-			result += modePair.second;
+			result.push_back(modePair.second);
 		}
 	}
 	return result;
@@ -151,10 +136,8 @@ string Modes::applyModeChanges(const string &modeChanges) {
 				continue;
 			}
 		}
-
 		unsupportedModes.push_back(modeChar);
 	}
-
 	return unsupportedModes;
 }
 

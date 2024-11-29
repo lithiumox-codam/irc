@@ -55,7 +55,8 @@ IRStream &IRStream::prefix(User *user) {
  * @return IRStream&
  */
 IRStream &IRStream::prefix(User *user, Channel *channel) {
-	*this << ":" << (channel->hasOperator(user) ? "@" : "") << user->getNickname() << "!" << user->getUsername() << "@"
+	auto isOperator = channel->getMember(user)->second.hasModes(M_OPERATOR);
+	*this << ":" << (isOperator ? "@" : "") << user->getNickname() << "!" << user->getUsername() << "@"
 		  << user->getHostname();
 	return *this;
 }

@@ -13,133 +13,146 @@
 
 extern Server server;
 
-void handleUserMode(IRStream &stream, vector<string> &tokens, User *user) {
-	if (tokens.size() == 2 && tokens[1] != user->getNickname()) {
-		// Only server operators can change modes for other users
-		if (server.operatorCheck(user)) {
+/**
+ * @brief Handles the MODE command for users. This function will handle the following:
+ * - MODE user			 : Returns the modes of the user.
+ * - MODE user (+|-)mode : (Un)sets a mode from the user. Only operators can change other users' modes.
+ *
+ * @param stream The stream to output to.
+ * @param tokens The tokens from the command.
+ * @param user The user that sent the command.
+ */
+static void handleUserMode(IRStream &stream, vector<string> &tokens, User *user) {
+	if (tokens.size() == 2 && tokens[0].find('o') != string::npos && !server.operatorCheck(user)) {
+		stream.prefix().code(ERR_NOPRIVILEGES).param(user->getNickname()).trail("Permission denied").end();
+		return;
+	}
+	switch (tokens.size()) {
+		case 1:
 			try {
-				auto *member = server.getUser(tokens[1]);
-				auto unsupportedModes = member->modes.applyModeChanges(tokens[0]);
+				auto *member = server.getUser(tokens[0]);
+				if (member->getNickname() != user->getNickname()) {
+					throw NoOtherUserModeException();
+				}
+				stream.prefix()
+					.code(RPL_UMODEIS)
+					.param(user->getNickname())
+					.trail("User modes: +" + user->modes.getModesString())
+					.end();
+			} catch (const IrcException &e) {
+				e.e_stream(stream, user);
+			}
+			break;
+
+		case 2:
+			try {
+				User *target = (tokens[1] != user->getNickname()) ? server.getUser(tokens[1]) : user;
+				if (target->getNickname() != user->getNickname() && !server.operatorCheck(user)) {
+					throw NoOtherUserModeException();
+				}
+				auto unsupportedModes = target->modes.applyModeChanges(tokens[0]);
 				if (!unsupportedModes.empty()) {
-					stream.prefix().code(ERR_UNKNOWNMODE).trail("Unsupported modes: " + unsupportedModes).end();
+					stream.prefix()
+						.code(ERR_UNKNOWNMODE)
+						.param(user->getNickname())
+						.trail("Unsupported modes: " + unsupportedModes)
+						.end();
 					return;
 				}
 				stream.prefix()
 					.code(RPL_UMODEIS)
 					.param(user->getNickname())
-					.trail(member->getNickname() + "'s modes: +" + member->modes.getModesString())
+					.trail(target->getNickname() + "'s modes: +" + target->modes.getModesString())
 					.end();
-				return;
 			} catch (const IrcException &e) {
 				e.e_stream(stream, user);
-				return;
 			}
-		}
-		stream.prefix()
-			.code(ERR_USERSDONTMATCH)
-			.param(user->getNickname())
-			.trail("Cannot change modes for other users")
-			.end();
-		return;
-	}
+			break;
 
-	if (tokens.size() == 1) {
-		try {
-			auto *member = server.getUser(tokens[0]);
-			if (member->getNickname() != user->getNickname()) {
-				throw NoOtherUserModeException();
-			}
-			stream.prefix()
-				.code(RPL_UMODEIS)
-				.param(user->getNickname())
-				.trail("User modes: +" + user->modes.getModesString())
-				.end();
-			return;
-		} catch (const IrcException &e) {
-			e.e_stream(stream, user);
-			return;
-		}
+		default:
+			stream.prefix().code(ERR_UNKNOWNMODE).param(user->getNickname()).trail("Unknown mode").end();
+			break;
 	}
-	if (tokens.size() == 2) {
-		auto unsupportedModes = user->modes.applyModeChanges(tokens[0]);
-		if (!unsupportedModes.empty()) {
-			stream.prefix().code(ERR_UNKNOWNMODE).trail("Unsupported modes: " + unsupportedModes).end();
-		}
-		stream.prefix()
-			.code(RPL_UMODEIS)
-			.param(user->getNickname())
-			.trail("User modes: +" + user->modes.getModesString())
-			.end();
-		return;
-	}
-	stream.prefix().code(ERR_UNKNOWNMODE).trail("Unknown mode").end();
 }
 
-void handleChannelMode(IRStream &stream, vector<string> &tokens, User *user) {
+/**
+ * @brief Handles the MODE command for channels. This function will handle the following:
+ * - MODE #channel				  : Returns the modes of the channel.
+ * - MODE #channel (+|-)mode	  : (Un)sets a mode from the channel.
+ * - MODE #channel user 		  : Returns the modes of the user in the channel.
+ * - MODE #channel (+|-)mode user : (Un)sets the modes of the user in the channel. Only for operators.
+ *
+ * @param stream The stream to output to.
+ * @param tokens The tokens from the command.
+ * @param user The user that sent the command.
+ */
+static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *user) {
 	try {
-		auto *channel = server.getChannel(tokens.front());
-		auto member = channel->getMember(user->getNickname());
+		auto *channel = server.getChannel(tokens[0]);
+		auto *member = channel->getMember(user->getNickname());
 
-		if (!member.second.hasModes(M_OPERATOR)) {
+		if (!member->second.hasModes(M_OPERATOR)) {
 			throw UserNotOperatorException();
 		}
 
-		if (tokens.size() == 1) {
-			stream.prefix()
-				.code(RPL_CHANNELMODEIS)
-				.param(user->getNickname())
-				.param(channel->getName())
-				.trail("+" + channel->modes.getModesString())
-				.end();
-			return;
-		}
-		if (tokens.size() == 2) {
-			if (tokens[1].starts_with("+") || tokens[1].starts_with("-")) {
-				channel->modes.applyModeChanges(tokens[1]);
+		switch (tokens.size()) {
+			case 1: {
 				stream.prefix()
 					.code(RPL_CHANNELMODEIS)
 					.param(user->getNickname())
 					.param(channel->getName())
 					.trail("+" + channel->modes.getModesString())
 					.end();
-				return;
-			}
-			try {
-				auto &member = channel->getMember(tokens[1]);
-				stream.prefix()
-					.code(RPL_UMODEIS)
-					.param(user->getNickname())
-					.trail(member.first->getNickname() + " User modes: +" + member.second.getModesString())
-					.end();
-			} catch (const IrcException &e) {
-				e.e_stream(stream, user);
-				return;
-			}
-		}
-		if (tokens.size() == 3) {
-			try {
-				auto &member = channel->getMember(tokens[2]);
-				auto unsupportedModes = member.second.applyModeChanges(tokens[1]);
+			} break;
+
+			case 2: {
+				if (tokens[1].starts_with("+") || tokens[1].starts_with("-")) {
+					channel->modes.applyModeChanges(tokens[1]);
+					stream.prefix()
+						.code(RPL_CHANNELMODEIS)
+						.param(user->getNickname())
+						.param(channel->getName())
+						.trail("+" + channel->modes.getModesString())
+						.end();
+				} else {
+					auto *targetMember = channel->getMember(tokens[1]);
+					stream.prefix()
+						.code(RPL_UMODEIS)
+						.param(user->getNickname())
+						.trail(targetMember->first->getNickname() + " User modes: +" +
+							   targetMember->second.getModesString())
+						.end();
+				}
+			} break;
+
+			case 3: {
+				auto *targetMember = channel->getMember(tokens[2]);
+				if (targetMember->second.getType() != Type::USER) {
+					cout << "There is some fuckery going on" << endl;
+				}
+				auto unsupportedModes = targetMember->second.applyModeChanges(tokens[1]);
 				if (!unsupportedModes.empty()) {
-					stream.prefix().code(ERR_UNKNOWNMODE).trail("Unsupported modes: " + unsupportedModes).end();
+					stream.prefix()
+						.code(ERR_UNKNOWNMODE)
+						.param(user->getNickname())
+						.trail("Unsupported modes: " + unsupportedModes)
+						.end();
 					return;
 				}
-			} catch (const IrcException &e) {
-				e.e_stream(stream, user);
-				return;
-			}
+			} break;
+
+			default:
+				stream.prefix().code(ERR_UNKNOWNMODE).param(user->getNickname()).trail("Unknown mode").end();
+				break;
 		}
 	} catch (const IrcException &e) {
 		e.e_stream(stream, user);
-		return;
 	}
-	stream.prefix().code(ERR_UNKNOWNMODE).trail("Unknown mode").end();
 }
 
 void MODE(IRStream &stream, string &args, User *user) {
 	if (args.empty()) {
-		stream.prefix().code(ERR_NEEDMOREPARAMS).trail("MODE :Not enough parameters").end();
-		return;
+		throw NotEnoughParametersException();
 	}
 
 	vector<string> tokens = split(args, ' ');

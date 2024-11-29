@@ -47,7 +47,7 @@ class Modes {
    public:
 	Modes(Type type);
 	~Modes() = default;
-	Modes(unsigned int modes);
+	Modes(unsigned int modes, Type type);
 	Modes(const Modes &modes) noexcept;
 	auto operator=(const Modes &modes) noexcept -> Modes &;
 

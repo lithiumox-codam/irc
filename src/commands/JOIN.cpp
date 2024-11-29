@@ -4,12 +4,12 @@
 
 #include "Channel.hpp"
 #include "Codes.hpp"
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "IRStream.hpp"
 #include "Modes.hpp"
 #include "Server.hpp"
 #include "User.hpp"
-#include "Exceptions.hpp"
 
 extern Server server;
 
@@ -91,7 +91,7 @@ void JOIN(IRStream &stream, string &args, User *user) {
 		if (channelName[0] != '#') {
 			NoSuchChannelException().e_stream(stream, user);
 			continue;
-		// 	throw NoSuchChannelException();
+			// 	throw NoSuchChannelException();
 		}
 		try {
 			Channel *channel = server.getChannel(channelName);
@@ -122,7 +122,7 @@ void JOIN(IRStream &stream, string &args, User *user) {
 
 			addToChannel(stream, channel, user);
 
-		} catch (const IrcException &e) {	// Channel not found
+		} catch (const IrcException &e) {  // Channel not found
 			if (e.GetCode() != ERR_NOSUCHCHANNEL) {
 				e.e_stream(stream, user);
 				continue;
