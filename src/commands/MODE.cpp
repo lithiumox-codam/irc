@@ -127,9 +127,6 @@ static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *us
 
 			case 3: {
 				auto *targetMember = channel->getMember(tokens[2]);
-				if (targetMember->second.getType() != Type::USER) {
-					cout << "There is some fuckery going on" << endl;
-				}
 				auto unsupportedModes = targetMember->second.applyModeChanges(tokens[1]);
 				if (!unsupportedModes.empty()) {
 					stream.prefix()

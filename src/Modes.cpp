@@ -104,9 +104,26 @@ void Modes::clearModes() { modes = 0; }
 Type Modes::getType() const { return type; }
 
 /**
+ * @brief Helper function to find and apply mode changes for a specific mode type
+ *
+ * @param modeChar The mode character to look for
+ * @param modePairs The array of mode pairs to search in
+ * @param addMode Whether to add or remove the mode
+ * @return true if mode was found and applied, false otherwise
+ */
+bool Modes::changeHelper(char modeChar, const auto &modePairs, bool addMode) {
+	const auto *const iter =
+		ranges::find_if(modePairs, [modeChar](const auto &pair) { return pair.second == modeChar; });
+	if (iter != modePairs.end()) {
+		addMode ? addModes(iter->first) : removeModes(iter->first);
+		return true;
+	}
+	return false;
+}
+
+/**
  * @brief Applies mode changes to the modes. This function will only apply the modes that are allowed for the type
- * specified in the constructor. For example, a channel user cannot have the M_INVISIBLE mode. And a user cannot have
- * the M_MODERATED mode.
+ * specified in the constructor.
  *
  * @param modeChanges The mode changes to apply. ex: "+ov" or "-o+v"
  * @return string The unsupported modes.
@@ -121,22 +138,19 @@ string Modes::applyModeChanges(const string &modeChanges) {
 			continue;
 		}
 
+		bool modeApplied = false;
+
 		if (type == Type::USER) {
-			const auto *const iter =
-				ranges::find_if(userModePairs, [modeChar](const auto &pair) { return pair.second == modeChar; });
-			if (iter != userModePairs.end()) {
-				addMode ? addModes(iter->first) : removeModes(iter->first);
-				continue;
-			}
-		} else {
-			const auto *const iter =
-				ranges::find_if(channelModePairs, [modeChar](const auto &pair) { return pair.second == modeChar; });
-			if (iter != channelModePairs.end()) {
-				addMode ? addModes(iter->first) : removeModes(iter->first);
-				continue;
-			}
+			modeApplied = changeHelper(modeChar, userModePairs, addMode);
+		} else if (type == Type::CHANNEL) {
+			modeApplied = changeHelper(modeChar, channelModePairs, addMode);
+		} else if (type == Type::CHANNELMEMBER) {
+			modeApplied = changeHelper(modeChar, channelMemberPairs, addMode);
 		}
-		unsupportedModes.push_back(modeChar);
+
+		if (!modeApplied) {
+			unsupportedModes.push_back(modeChar);
+		}
 	}
 	return unsupportedModes;
 }
