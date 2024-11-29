@@ -31,13 +31,14 @@ unsigned int const M_TOPIC_LOCK = 1 << 7;
 /** Determines if the channel has a limit. (+l) */
 unsigned int const M_LIMIT = 1 << 8;
 
-static constexpr array<pair<unsigned int, char>, 3> userModePairs{
-	{{M_OPERATOR, 'o'}, {M_VOICE, 'v'}, {M_INVISIBLE, 'i'}}};
+static constexpr array<pair<unsigned int, char>, 3> channelMemberPairs{{{M_OPERATOR, 'o'}, {M_VOICE, 'v'}}};
+
+static constexpr array<pair<unsigned int, char>, 2> userModePairs{{{M_OPERATOR, 'o'}, {M_INVISIBLE, 'i'}}};
 
 static constexpr array<pair<unsigned int, char>, 5> channelModePairs{
 	{{M_MODERATED, 'm'}, {M_INVITE_ONLY, 'i'}, {M_PASSWORD, 'k'}, {M_TOPIC_LOCK, 't'}, {M_LIMIT, 'l'}}};
 
-enum class Type : uint8_t { USER, CHANNEL };
+enum class Type : uint8_t { USER, CHANNEL, CHANNELMEMBER };
 
 class Modes {
    private:
@@ -59,6 +60,7 @@ class Modes {
 	string getModesString() const;
 	void clearModes();
 	Type getType() const;
+	bool changeHelper(char modeChar, const auto &modePairs, bool addMode);
 	string applyModeChanges(const string &modeChanges);
 
 	friend ostream &operator<<(ostream &stream, const Modes &modes);

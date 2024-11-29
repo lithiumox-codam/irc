@@ -49,7 +49,7 @@ void Channel::setName(const string &name) { this->name = name; }
  * @param user The user to add.
  */
 void Channel::addUser(User *user) {
-	this->members.emplace_back(user, Modes(Type::USER));
+	this->members.emplace_back(user, Modes(Type::CHANNELMEMBER));
 	if (this->hasOperator(user)) {
 		this->getMembers()->back().second.addModes(M_OPERATOR);
 	}

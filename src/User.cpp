@@ -16,11 +16,7 @@
 
 extern Server server;
 
-User::User(int socket) : socket(socket), handshake(0), modes(Type::USER) {
-	if (server.operatorCheck(this)) {
-		modes.addModes(M_OPERATOR);
-	}
-}
+User::User(int socket) : socket(socket), handshake(0), modes(Type::USER) {}
 
 User::User(const User &user) noexcept : modes(user.modes) {
 	this->socket = user.socket;
@@ -86,7 +82,12 @@ const string &User::getHostname() const { return this->hostname; }
 
 void User::setNickname(string &nickname) { this->nickname = std::move(nickname); }
 
-void User::setUsername(string &username) { this->username = std::move(username); }
+void User::setUsername(string &username) {
+	this->username = std::move(username);
+	if (server.operatorCheck(this)) {
+		this->modes.addModes(M_OPERATOR);
+	}
+}
 
 void User::setRealname(string &realname) { this->realname = std::move(realname); }
 

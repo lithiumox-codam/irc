@@ -27,9 +27,9 @@ static void handleUserMode(IRStream &stream, vector<string> &tokens, User *user)
 		stream.prefix().code(ERR_NOPRIVILEGES).param(user->getNickname()).trail("Permission denied").end();
 		return;
 	}
-	switch (tokens.size()) {
-		case 1:
-			try {
+	try {
+		switch (tokens.size()) {
+			case 1: {
 				auto *member = server.getUser(tokens[0]);
 				if (member->getNickname() != user->getNickname()) {
 					throw NoOtherUserModeException();
@@ -39,13 +39,9 @@ static void handleUserMode(IRStream &stream, vector<string> &tokens, User *user)
 					.param(user->getNickname())
 					.trail("User modes: +" + user->modes.getModesString())
 					.end();
-			} catch (const IrcException &e) {
-				e.e_stream(stream, user);
-			}
-			break;
+			} break;
 
-		case 2:
-			try {
+			case 2: {
 				User *target = (tokens[1] != user->getNickname()) ? server.getUser(tokens[1]) : user;
 				if (target->getNickname() != user->getNickname() && !server.operatorCheck(user)) {
 					throw NoOtherUserModeException();
@@ -64,14 +60,10 @@ static void handleUserMode(IRStream &stream, vector<string> &tokens, User *user)
 					.param(user->getNickname())
 					.trail(target->getNickname() + "'s modes: +" + target->modes.getModesString())
 					.end();
-			} catch (const IrcException &e) {
-				e.e_stream(stream, user);
-			}
-			break;
-
-		default:
-			stream.prefix().code(ERR_UNKNOWNMODE).param(user->getNickname()).trail("Unknown mode").end();
-			break;
+			} break;
+		}
+	} catch (const IrcException &e) {
+		e.e_stream(stream, user);
 	}
 }
 
@@ -127,9 +119,6 @@ static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *us
 
 			case 3: {
 				auto *targetMember = channel->getMember(tokens[2]);
-				if (targetMember->second.getType() != Type::USER) {
-					cout << "There is some fuckery going on" << endl;
-				}
 				auto unsupportedModes = targetMember->second.applyModeChanges(tokens[1]);
 				if (!unsupportedModes.empty()) {
 					stream.prefix()
@@ -140,10 +129,6 @@ static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *us
 					return;
 				}
 			} break;
-
-			default:
-				stream.prefix().code(ERR_UNKNOWNMODE).param(user->getNickname()).trail("Unknown mode").end();
-				break;
 		}
 	} catch (const IrcException &e) {
 		e.e_stream(stream, user);
