@@ -36,7 +36,7 @@ static void makeNamesList(IRStream &stream, Channel *channel, User *user) {
 	stream.prefix().code(RPL_NAMREPLY).param(user->getNickname()).param("=").param(channel->getName()).trail("");
 	for (auto &member : *channel->getMembers()) {
 		if (!member.second.hasModes(M_INVISIBLE)) {
-			stream.param(member.first->getNickname());
+			stream.param((member.second.hasModes(M_OPERATOR) ? "@" : "") + member.first->getNickname());
 		}
 	}
 	stream.end();
