@@ -53,7 +53,7 @@ static void channelChecks(Channel *channel, User *user) {
 		throw UserAlreadyOnChannelException();
 	}
 	if (channel->getMembers()->size() >= MEMBER_LIMIT) {
-		throw ChannelFullException();
+		throw ChannelFullException(channel->getName());
 	}
 
 	if (channel->hasInvited(user)) {
@@ -88,7 +88,7 @@ void JOIN(IRStream &stream, string &args, User *user) {
 	// Try joining the channels
 	for (string &channelName : channelNames) {
 		if (channelName[0] != '#') {
-			NoSuchChannelException().e_stream(stream, user);
+			NoSuchChannelException(channelName).e_stream(stream, user);
 			continue;
 		}
 		try {
@@ -97,11 +97,11 @@ void JOIN(IRStream &stream, string &args, User *user) {
 			channelChecks(channel, user);
 			if (channel->modes.hasModes(M_PASSWORD)) {
 				if (password == passwords.end()) {
-					throw BadChannelKeyException();
+					throw BadChannelKeyException(channelName);
 				}
 				if (*password != channel->getPassword()) {
 					password++;
-					throw BadChannelKeyException();
+					throw BadChannelKeyException(channelName);
 				}
 				password++;
 			}

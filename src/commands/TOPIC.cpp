@@ -25,7 +25,7 @@ void TOPIC(IRStream &stream, string &args, User *user) {
 	try {
 		Channel *channel = server.getChannel(tokens.first);
 		if (!channel->hasUser(user)) {
-			throw NotOnChannelException();
+			throw NotOnChannelException(tokens.first);
 		}
 		if (tokens.second.empty()) {
 			if (channel->getTopic().empty()) {
