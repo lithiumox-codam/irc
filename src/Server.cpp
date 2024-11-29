@@ -16,13 +16,13 @@
 #include <string>
 #include <vector>
 
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "User.hpp"
-#include "Exceptions.hpp"
 
 extern Server server;
 
-Server::Server() : socket(0), port(0), running(false) { }
+Server::Server() : socket(0), port(0), running(false) {}
 
 Server::~Server() { this->stop(); }
 
@@ -95,13 +95,13 @@ static void handleEpollDisconnect(User *user) {
 	server.removeUser(*user);
 }
 
-static void handleEpollRead(User *user){
+static void handleEpollRead(User *user) {
 	if (!user->readFromSocket()) {
 		server.removeUser(*user);
 	}
 }
 
-static void HandleEpollWrite(User *user){
+static void HandleEpollWrite(User *user) {
 	if (!user->sendToSocket()) {
 		server.removeUser(*user);
 	}
@@ -249,7 +249,7 @@ void Server::addUser(unsigned int socket) {
 }
 
 void Server::removeUser(User &user) {
-	//remove from channels
+	// remove from channels
 	for (auto &channel : this->channels) {
 		if (channel.hasUser(&user)) {
 			channel.removeUser(&user);

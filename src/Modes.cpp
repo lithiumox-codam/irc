@@ -11,14 +11,14 @@ Modes::Modes(Type type) : modes(0) { this->type = type; }
  *
  * @param modes The modes to set.
  */
-Modes::Modes(unsigned int modes) : modes(modes) {}
+Modes::Modes(unsigned int modes, Type type) : modes(modes), type(type) {}
 
 /**
  * @brief Copy constructor.
  *
  * @param modes The modes to copy.
  */
-Modes::Modes(const Modes &modes) noexcept : modes(modes.modes) {}
+Modes::Modes(const Modes &modes) noexcept : modes(modes.modes), type(modes.type) {}
 
 /**
  * @brief Copy assignment operator.
@@ -28,6 +28,7 @@ Modes::Modes(const Modes &modes) noexcept : modes(modes.modes) {}
  */
 auto Modes::operator=(const Modes &modes) noexcept -> Modes & {
 	this->modes = modes.modes;
+	this->type = modes.type;
 	return *this;
 }
 
@@ -51,15 +52,7 @@ unsigned int Modes::getModes() const { return modes; }
  *
  * @param modes The modes to add.
  */
-void Modes::addModes(unsigned int modes) {
-	if (this->type == Type::CHANNEL) {
-		modes &= M_MODERATED | M_INVITE_ONLY | M_PASSWORD | M_TOPIC_LOCK | M_LIMIT;
-	}
-	if (this->type == Type::USER) {
-		modes &= M_OPERATOR | M_VOICE | M_INVISIBLE;
-	}
-	this->modes |= modes;
-}
+void Modes::addModes(unsigned int modes) { this->modes |= modes; }
 
 /**
  * @brief Removes one or more modes from the class. This function will only remove the modes that are allowed for the
@@ -68,15 +61,7 @@ void Modes::addModes(unsigned int modes) {
  *
  * @param modes The modes to remove.
  */
-void Modes::removeModes(unsigned int modes) {
-	if (this->type == Type::CHANNEL) {
-		modes &= M_MODERATED | M_INVITE_ONLY | M_PASSWORD | M_TOPIC_LOCK | M_LIMIT;
-	}
-	if (this->type == Type::USER) {
-		modes &= M_OPERATOR | M_VOICE | M_INVISIBLE;
-	}
-	this->modes &= ~modes;
-}
+void Modes::removeModes(unsigned int modes) { this->modes &= ~modes; }
 
 /**
  * @brief Checks if the user has one or more modes.
@@ -90,19 +75,17 @@ bool Modes::hasModes(unsigned int modes) const { return (this->modes & modes) ==
 
 /**
  * @brief Returns a string representation of the modes.
- * @warning This function will return an empty string if the user is not a channel operator or voice. And please note
- * that this is mainly used for channel prefixes.
  * @return string
  */
 string Modes::getModesString() const {
 	string result;
-	const std::string modeChars = "@vimiktl";
-	const unsigned int modeValues[] = {M_OPERATOR,	  M_VOICE,	  M_INVISIBLE,	M_MODERATED,
-									   M_INVITE_ONLY, M_PASSWORD, M_TOPIC_LOCK, M_LIMIT};
+	const pair<unsigned int, char> modePairs[] = {{M_OPERATOR, 'o'},   {M_VOICE, 'v'},		 {M_INVISIBLE, 'i'},
+												  {M_MODERATED, 'm'},  {M_INVITE_ONLY, 'i'}, {M_PASSWORD, 'k'},
+												  {M_TOPIC_LOCK, 't'}, {M_LIMIT, 'l'}};
 
-	for (size_t i = 0; i < modeChars.size(); ++i) {
-		if (hasModes(modeValues[i])) {
-			result += modeChars[i];
+	for (const auto &modePair : modePairs) {
+		if (hasModes(modePair.first)) {
+			result.push_back(modePair.second);
 		}
 	}
 	return result;
@@ -119,3 +102,53 @@ void Modes::clearModes() { modes = 0; }
  * @return Type
  */
 Type Modes::getType() const { return type; }
+
+/**
+ * @brief Applies mode changes to the modes. This function will only apply the modes that are allowed for the type
+ * specified in the constructor. For example, a channel user cannot have the M_INVISIBLE mode. And a user cannot have
+ * the M_MODERATED mode.
+ *
+ * @param modeChanges The mode changes to apply. ex: "+ov" or "-o+v"
+ * @return string The unsupported modes.
+ */
+string Modes::applyModeChanges(const string &modeChanges) {
+	string unsupportedModes;
+	bool addMode = false;
+
+	for (char modeChar : modeChanges) {
+		if (modeChar == '+' || modeChar == '-') {
+			addMode = (modeChar == '+');
+			continue;
+		}
+
+		if (type == Type::USER) {
+			const auto *const iter =
+				ranges::find_if(userModePairs, [modeChar](const auto &pair) { return pair.second == modeChar; });
+			if (iter != userModePairs.end()) {
+				addMode ? addModes(iter->first) : removeModes(iter->first);
+				continue;
+			}
+		} else {
+			const auto *const iter =
+				ranges::find_if(channelModePairs, [modeChar](const auto &pair) { return pair.second == modeChar; });
+			if (iter != channelModePairs.end()) {
+				addMode ? addModes(iter->first) : removeModes(iter->first);
+				continue;
+			}
+		}
+		unsupportedModes.push_back(modeChar);
+	}
+	return unsupportedModes;
+}
+
+/**
+ * @brief Overloaded stream operator.
+ *
+ * @param stream The stream to output to.
+ * @param modes The modes to output.
+ * @return ostream&
+ */
+ostream &operator<<(ostream &stream, const Modes &modes) {
+	stream << modes.getModesString();
+	return stream;
+}

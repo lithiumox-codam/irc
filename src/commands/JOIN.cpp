@@ -5,12 +5,12 @@
 
 #include "Channel.hpp"
 #include "Codes.hpp"
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "IRStream.hpp"
 #include "Modes.hpp"
 #include "Server.hpp"
 #include "User.hpp"
-#include "Exceptions.hpp"
 
 extern Server server;
 

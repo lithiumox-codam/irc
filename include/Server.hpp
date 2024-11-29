@@ -5,10 +5,10 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <array>
 #include <csignal>
 #include <deque>
 #include <string>
-#include <array>
 
 #include "Channel.hpp"
 #include "User.hpp"

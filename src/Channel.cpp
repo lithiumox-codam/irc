@@ -3,10 +3,10 @@
 #include <cstddef>
 #include <utility>
 
+#include "Exceptions.hpp"
 #include "IRStream.hpp"
 #include "Modes.hpp"
 #include "User.hpp"
-#include "Exceptions.hpp"
 
 using namespace std;
 
@@ -49,7 +49,7 @@ void Channel::setName(const string &name) { this->name = name; }
  * @param user The user to add.
  */
 void Channel::addUser(User *user) {
-	this->members.emplace_back(user, Modes(Type::CHANNEL));
+	this->members.emplace_back(user, Modes(Type::USER));
 	if (this->hasOperator(user)) {
 		this->getMembers()->back().second.addModes(M_OPERATOR);
 	}
@@ -78,16 +78,6 @@ bool Channel::hasUser(User *user) const {
 		}
 	}
 	return false;
-}
-
-pair<User *, Modes> &Channel::getMember(const string &nickname) {
-	// NOLINTNEXTLINE
-	for (auto &member : this->members) {
-		if (member.first->getNickname() == nickname) {
-			return member;
-		}
-	}
-	throw UserNotOnChannelException();
 }
 
 void Channel::addOperator(User *user) { operators.push_back(user); }
@@ -143,6 +133,16 @@ std::pair<User *, Modes> *Channel::getMember(User *user) {
 		}
 	}
 	return nullptr;
+}
+
+pair<User *, Modes> *Channel::getMember(const string &nickname) {
+	// NOLINTNEXTLINE
+	for (auto &member : this->members) {
+		if (member.first->getNickname() == nickname) {
+			return &member;
+		}
+	}
+	throw UserNotOnChannelException();
 }
 
 void Channel::broadcast(User *user, const string &message) {

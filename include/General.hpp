@@ -32,8 +32,7 @@ using namespace std;
 vector<string> split(const string& str, const char& delim);
 vector<string> split(const string& str, const string& delim);
 pair<string, string> splitPair(const string& str, const char& delim);
-string join(const vector<string> &tokens, size_t start);
-
+string join(const vector<string>& tokens, size_t start);
 
 void CAP(IRStream& stream, string& args, User* user);
 void NICK(IRStream& stream, string& args, User* user);

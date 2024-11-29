@@ -154,8 +154,7 @@ bool User::sendToSocket() {
 void User::addToBuffer(const string &data) {
 	this->out_buffer.append(data);
 
-	if (!this->out_buffer.empty())
-		server.epollChange(this->socket, EPOLLIN | EPOLLOUT);
+	if (!this->out_buffer.empty()) server.epollChange(this->socket, EPOLLIN | EPOLLOUT);
 };
 
 ostream &operator<<(std::ostream &stream, const User &user) {

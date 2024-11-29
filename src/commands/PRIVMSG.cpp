@@ -1,9 +1,9 @@
 #include "Codes.hpp"
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "IRStream.hpp"
 #include "Server.hpp"
 #include "User.hpp"
-#include "Exceptions.hpp"
 
 extern Server server;
 
@@ -39,7 +39,7 @@ void handleChannelMessage(IRStream &stream, const pair<string, string> &token, U
 		if (!channel->modes.hasModes(M_MODERATED)) {
 			channel->broadcast(user, token.second);
 		} else {
-			if (channel->getMember(user->getNickname()).second.hasModes(M_VOICE)) {
+			if (channel->getMember(user->getNickname())->second.hasModes(M_VOICE)) {
 				channel->broadcast(user, token.second);
 			} else if (channel->hasOperator(user)) {
 				channel->broadcast(user, token.second);

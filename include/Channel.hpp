@@ -1,10 +1,10 @@
 #pragma once
 
 #include <ctime>
+#include <deque>
 #include <iostream>
 #include <string>
 #include <utility>
-#include <deque>
 
 class IRStream;
 #include "IRStream.hpp"
@@ -53,7 +53,6 @@ class Channel {
 	void addUser(User *user);
 	void removeUser(User *user);
 	bool hasUser(User *user) const;
-	pair<User *, Modes> &getMember(const string &nickname);
 
 	void addOperator(User *user);
 	void removeOperator(User *user);
@@ -65,6 +64,7 @@ class Channel {
 
 	[[nodiscard]] deque<pair<User *, Modes>> *getMembers();
 	[[nodiscard]] pair<User *, Modes> *getMember(User *user);
+	[[nodiscard]] pair<User *, Modes> *getMember(const string &nickname);
 
 	void broadcast(User *user, const string &message);
 	void broadcast(IRStream &stream, User *user);

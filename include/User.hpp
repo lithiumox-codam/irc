@@ -14,7 +14,8 @@ enum UserConfig : uint16_t {
 /**
  * @brief Bitmask representing the completion status of a user.
  *
- * @details The UserFlags enum is a bitmask that represents the completion status of a user. The flags are used to determine
+ * @details The UserFlags enum is a bitmask that represents the completion status of a user. The flags are used to
+ determine
  * if a user has completed all necessary steps to be considered registered.
 
  * - The USER_INFO flag is set when the user has completed CAP negotiation.
@@ -23,18 +24,20 @@ enum UserConfig : uint16_t {
  * - The USER_PASS flag is set when the user has entered the correct password.
  * - The USER_WELCOME flag is set when the user has received a welcome message.
  *
- * - The USER_AUTHENTICATED flag is set when the user has completed all necessary steps, except for sending the welcome message.
+ * - The USER_AUTHENTICATED flag is set when the user has completed all necessary steps, except for sending the welcome
+ message.
  * - The USER_REGISTERED flag is set when the user has completed all necessary steps.
  */
 enum UserFlags : uint8_t {
-	USER_INFO			= 1 << 0,				// User has completed CAP negotiation.
-	USER_USER			= 1 << 1,				// User has user information.
-	USER_NICK			= 1 << 2,				// User has a nickname.
-	USER_PASS 			= 1 << 3,				// User has entered the correct password.
-	USER_WELCOME		= 1 << 4,				// User has received a welcome message.
+	USER_INFO = 1 << 0,		// User has completed CAP negotiation.
+	USER_USER = 1 << 1,		// User has user information.
+	USER_NICK = 1 << 2,		// User has a nickname.
+	USER_PASS = 1 << 3,		// User has entered the correct password.
+	USER_WELCOME = 1 << 4,	// User has received a welcome message.
 
-	USER_AUTHENTICATED	= USER_USER | USER_NICK | USER_PASS | USER_INFO,	// User has completed all necessary steps, except for sending the welcome message.
-	USER_REGISTERED		= USER_AUTHENTICATED | USER_WELCOME,				// User has completed all necessary steps.
+	USER_AUTHENTICATED = USER_USER | USER_NICK | USER_PASS |
+						 USER_INFO,	 // User has completed all necessary steps, except for sending the welcome message.
+	USER_REGISTERED = USER_AUTHENTICATED | USER_WELCOME,  // User has completed all necessary steps.
 };
 
 class User {
