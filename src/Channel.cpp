@@ -62,7 +62,7 @@ void Channel::removeUser(User *user) {
 	// NOLINTNEXTLINE
 	for (auto it = this->members.begin(); it != this->members.end(); ++it) {
 		if (it->first->getSocket() == user->getSocket()) {
-			broadcast2(stream, user);
+			broadcast(stream, user);
 
 			this->members.erase(it);
 			return;
