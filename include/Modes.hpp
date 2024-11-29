@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string>
 
@@ -30,6 +31,12 @@ unsigned int const M_TOPIC_LOCK = 1 << 7;
 /** Determines if the channel has a limit. (+l) */
 unsigned int const M_LIMIT = 1 << 8;
 
+static constexpr array<pair<unsigned int, char>, 3> userModePairs{
+	{{M_OPERATOR, 'o'}, {M_VOICE, 'v'}, {M_INVISIBLE, 'i'}}};
+
+static constexpr array<pair<unsigned int, char>, 5> channelModePairs{
+	{{M_MODERATED, 'm'}, {M_INVITE_ONLY, 'i'}, {M_PASSWORD, 'k'}, {M_TOPIC_LOCK, 't'}, {M_LIMIT, 'l'}}};
+
 enum class Type : uint8_t { USER, CHANNEL };
 
 class Modes {
@@ -52,6 +59,7 @@ class Modes {
 	string getModesString() const;
 	void clearModes();
 	Type getType() const;
+	string applyModeChanges(const string &modeChanges);
 
 	friend ostream &operator<<(ostream &stream, const Modes &modes);
 };

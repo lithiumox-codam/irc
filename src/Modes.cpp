@@ -119,6 +119,46 @@ void Modes::clearModes() { modes = 0; }
 Type Modes::getType() const { return type; }
 
 /**
+ * @brief Applies mode changes to the modes. This function will only apply the modes that are allowed for the type
+ * specified in the constructor. For example, a channel user cannot have the M_INVISIBLE mode. And a user cannot have
+ * the M_MODERATED mode.
+ *
+ * @param modeChanges The mode changes to apply. ex: "+ov" or "-o+v"
+ * @return string The unsupported modes.
+ */
+string Modes::applyModeChanges(const string &modeChanges) {
+	string unsupportedModes;
+	bool addMode = false;
+
+	for (char modeChar : modeChanges) {
+		if (modeChar == '+' || modeChar == '-') {
+			addMode = (modeChar == '+');
+			continue;
+		}
+
+		if (type == Type::USER) {
+			const auto *const iter =
+				ranges::find_if(userModePairs, [modeChar](const auto &pair) { return pair.second == modeChar; });
+			if (iter != userModePairs.end()) {
+				addMode ? addModes(iter->first) : removeModes(iter->first);
+				continue;
+			}
+		} else {
+			const auto *const iter =
+				ranges::find_if(channelModePairs, [modeChar](const auto &pair) { return pair.second == modeChar; });
+			if (iter != channelModePairs.end()) {
+				addMode ? addModes(iter->first) : removeModes(iter->first);
+				continue;
+			}
+		}
+
+		unsupportedModes.push_back(modeChar);
+	}
+
+	return unsupportedModes;
+}
+
+/**
  * @brief Overloaded stream operator.
  *
  * @param stream The stream to output to.
