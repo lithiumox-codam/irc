@@ -18,8 +18,6 @@ static vector<string> getCommands(string &buffer, const string &delim) {
 		commands.push_back(buffer.substr(0, delimPos));
 		buffer.erase(0, delimPos + delim.size());
 	}
-
-	cout << "DEBUG: " << commands.size() << " commands found" << '\n';
 	return commands;
 }
 

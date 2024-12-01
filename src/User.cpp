@@ -118,7 +118,7 @@ bool User::readFromSocket() {
 
 	buffer[ret] = '\0';
 	this->in_buffer.append(buffer, ret);
-	cout << RED << "DEBUG: Received: " << this->in_buffer << RESET << '\n';
+	// cout << RED << "DEBUG: Received: " << this->in_buffer << RESET << '\n';
 
 	this->parse();
 
@@ -127,7 +127,7 @@ bool User::readFromSocket() {
 
 bool User::sendToSocket() {
 	while (!this->out_buffer.empty()) {
-		cout << GREEN << "DEBUG: Sending: " << this->out_buffer << RESET << '\n';
+		// cout << GREEN << "DEBUG: Sending: " << this->out_buffer << RESET << '\n';
 
 		int ret = send(this->socket, this->out_buffer.data(), this->out_buffer.size(), 0);
 

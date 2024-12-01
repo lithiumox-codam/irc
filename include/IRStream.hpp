@@ -26,8 +26,10 @@ class IRStream : public stringstream {
 	IRStream &command();
 	IRStream &code(const string &code);
 	IRStream &param(const string &param);
+	IRStream &param(const char &param);
 	IRStream &params(const vector<string> &params);
 	IRStream &trail(const string &trail);
+	IRStream &trail(const vector<string> &trail);
 	IRStream &end();
 
 	void sendPacket(User *user);

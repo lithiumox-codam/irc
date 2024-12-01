@@ -165,8 +165,6 @@ void Server::acceptNewConnection() {
 	bool opt = true;
 	setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 	this->addUser(clientSocket);
-
-	cout << GREEN << "New connection on socket " << clientSocket << RESET << '\n';
 }
 
 void Server::handleEvents(array<struct epoll_event, (size_t)ServerConfig::BACKLOG> &events, int numberOfEvents) {
@@ -218,8 +216,6 @@ void Server::stop() {
 	}
 	close(this->socket);
 	this->running = false;
-
-	cout << RED << "\rServer stopped" << RESET << '\n';
 }
 
 deque<User> &Server::getUsers() { return this->users; }
@@ -298,6 +294,15 @@ bool Server::isBound() const { return this->socket != 0; }
 
 void Server::addOperator(const string &nickname) { this->operators.push_back(nickname); }
 
+void Server::removeOperator(const string &nickname) {
+	for (auto it = this->operators.begin(); it != this->operators.end(); ++it) {
+		if (*it == nickname) {
+			this->operators.erase(it);
+			break;
+		}
+	}
+}
+
 bool Server::operatorCheck(User *user) const {
 	if (this->operators.empty()) {
 		return false;
@@ -309,4 +314,14 @@ bool Server::operatorCheck(User *user) const {
 		}
 	}
 	return false;
+}
+
+string Server::getUserCount() const {
+	size_t count = 0;
+	for (const auto &user : users) {
+		if (user.hasHandshake(USER_AUTHENTICATED)) {
+			count++;
+		}
+	}
+	return to_string(count);
 }

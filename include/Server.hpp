@@ -78,7 +78,10 @@ class Server {
 
 	[[nodiscard]] const string &getHostname();
 	void addOperator(const string &nickname);
-	bool operatorCheck(User *user) const;
+	void removeOperator(const string &nickname);
+	[[nodiscard]] bool operatorCheck(User *user) const;
+
+	string getUserCount() const;
 };
 
 ostream &operator<<(ostream &stream, Server &server);

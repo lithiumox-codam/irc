@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 
 #include "Channel.hpp"
 #include "Codes.hpp"
@@ -12,6 +13,79 @@
 #include "User.hpp"
 
 extern Server server;
+
+static const string &diffModes(const string &modes, const string &unsupportedModes) {
+	static string diff;
+	diff.clear();
+	unordered_map<char, char> modeMap;
+	vector<char> modeOrder;
+	char currentOp = 0;
+
+	for (size_t i = 0; i < modes.length(); ++i) {
+		char chr = modes[i];
+		if (chr == '+' || chr == '-') {
+			currentOp = chr;
+			continue;
+		}
+		if (unsupportedModes.find(chr) != string::npos) {
+			continue;
+		}
+		modeMap[chr] = currentOp;
+		if (ranges::find(modeOrder.begin(), modeOrder.end(), chr) == modeOrder.end()) {
+			modeOrder.push_back(chr);
+		}
+	}
+
+	currentOp = 0;
+	for (char chr : modeOrder) {
+		if (modeMap[chr] != currentOp) {
+			diff += modeMap[chr];
+			currentOp = modeMap[chr];
+		}
+		diff += chr;
+	}
+
+	return diff;
+}
+
+static void serverOperatorHelper(const string &modes, User *user) {
+	bool addMode = false;
+
+	for (const auto &mode : modes) {
+		if (mode == '+' || mode == '-') {
+			addMode = (mode == '+');
+			continue;
+		}
+		if (addMode) {
+			server.addOperator(user->getNickname());
+			user->modes.addModes(M_OPERATOR);
+		} else {
+			server.removeOperator(user->getNickname());
+			user->modes.removeModes(M_OPERATOR);
+		}
+	}
+}
+
+static void broadcastModeChange(Channel *channel, User *user, const string &modes, const string &target) {
+	IRStream stream;
+	stream.prefix(user).param("MODE").param(channel->getName()).param(modes).param(target).end();
+	channel->broadcast(stream);
+}
+
+static void sendModeChange(IRStream &stream, User *user, const string &modes) {
+	stream.prefix().code(RPL_UMODEIS).param(user->getNickname()).param(modes).end();
+}
+
+static void sendUnknownMode(IRStream &stream, User *user, const string &unsupportedModes) {
+	for (const auto mode : unsupportedModes) {
+		stream.prefix()
+			.code(ERR_UNKNOWNMODE)
+			.param(user->getNickname())
+			.param(mode)
+			.trail("is not a valid mode in this scope!")
+			.end();
+	}
+}
 
 /**
  * @brief Handles the MODE command for users. This function will handle the following:
@@ -30,15 +104,13 @@ static void handleUserMode(IRStream &stream, vector<string> &tokens, User *user)
 	try {
 		switch (tokens.size()) {
 			case 1: {
-				auto *member = server.getUser(tokens[0]);
-				if (member->getNickname() != user->getNickname()) {
-					throw NoOtherUserModeException();
+				if (tokens[0] != user->getNickname() && server.operatorCheck(user)) {
+					auto *member = server.getUser(tokens[0]);
+					sendModeChange(stream, user, member->modes.getModesString());
+				} else {
+					stream.prefix().code(ERR_NOPRIVILEGES).param(user->getNickname()).trail("Permission denied").end();
 				}
-				stream.prefix()
-					.code(RPL_UMODEIS)
-					.param(user->getNickname())
-					.trail("User modes: +" + user->modes.getModesString())
-					.end();
+				sendModeChange(stream, user, user->modes.getModesString());
 			} break;
 
 			case 2: {
@@ -46,20 +118,14 @@ static void handleUserMode(IRStream &stream, vector<string> &tokens, User *user)
 				if (target->getNickname() != user->getNickname() && !server.operatorCheck(user)) {
 					throw NoOtherUserModeException();
 				}
+				if (tokens[0].find('o') != string::npos) {
+					serverOperatorHelper(tokens[0], target);
+				}
 				auto unsupportedModes = target->modes.applyModeChanges(tokens[0]);
 				if (!unsupportedModes.empty()) {
-					stream.prefix()
-						.code(ERR_UNKNOWNMODE)
-						.param(user->getNickname())
-						.trail("Unsupported modes: " + unsupportedModes)
-						.end();
-					return;
+					sendUnknownMode(stream, user, unsupportedModes);
 				}
-				stream.prefix()
-					.code(RPL_UMODEIS)
-					.param(user->getNickname())
-					.trail(target->getNickname() + "'s modes: +" + target->modes.getModesString())
-					.end();
+				sendModeChange(stream, user, diffModes(tokens[0], unsupportedModes));
 			} break;
 		}
 	} catch (const IrcException &e) {
@@ -84,7 +150,13 @@ static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *us
 		auto *member = channel->getMember(user->getNickname());
 
 		if (!member->second.hasModes(M_OPERATOR)) {
-			throw UserNotOperatorException();
+			stream.prefix()
+				.code(ERR_CHANOPRIVSNEEDED)
+				.param(user->getNickname())
+				.param(channel->getName() + ":")
+				.trail("You're not channel operator")
+				.end();
+			return;
 		}
 
 		switch (tokens.size()) {
@@ -93,27 +165,17 @@ static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *us
 					.code(RPL_CHANNELMODEIS)
 					.param(user->getNickname())
 					.param(channel->getName())
-					.trail("+" + channel->modes.getModesString())
+					.param(channel->modes.getModesString())
 					.end();
 			} break;
 
 			case 2: {
 				if (tokens[1].starts_with("+") || tokens[1].starts_with("-")) {
 					channel->modes.applyModeChanges(tokens[1]);
-					stream.prefix()
-						.code(RPL_CHANNELMODEIS)
-						.param(user->getNickname())
-						.param(channel->getName())
-						.trail("+" + channel->modes.getModesString())
-						.end();
+					broadcastModeChange(channel, user, tokens[1], "");
 				} else {
 					auto *targetMember = channel->getMember(tokens[1]);
-					stream.prefix()
-						.code(RPL_UMODEIS)
-						.param(user->getNickname())
-						.trail(targetMember->first->getNickname() + " User modes: +" +
-							   targetMember->second.getModesString())
-						.end();
+					sendModeChange(stream, user, targetMember->second.getModesString());
 				}
 			} break;
 
@@ -121,12 +183,9 @@ static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *us
 				auto *targetMember = channel->getMember(tokens[2]);
 				auto unsupportedModes = targetMember->second.applyModeChanges(tokens[1]);
 				if (!unsupportedModes.empty()) {
-					stream.prefix()
-						.code(ERR_UNKNOWNMODE)
-						.param(user->getNickname())
-						.trail("Unsupported modes: " + unsupportedModes)
-						.end();
-					return;
+					sendUnknownMode(stream, user, unsupportedModes);
+				} else if (!diffModes(tokens[1], unsupportedModes).empty()) {
+					broadcastModeChange(channel, user, diffModes(tokens[1], unsupportedModes), tokens[2]);
 				}
 			} break;
 		}
@@ -141,6 +200,15 @@ void MODE(IRStream &stream, string &args, User *user) {
 	}
 
 	vector<string> tokens = split(args, ' ');
+
+	if (tokens.size() > 2 && tokens[1].find('+') == string::npos && tokens[1].find('-') == string::npos) {
+		stream.prefix()
+			.code(ERR_NEEDMOREPARAMS)
+			.param(user->getNickname())
+			.trail("A mode string should contain + or -")
+			.end();
+		return;
+	}
 
 	if (tokens.front().starts_with("#")) {
 		handleChannelMode(stream, tokens, user);

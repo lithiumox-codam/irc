@@ -8,7 +8,7 @@ extern Server server;
 /**
  * @brief The MOTD command sends the Message of the Day to the user.
  */
-void MOTD(IRStream &stream, string &args, User *user) {
+void MOTD(IRStream &stream, std::string &args, User *user) {
 	(void)args;
 
 	if (!user->hasHandshake(USER_AUTHENTICATED)) {
@@ -17,53 +17,64 @@ void MOTD(IRStream &stream, string &args, User *user) {
 	}
 
 	// Start of MOTD
-	stream.prefix()
-		.code(RPL_MOTDSTART)
-		.param(user->getNickname())
-		.trail(":- " + server.getHostname() + " Message of the day -")
-		.end();
-	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail(":-   _____  _____   _____ ").end();
-	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail(":-  |_   _||  __ \\ / ____|").end();
-	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail(":-    | |  | |__) | |     ").end();
-	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail(":-    | |  |  _  /| |     ").end();
-	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail(":-   _| |_ | | \\ \\| |____ ").end();
-	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail(":-  |_____||_|  \\_\\\\_____|").end();
-	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail(":-                        ").end();
+	stream.prefix().code(RPL_MOTDSTART).param(user->getNickname()).end();
 
-	// Cool welcome message
+	// Custom ASCII Art for MOTD using Raw String Literals
 	stream.prefix()
 		.code(RPL_MOTD)
 		.param(user->getNickname())
-		.trail(":- Welcome to the Interstellar Relay Chat Network!")
+		.trail(R"(__/\\\\\\\\\\\____/\\\\\\\\\____________/\\\\\\\\\______________________/\\\_______/\\\\\\\\\_____)")
 		.end();
 	stream.prefix()
 		.code(RPL_MOTD)
 		.param(user->getNickname())
-		.trail(":- Your gateway to the digital cosmos: " + server.getHostname())
+		.trail(R"(_\/////\\\///___/\\\///////\\\_______/\\\////////_____________________/\\\\\_____/\\\///////\\\___)")
 		.end();
-	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail(":- ").end();
 	stream.prefix()
 		.code(RPL_MOTD)
 		.param(user->getNickname())
-		.trail(":- 🌟 Connect with beings across the universe")
+		.trail(R"(_____\/\\\_____\/\\\_____\/\\\_____/\\\/____________________________/\\\/\\\____\///______\//\\\__)")
 		.end();
-	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail(":- 🚀 Explore channels at lightspeed").end();
 	stream.prefix()
 		.code(RPL_MOTD)
 		.param(user->getNickname())
-		.trail(":- 🌌 Share ideas that transcend space and time")
+		.trail(R"(_____\/\\\_____\/\\\\\\\\\\\/_____/\\\____________________________/\\\/\/\\\______________/\\\/___)")
 		.end();
-	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail(":- ").end();
 	stream.prefix()
 		.code(RPL_MOTD)
 		.param(user->getNickname())
-		.trail(":- Remember: In space, everyone can hear you type!")
+		.trail(R"(_____\/\\\_____\/\\\//////\\\____\/\\\__________________________/\\\/__\/\\\___________/\\\//_____)")
+		.end();
+	stream.prefix()
+		.code(RPL_MOTD)
+		.param(user->getNickname())
+		.trail(R"(_____\/\\\_____\/\\\____\//\\\___\//\\\_______________________/\\\\\\\\\\\\\\\\_____/\\\//________)")
+		.end();
+	stream.prefix()
+		.code(RPL_MOTD)
+		.param(user->getNickname())
+		.trail(R"(_____\/\\\_____\/\\\_____\//\\\___\///\\\____________________\///////////\\\//____/\\\/___________)")
+		.end();
+	stream.prefix()
+		.code(RPL_MOTD)
+		.param(user->getNickname())
+		.trail(R"(__/\\\\\\\\\\\_\/\\\______\//\\\____\////\\\\\\\\\_____________________\/\\\_____/\\\\\\\\\\\\\\\_)")
+		.end();
+	stream.prefix()
+		.code(RPL_MOTD)
+		.param(user->getNickname())
+		.trail(R"(_\///////////__\///________\///________\/////////______________________\///_____\///////////////__)")
 		.end();
 
-	// End of MOTD
+	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail("").end();
+
+	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail("").end();
 	stream.prefix()
-		.code(RPL_ENDOFMOTD)
+		.code(RPL_MOTD)
 		.param(user->getNickname())
-		.trail(":- End of /MOTD command. Enjoy your cosmic journey!")
+		.trail("     Users Online: " + server.getUserCount())
 		.end();
+	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail("     Server: " + server.getHostname()).end();
+
+	stream.prefix().code(RPL_ENDOFMOTD).param(user->getNickname()).end();
 }

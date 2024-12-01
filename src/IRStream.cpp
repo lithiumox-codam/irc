@@ -109,6 +109,11 @@ IRStream &IRStream::params(const vector<string> &params) {
 	return *this;
 }
 
+IRStream &IRStream::param(const char &param) {
+	*this << " " << param;
+	return *this;
+}
+
 /**
  * @brief Add a trail to the current command.
  * @code " :<trail>" can contain spaces.
@@ -118,6 +123,21 @@ IRStream &IRStream::params(const vector<string> &params) {
  */
 IRStream &IRStream::trail(const string &trail) {
 	*this << " :" << trail;
+	return *this;
+}
+
+/**
+ * @brief Add a vector of trails to the current command.
+ * @code " :<trail>" can contain spaces.
+ *
+ * @param trail The vector of trails to add to the current command.
+ * @return IRStream& The current IRStream.
+ */
+IRStream &IRStream::trail(const vector<string> &trail) {
+	*this << " :";
+	for (const auto &str : trail) {
+		*this << str << " ";
+	}
 	return *this;
 }
 
@@ -139,9 +159,13 @@ IRStream &IRStream::end() {
  */
 void IRStream::sendPacket(User *user) {
 	for (const auto &line : parts) {
-		cout << "DEBUG: " << user->getSocket() << " / " << user->getNickname() << " Line sent: " << line;
 		user->addToBuffer(line);
 	}
+	// NOLINTNEXTLINE
+	cout << "[\033[1;" << (31 + (user->getSocket() % 6)) << "m" << user->getNickname() << "\033[0m] "
+		 << (user->hasHandshake(USER_AUTHENTICATED) ? "🔒" : "") << (user->modes.hasModes(M_OPERATOR) ? "🧏" : "")
+		 << "\n"
+		 << user->getOutBuffer() << "\n";
 }
 
 /**

@@ -32,14 +32,24 @@ static void sendChannelTopic(IRStream &stream, Channel *channel, User *user) {
 	}
 }
 
-static void makeNamesList(IRStream &stream, Channel *channel, User *user) {
-	stream.prefix().code(RPL_NAMREPLY).param(user->getNickname()).param("=").param(channel->getName()).trail("");
+static vector<string> getVisibleMembers(Channel *channel) {
+	vector<string> members;
 	for (auto &member : *channel->getMembers()) {
 		if (!member.second.hasModes(M_INVISIBLE)) {
-			stream.param((member.second.hasModes(M_OPERATOR) ? "@" : "") + member.first->getNickname());
+			members.push_back((member.second.hasModes(M_OPERATOR) ? "@" : "") + member.first->getNickname());
 		}
 	}
-	stream.end();
+	return members;
+}
+
+static void makeNamesList(IRStream &stream, Channel *channel, User *user) {
+	stream.prefix()
+		.code(RPL_NAMREPLY)
+		.param(user->getNickname())
+		.param("=")
+		.param(channel->getName())
+		.trail(getVisibleMembers(channel))
+		.end();
 	stream.prefix()
 		.code(RPL_ENDOFNAMES)
 		.param(user->getNickname())

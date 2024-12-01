@@ -157,9 +157,8 @@ void Channel::broadcast(User *user, const string &message) {
 	}
 }
 
-void Channel::broadcast(IRStream &stream, User *user){
+void Channel::broadcast(IRStream &stream, User *user) {
 	for (auto &member : *this->getMembers()) {
-
 		if (user != NULL && (member.first->getSocket() != user->getSocket())) {
 			stream.sendPacket(member.first);
 		}
