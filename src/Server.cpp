@@ -226,7 +226,7 @@ User *Server::getUser(const int socket) {
 			return &user;
 		}
 	}
-	throw NoSuchUserException();
+	throw NoSuchUserException("");////////////////////change this later maybe
 }
 
 User *Server::getUser(const string &nickname) {
@@ -236,7 +236,7 @@ User *Server::getUser(const string &nickname) {
 			return &user;
 		}
 	}
-	throw NoSuchUserException();
+	throw NoSuchUserException(nickname);
 }
 
 void Server::addUser(unsigned int socket) {
@@ -285,7 +285,7 @@ Channel *Server::getChannel(const string &name) {
 			return &channel;
 		}
 	}
-	throw NoSuchChannelException();
+	throw NoSuchChannelException(name);
 }
 
 const string &Server::getHostname() { return this->hostname; }

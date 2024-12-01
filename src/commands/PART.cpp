@@ -31,7 +31,7 @@ void PART(IRStream &stream, string &args, User *user) {
 		try {
 			Channel *channel = server.getChannel(channelName);
 			if (!channel->hasUser(user)) {
-				throw NotOnChannelException();
+				throw NotOnChannelException(user->getNickname());
 			}
 			stream.prefix(user).command().param(channel->getName());
 			cerr << "stream before end: " << stream.str() << '\n';

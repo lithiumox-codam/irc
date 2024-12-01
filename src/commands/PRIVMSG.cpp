@@ -33,7 +33,7 @@ void handleChannelMessage(IRStream &stream, const pair<string, string> &token, U
 		Channel *channel = server.getChannel(token.first);
 
 		if (!channel->hasUser(user)) {
-			throw NotOnChannelException();
+			throw NotOnChannelException(user->getNickname());
 		}
 
 		if (!channel->modes.hasModes(M_MODERATED)) {

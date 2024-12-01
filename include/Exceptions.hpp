@@ -1,6 +1,7 @@
 #pragma once
 
 #include <exception>
+#include <stdexcept>
 #include <string>
 
 #include "Channel.hpp"
@@ -14,10 +15,12 @@ class IrcException : public exception {
    protected:
 	const string message;
 	const string code;
-	IrcException(const string &msg, const string &I_code) : message(msg), code(I_code) {}
-	~IrcException() {}
+	const string param;
 
    public:
+	IrcException(const string &msg, const string &I_code) : message(msg), code(I_code) {}
+	IrcException(const string &msg, const string &I_code, const string &I_param) : message(msg), code(I_code), param(I_param) {}
+	~IrcException() {}
 	const string &GetCode() const { return code; }
 	virtual void e_stream(IRStream &stream, User *user) const = 0;
 	const char *what() const noexcept override { return message.c_str(); }
@@ -25,25 +28,25 @@ class IrcException : public exception {
 
 class NoSuchUserException : public IrcException {
    public:
-	NoSuchUserException() : IrcException("No such nickname", ERR_NOSUCHNICK) {}
+	NoSuchUserException(const string &param) : IrcException("No such nickname", ERR_NOSUCHNICK, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
-		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
 	}
 };
 
 class NoSuchChannelException : public IrcException {
    public:
-	NoSuchChannelException() : IrcException("No such channel", ERR_NOSUCHCHANNEL) {}
+	NoSuchChannelException(const string &param) : IrcException("No such channel", ERR_NOSUCHCHANNEL, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
-		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
 	}
 };
 
 class NotOnChannelException : public IrcException {
    public:
-	NotOnChannelException() : IrcException("You're not in that channel", ERR_NOTONCHANNEL) {}
+	NotOnChannelException(const string &param) : IrcException("You're not in that channel", ERR_NOTONCHANNEL, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
-		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
 	}
 };
 
@@ -65,9 +68,9 @@ class UserAlreadyOnChannelException : public IrcException {
 
 class ChannelFullException : public IrcException {
    public:
-	ChannelFullException() : IrcException("Channel is full", ERR_CHANNELISFULL) {}
+	ChannelFullException(const string &param) : IrcException("Channel is full", ERR_CHANNELISFULL, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
-		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
 	}
 };
 
@@ -81,9 +84,9 @@ class InviteOnlyChannelException : public IrcException {
 
 class BadChannelKeyException : public IrcException {
    public:
-	BadChannelKeyException() : IrcException("Cannot join channel (+k) - bad key", ERR_BADCHANNELKEY) {}
+	BadChannelKeyException(const string &param) : IrcException("Cannot join channel (+k) - bad key", ERR_BADCHANNELKEY, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
-		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
 	}
 };
 
@@ -97,9 +100,9 @@ class NotEnoughParametersException : public IrcException {
 
 class UserNotOnChannelException : public IrcException {
    public:
-	UserNotOnChannelException() : IrcException("User not in channel", ERR_USERNOTINCHANNEL) {}
+	UserNotOnChannelException(const string &param) : IrcException("User not in channel", ERR_USERNOTINCHANNEL, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
-		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
 	}
 };
 

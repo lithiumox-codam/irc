@@ -142,7 +142,7 @@ pair<User *, Modes> *Channel::getMember(const string &nickname) {
 			return &member;
 		}
 	}
-	throw UserNotOnChannelException();
+	throw UserNotOnChannelException(nickname);
 }
 
 void Channel::broadcast(User *user, const string &message) {

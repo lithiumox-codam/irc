@@ -22,7 +22,7 @@ void INVITE(IRStream &stream, string &args, User *user) {
 		Channel *channel = server.getChannel(tokens.first);
 		pair<User *, Modes> *inviter = channel->getMember(user);
 		if (inviter == nullptr) {
-			throw NotOnChannelException();
+			throw NotOnChannelException(user->getNickname());
 		}
 		if (channel->modes.hasModes(M_INVITE_ONLY) && !inviter->second.hasModes(M_OPERATOR)) {
 			throw UserNotOperatorException();
