@@ -14,9 +14,8 @@
 
 extern Server server;
 
-static const string &diffModes(const string &modes, const string &unsupportedModes) {
-	static string diff;
-	diff.clear();
+static string diffModes(const string &modes, const string &unsupportedModes) {
+	string diff;
 	unordered_map<char, char> modeMap;
 	vector<char> modeOrder;
 	char currentOp = 0;
