@@ -12,29 +12,29 @@
 extern Server server;
 
 void INVITE(IRStream &stream, string &args, User *user) {
-	pair<string, string> tokens = splitPair(args, ' ');
+	auto [ChannelName, InviteeName] = splitPair(args, ' ');
 
-	if (tokens.first.empty() || tokens.second.empty()) {
+	if (ChannelName.empty() || InviteeName.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 		return;
 	}
 	try {
-		Channel *channel = server.getChannel(tokens.first);
-		pair<User *, Modes> *inviter = channel->getMember(user);
+		Channel *channel = server.getChannel(ChannelName);
+		auto *inviter = channel->getMember(user);
 		if (inviter == nullptr) {
 			throw NotOnChannelException(user->getNickname());
 		}
 		if (channel->modes.hasModes(M_INVITE_ONLY) && !inviter->second.hasModes(M_OPERATOR)) {
 			throw UserNotOperatorException();
 		}
-		User *invitee = server.getUser(tokens.second);
+		User *invitee = server.getUser(InviteeName);
 		if (channel->getMember(invitee) != nullptr) {
 			throw UserAlreadyOnChannelException();
 		}
 		channel->addInvited(invitee);
-		stream.prefix().code(RPL_INVITING).param(user->getNickname()).param(tokens.second).param(tokens.first).end();
+		stream.prefix().code(RPL_INVITING).param(user->getNickname()).param(InviteeName).param(ChannelName).end();
 		IRStream invStream;
-		invStream.prefix(user).param("INVITE").param(tokens.second).param(tokens.first).end().sendPacket(invitee);
+		invStream.prefix(user).param("INVITE").param(InviteeName).param(ChannelName).end().sendPacket(invitee);
 	} catch (const IrcException &e) {
 		e.e_stream(stream, user);
 	}
