@@ -52,7 +52,7 @@ void Channel::setName(const string &name) { this->name = name; }
 void Channel::addUser(User *user) {
 	this->members.emplace_back(user, Modes(Type::CHANNELMEMBER));
 	if (this->hasOperator(user)) {
-		this->getMembers()->back().second.addModes(M_OPERATOR);
+		this->getMembers()->back().second.add(M_OPERATOR);
 	}
 }
 
@@ -121,9 +121,9 @@ bool Channel::hasInvited(User *user) const {
 	return false;
 }
 
-std::deque<pair<User *, Modes>> *Channel::getMembers() { return &this->members; }
+std::deque<Member> *Channel::getMembers() { return &this->members; }
 
-std::pair<User *, Modes> *Channel::getMember(User *user) {
+Member *Channel::getMember(User *user) {
 	for (auto &member : this->members) {
 		if (member.first->getSocket() == user->getSocket()) {
 			return &member;
@@ -132,7 +132,7 @@ std::pair<User *, Modes> *Channel::getMember(User *user) {
 	return nullptr;
 }
 
-pair<User *, Modes> *Channel::getMember(const string &nickname) {
+Member *Channel::getMember(const string &nickname) {
 	// NOLINTNEXTLINE
 	for (auto &member : this->members) {
 		if (member.first->getNickname() == nickname) {
@@ -171,7 +171,7 @@ void Channel::broadcast(IRStream &stream) {
 string Channel::getUserModes(User *user) {
 	for (const auto &member : this->members) {
 		if (member.first->getSocket() == user->getSocket()) {
-			return member.second.getModesString();
+			return member.second.getString();
 		}
 	}
 	return "";
