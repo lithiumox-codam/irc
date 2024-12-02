@@ -29,15 +29,15 @@ enum UserConfig : uint16_t {
  * - The H_REGISTERED flag is set when the user has completed all necessary steps.
  */
 enum Handshake : uint8_t {
-	H_INFO = 1 << 0,								// User has completed CAP negotiation.
-	H_USER = 1 << 1,								// User has user information.
-	H_NICK = 1 << 2,								// User has a nickname.
-	H_PASS = 1 << 3,								// User has entered the correct password.
-	H_WELCOME = 1 << 4,								// User has received a welcome message.
+	H_INFO = 1 << 0,	 // User has completed CAP negotiation.
+	H_USER = 1 << 1,	 // User has user information.
+	H_NICK = 1 << 2,	 // User has a nickname.
+	H_PASS = 1 << 3,	 // User has entered the correct password.
+	H_WELCOME = 1 << 4,	 // User has received a welcome message.
 
 	H_AUTHENTICATED = H_USER | H_NICK | H_PASS |
-						 H_INFO,					// User has completed all necessary steps, except for sending the welcome message.
-	H_REGISTERED = H_AUTHENTICATED | H_WELCOME, 	// User has completed all necessary steps.
+					  H_INFO,  // User has completed all necessary steps, except for sending the welcome message.
+	H_REGISTERED = H_AUTHENTICATED | H_WELCOME,	 // User has completed all necessary steps.
 };
 
 class User {
