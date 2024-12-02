@@ -50,17 +50,22 @@ static string diffModes(const string &modes, const string &unsupportedModes) {
 static void serverOperatorHelper(const string &modes, User *user) {
 	bool addMode = false;
 
+	if (modes.find('o') == string::npos) {
+		return;
+	}
+
 	for (const auto &mode : modes) {
 		if (mode == '+' || mode == '-') {
 			addMode = (mode == '+');
 			continue;
 		}
+		if (mode != 'o') {
+			continue;
+		}
 		if (addMode) {
 			server.addOperator(user->getNickname());
-			user->modes.addModes(M_OPERATOR);
 		} else {
 			server.removeOperator(user->getNickname());
-			user->modes.removeModes(M_OPERATOR);
 		}
 	}
 }
@@ -96,36 +101,37 @@ static void sendUnknownMode(IRStream &stream, User *user, const string &unsuppor
  * @param user The user that sent the command.
  */
 static void handleUserMode(IRStream &stream, vector<string> &tokens, User *user) {
-	if (tokens.size() == 2 && tokens[0].find('o') != string::npos && !server.operatorCheck(user)) {
-		stream.prefix().code(ERR_NOPRIVILEGES).param(user->getNickname()).trail("Permission denied").end();
-		return;
-	}
 	try {
 		switch (tokens.size()) {
 			case 1: {
-				if (tokens[0] != user->getNickname() && server.operatorCheck(user)) {
-					auto *member = server.getUser(tokens[0]);
-					sendModeChange(stream, user, member->modes.getModesString());
-				} else {
+				if (tokens[0] != user->getNickname() && !server.operatorCheck(user)) {
 					stream.prefix().code(ERR_NOPRIVILEGES).param(user->getNickname()).trail("Permission denied").end();
+					return;
 				}
-				sendModeChange(stream, user, user->modes.getModesString());
+				auto *target = (tokens[0] != user->getNickname()) ? server.getUser(tokens[0]) : user;
+				sendModeChange(stream, user, target->modes.getModesString());
 			} break;
 
 			case 2: {
-				User *target = (tokens[1] != user->getNickname()) ? server.getUser(tokens[1]) : user;
+				User *target = (tokens[0] != user->getNickname()) ? server.getUser(tokens[0]) : user;
 				if (target->getNickname() != user->getNickname() && !server.operatorCheck(user)) {
 					throw NoOtherUserModeException();
 				}
-				if (tokens[0].find('o') != string::npos) {
-					serverOperatorHelper(tokens[0], target);
+				if (tokens[1].find('o') != string::npos && !server.operatorCheck(user)) {
+					stream.prefix().code(ERR_NOPRIVILEGES).param(user->getNickname()).trail("Permission denied").end();
+					return;
 				}
-				auto unsupportedModes = target->modes.applyModeChanges(tokens[0]);
+				auto unsupportedModes = target->modes.applyModeChanges(tokens[1]);
+				serverOperatorHelper(tokens[1], target);
 				if (!unsupportedModes.empty()) {
 					sendUnknownMode(stream, user, unsupportedModes);
 				}
-				sendModeChange(stream, user, diffModes(tokens[0], unsupportedModes));
+				sendModeChange(stream, user, diffModes(tokens[1], unsupportedModes));
 			} break;
+
+			default: {
+				throw NotEnoughParametersException();
+			}
 		}
 	} catch (const IrcException &e) {
 		e.e_stream(stream, user);
@@ -187,6 +193,10 @@ static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *us
 					broadcastModeChange(channel, user, diffModes(tokens[1], unsupportedModes), tokens[2]);
 				}
 			} break;
+
+			default: {
+				throw NotEnoughParametersException();
+			}
 		}
 	} catch (const IrcException &e) {
 		e.e_stream(stream, user);
