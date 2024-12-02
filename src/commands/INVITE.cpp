@@ -12,7 +12,7 @@
 extern Server server;
 
 void INVITE(IRStream &stream, string &args, User *user) {
-	auto [ChannelName, InviteeName] = splitPair(args, ' ');
+	auto [InviteeName, ChannelName] = splitPair(args, ' ');
 
 	if (!user->hasHandshake(H_AUTHENTICATED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
