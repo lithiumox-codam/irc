@@ -7,7 +7,7 @@
 extern Server server;
 
 void LIST(IRStream &stream, string &args, User *user) {
-	if (!user->hasHandshake(USER_REGISTERED)) {
+	if (!user->hasHandshake(H_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}

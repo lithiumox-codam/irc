@@ -12,7 +12,7 @@
 extern Server server;
 
 void INVITE(IRStream &stream, string &args, User *user) {
-	if (!user->hasHandshake(USER_AUTHENTICATED)) {
+	if (!user->hasHandshake(H_AUTHENTICATED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}
@@ -33,7 +33,7 @@ void INVITE(IRStream &stream, string &args, User *user) {
 			throw NotOnChannelException(user->getNickname());
 		}
 
-		if (channel->modes.hasModes(M_INVITE_ONLY) && !inviter->second.hasModes(M_OPERATOR)) {
+		if (channel->modes.has(M_INVITE_ONLY) && !inviter->second.has(M_OPERATOR)) {
 			throw UserNotOperatorException();
 		}
 

@@ -85,7 +85,7 @@ void User::setNickname(string &nickname) { this->nickname = std::move(nickname);
 void User::setUsername(string &username) {
 	this->username = std::move(username);
 	if (server.operatorCheck(this)) {
-		this->modes.addModes(M_OPERATOR);
+		this->modes.add(M_OPERATOR);
 	}
 }
 
@@ -161,7 +161,7 @@ void User::addToBuffer(const string &data) {
 ostream &operator<<(std::ostream &stream, const User &user) {
 	const int WIDTH = 52;
 	const std::map<unsigned int, char> handshakeMap = {
-		{USER_INFO, 'I'}, {USER_USER, 'U'}, {USER_NICK, 'N'}, {USER_PASS, 'P'}, {USER_WELCOME, 'W'}};
+		{H_INFO, 'I'}, {H_USER, 'U'}, {H_NICK, 'N'}, {H_PASS, 'P'}, {H_WELCOME, 'W'}};
 
 	// NOLINTNEXTLINE
 	auto line = [](char l, char m, char r) { return l + std::string(WIDTH - 2, m) + r; };

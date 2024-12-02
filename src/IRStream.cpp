@@ -55,7 +55,7 @@ IRStream &IRStream::prefix(User *user) {
  * @return IRStream&
  */
 IRStream &IRStream::prefix(User *user, Channel *channel) {
-	auto isOperator = channel->getMember(user)->second.hasModes(M_OPERATOR);
+	auto isOperator = channel->getMember(user)->second.has(M_OPERATOR);
 	*this << ":" << (isOperator ? "@" : "") << user->getNickname() << "!" << user->getUsername() << "@"
 		  << user->getHostname();
 	return *this;
@@ -163,7 +163,7 @@ void IRStream::sendPacket(User *user) {
 	}
 	// NOLINTNEXTLINE
 	cout << "[\033[1;" << (31 + (user->getSocket() % 6)) << "m" << user->getNickname() << "\033[0m] "
-		 << (user->hasHandshake(USER_AUTHENTICATED) ? "🔒" : "") << (user->modes.hasModes(M_OPERATOR) ? "🧏" : "")
+		 << (user->hasHandshake(H_AUTHENTICATED) ? "🔒" : "") << (user->modes.has(M_OPERATOR) ? "🧏" : "")
 		 << "\n"
 		 << user->getOutBuffer() << "\n";
 }
