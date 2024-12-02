@@ -70,7 +70,6 @@ class Channel {
 	void broadcast(IRStream &stream, User *user);
 	void broadcast(IRStream &stream);
 
-
 	string getUserModes(User *user);
 
 	[[nodiscard]] time_t getCreated() const;

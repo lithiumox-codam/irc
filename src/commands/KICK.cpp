@@ -15,6 +15,11 @@ extern Server server;
 using namespace std;
 
 void KICK(IRStream &stream, string &args, User *user) {
+	if (!user->hasHandshake(USER_AUTHENTICATED)) {
+		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
+		return;
+	}
+
 	vector<string> tokens = split(args, ' ');
 	if (tokens.size() < 2) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();

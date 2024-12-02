@@ -53,6 +53,10 @@ void handleChannelMessage(IRStream &stream, const pair<string, string> &token, U
 }
 
 void PRIVMSG(IRStream &stream, string &args, User *user) {
+	if (!user->hasHandshake(USER_AUTHENTICATED)) {
+		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
+		return;
+	}
 	if (args.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 		return;

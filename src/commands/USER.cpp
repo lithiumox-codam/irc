@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "Codes.hpp"
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "IRStream.hpp"
 #include "Server.hpp"
@@ -55,6 +56,10 @@ static void correct_realname(vector<string> &args) {
 	realname.erase(0, realname.find_first_not_of(':'));
 	args.erase(args.begin() + 3, args.end());
 	args.push_back(realname);
+
+	if (args.size() != 4) {
+		throw NotEnoughParametersException();
+	}
 }
 
 /**
@@ -66,22 +71,26 @@ void USER(IRStream &stream, string &args, User *user) {
 		stream.code(ERR_ALREADYREGISTRED).param(user->getNickname()).trail("You may not reregister").end();
 		return;
 	}
-	vector<string> tokens = split(args, ' ');
-	correct_realname(tokens);
-	if (tokens.size() < 4) {
-		cerr << "Error: USER packet has less than 4 arguments" << "\n";
-		return;
-	}
-	string hostname = getHostnameFromSocket(user->getSocket());
 
-	user->setHostname(hostname);
-	user->setUsername(tokens[0]);
-	user->setRealname(tokens[3]);
-	user->addHandshake(USER_USER);
+	try {
+		vector<string> tokens = split(args, ' ');
+		if (tokens.size() < 4) {
+			throw NotEnoughParametersException();
+		}
+		correct_realname(tokens);
+		string hostname = getHostnameFromSocket(user->getSocket());
 
-	if (user->hasHandshake(USER_AUTHENTICATED) && !user->hasHandshake(USER_WELCOME)) {
-		string empty;
-		MOTD(stream, empty, user);
-		user->addHandshake(USER_WELCOME);
+		user->setHostname(hostname);
+		user->setUsername(tokens[0]);
+		user->setRealname(tokens[3]);
+		user->addHandshake(USER_USER);
+
+		if (user->hasHandshake(USER_AUTHENTICATED) && !user->hasHandshake(USER_WELCOME)) {
+			string empty;
+			MOTD(stream, empty, user);
+			user->addHandshake(USER_WELCOME);
+		}
+	} catch (const IrcException &e) {
+		e.e_stream(stream, user);
 	}
 }

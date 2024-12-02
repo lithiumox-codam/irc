@@ -34,7 +34,6 @@ void PART(IRStream &stream, string &args, User *user) {
 				throw NotOnChannelException(user->getNickname());
 			}
 			stream.prefix(user).command().param(channel->getName());
-			cerr << "stream before end: " << stream.str() << '\n';
 			if (parts.size() > 1) {
 				stream.param(join(parts, 1)).end();
 			} else {

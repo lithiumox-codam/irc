@@ -76,5 +76,5 @@ void MOTD(IRStream &stream, std::string &args, User *user) {
 		.end();
 	stream.prefix().code(RPL_MOTD).param(user->getNickname()).trail("     Server: " + server.getHostname()).end();
 
-	stream.prefix().code(RPL_ENDOFMOTD).param(user->getNickname()).end();
+	stream.prefix().code(RPL_ENDOFMOTD).param(user->getNickname()).trail("").end();
 }

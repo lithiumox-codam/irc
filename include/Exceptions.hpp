@@ -19,7 +19,8 @@ class IrcException : public exception {
 
    public:
 	IrcException(const string &msg, const string &I_code) : message(msg), code(I_code) {}
-	IrcException(const string &msg, const string &I_code, const string &I_param) : message(msg), code(I_code), param(I_param) {}
+	IrcException(const string &msg, const string &I_code, const string &I_param)
+		: message(msg), code(I_code), param(I_param) {}
 	~IrcException() {}
 	const string &GetCode() const { return code; }
 	virtual void e_stream(IRStream &stream, User *user) const = 0;
@@ -84,7 +85,8 @@ class InviteOnlyChannelException : public IrcException {
 
 class BadChannelKeyException : public IrcException {
    public:
-	BadChannelKeyException(const string &param) : IrcException("Cannot join channel (+k) - bad key", ERR_BADCHANNELKEY, param) {}
+	BadChannelKeyException(const string &param)
+		: IrcException("Cannot join channel (+k) - bad key", ERR_BADCHANNELKEY, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
 		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
 	}

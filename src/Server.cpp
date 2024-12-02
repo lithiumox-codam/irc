@@ -226,7 +226,7 @@ User *Server::getUser(const int socket) {
 			return &user;
 		}
 	}
-	throw NoSuchUserException("");////////////////////change this later maybe
+	throw NoSuchUserException("");	////////////////////change this later maybe
 }
 
 User *Server::getUser(const string &nickname) {
