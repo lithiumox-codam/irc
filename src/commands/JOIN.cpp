@@ -35,8 +35,8 @@ static void sendChannelTopic(IRStream &stream, Channel *channel, User *user) {
 static vector<string> getVisibleMembers(Channel *channel) {
 	vector<string> members;
 	for (auto &member : *channel->getMembers()) {
-		if (!member.second.hasModes(M_INVISIBLE)) {
-			members.push_back((member.second.hasModes(M_OPERATOR) ? "@" : "") + member.first->getNickname());
+		if (!member.second.has(M_INVISIBLE)) {
+			members.push_back((member.second.has(M_OPERATOR) ? "@" : "") + member.first->getNickname());
 		}
 	}
 	return members;
@@ -68,7 +68,7 @@ static void channelChecks(Channel *channel, User *user) {
 
 	if (channel->hasInvited(user)) {
 		channel->removeInvited(user);
-	} else if (channel->modes.hasModes(M_INVITE_ONLY)) {
+	} else if (channel->modes.has(M_INVITE_ONLY)) {
 		throw InviteOnlyChannelException();
 	}
 }
@@ -105,7 +105,7 @@ void JOIN(IRStream &stream, string &args, User *user) {
 			Channel *channel = server.getChannel(channelName);
 
 			channelChecks(channel, user);
-			if (channel->modes.hasModes(M_PASSWORD)) {
+			if (channel->modes.has(M_PASSWORD)) {
 				if (password == passwords.end()) {
 					throw BadChannelKeyException(channelName);
 				}
@@ -132,7 +132,7 @@ void JOIN(IRStream &stream, string &args, User *user) {
 
 			if (password != passwords.end()) {
 				channel->setPassword(*password);
-				channel->modes.addModes(M_PASSWORD);
+				channel->modes.add(M_PASSWORD);
 				password++;
 			}
 			stream.prefix(user).command().param(channel->getName()).end();

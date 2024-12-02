@@ -85,7 +85,7 @@ void User::setNickname(string &nickname) { this->nickname = std::move(nickname);
 void User::setUsername(string &username) {
 	this->username = std::move(username);
 	if (server.operatorCheck(this)) {
-		this->modes.addModes(M_OPERATOR);
+		this->modes.add(M_OPERATOR);
 	}
 }
 

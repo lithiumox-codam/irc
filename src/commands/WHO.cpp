@@ -13,14 +13,14 @@ static void sendWhoReply(IRStream& stream, User* requestingUser, Channel* channe
 	// Add channel-specific status indicators only if channel is provided
 	if (channel != nullptr) {
 		auto* channelMember = channel->getMember(member);
-		if (channelMember->second.hasModes(M_OPERATOR)) {
+		if (channelMember->second.has(M_OPERATOR)) {
 			status += "@";
-		} else if (channelMember->second.hasModes(M_VOICE)) {
+		} else if (channelMember->second.has(M_VOICE)) {
 			status += "+";
 		}
 	}
 
-	if (member->modes.hasModes(M_OPERATOR) && channel == nullptr) {
+	if (member->modes.has(M_OPERATOR) && channel == nullptr) {
 		status += "*";
 	}
 
@@ -47,7 +47,7 @@ void WHO(IRStream& stream, string& args, User* user) {
 	if (args.empty()) {
 		const auto users = server.getUsers();
 		for (const auto& usr : users) {
-			if (usr.modes.hasModes(M_INVISIBLE)) {
+			if (usr.modes.has(M_INVISIBLE)) {
 				continue;
 			}
 			sendWhoReply(stream, user, nullptr, const_cast<User*>(&usr));
@@ -71,7 +71,7 @@ void WHO(IRStream& stream, string& args, User* user) {
 
 	auto* users = channel->getMembers();
 	for (const auto& member : *users) {
-		if (member.second.hasModes(M_INVISIBLE)) {
+		if (member.second.has(M_INVISIBLE)) {
 			continue;
 		}
 		sendWhoReply(stream, user, channel, member.first);

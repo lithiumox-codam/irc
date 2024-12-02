@@ -33,7 +33,7 @@ void INVITE(IRStream &stream, string &args, User *user) {
 			throw NotOnChannelException(user->getNickname());
 		}
 
-		if (channel->modes.hasModes(M_INVITE_ONLY) && !inviter->second.hasModes(M_OPERATOR)) {
+		if (channel->modes.has(M_INVITE_ONLY) && !inviter->second.has(M_OPERATOR)) {
 			throw UserNotOperatorException();
 		}
 
