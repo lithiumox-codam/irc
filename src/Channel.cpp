@@ -19,15 +19,16 @@ Channel::Channel(const Channel &channel) noexcept
 	  name(channel.name),
 	  password(channel.password),
 	  topic(channel.password),
-	  modes(channel.modes), limit(10) {}
+	  limit(channel.limit),
+	  modes(channel.modes) {}
 
 Channel &Channel::operator=(const Channel &channel) noexcept {
 	this->members = channel.members;
 	this->name = channel.name;
 	this->password = channel.password;
 	this->topic = channel.topic;
-	this->modes = channel.modes;
 	this->limit = channel.limit;
+	this->modes = channel.modes;
 	return *this;
 }
 
@@ -37,7 +38,7 @@ const string &Channel::getPassword() const { return this->password; }
 
 void Channel::setPassword(const string &password) {
 	this->password = password;
-	this->modes.addModes(M_PASSWORD);
+	this->modes.add(M_PASSWORD);
 }
 
 void Channel::setName(const string &name) { this->name = name; }
@@ -193,7 +194,7 @@ time_t Channel::getCreated() const { return this->created; }
 
 void Channel::setLimit(size_t limit) {
 	this->limit = limit;
-	this->modes.addModes(M_LIMIT);
+	this->modes.add(M_LIMIT);
 }
 
-void Channel::removeLimit() { this->modes.removeModes(M_LIMIT); }
+void Channel::removeLimit() { this->modes.remove(M_LIMIT); }
