@@ -19,16 +19,15 @@ Channel::Channel(const Channel &channel) noexcept
 	  name(channel.name),
 	  password(channel.password),
 	  topic(channel.password),
-	  limit(channel.limit),
-	  modes(channel.modes) {}
+	  modes(channel.modes), limit(10) {}
 
 Channel &Channel::operator=(const Channel &channel) noexcept {
 	this->members = channel.members;
 	this->name = channel.name;
 	this->password = channel.password;
 	this->topic = channel.topic;
-	this->limit = channel.limit;
 	this->modes = channel.modes;
+	this->limit = channel.limit;
 	return *this;
 }
 
@@ -38,7 +37,7 @@ const string &Channel::getPassword() const { return this->password; }
 
 void Channel::setPassword(const string &password) {
 	this->password = password;
-	this->modes.add(M_PASSWORD);
+	this->modes.addModes(M_PASSWORD);
 }
 
 void Channel::setName(const string &name) { this->name = name; }
@@ -53,7 +52,7 @@ void Channel::setName(const string &name) { this->name = name; }
 void Channel::addUser(User *user) {
 	this->members.emplace_back(user, Modes(Type::CHANNELMEMBER));
 	if (this->hasOperator(user)) {
-		this->getMembers()->back().second.add(M_OPERATOR);
+		this->getMembers()->back().second.addModes(M_OPERATOR);
 	}
 }
 
@@ -61,8 +60,7 @@ void Channel::removeUser(User *user) {
 	IRStream stream;
 
 	for (auto it = this->members.begin(); it != this->members.end(); ++it) {
-		auto &[memberUser, _] = *it;
-		if (memberUser->getSocket() == user->getSocket()) {
+		if (it->first->getSocket() == user->getSocket()) {
 			this->members.erase(it);
 			return;
 		}
@@ -123,21 +121,21 @@ bool Channel::hasInvited(User *user) const {
 	return false;
 }
 
-std::deque<Member> *Channel::getMembers() { return &this->members; }
+std::deque<pair<User *, Modes>> *Channel::getMembers() { return &this->members; }
 
-std::Member *Channel::getMember(User *user) {
-	for (auto &[member, _] : this->members) {
-		if (member->getSocket() == user->getSocket()) {
+std::pair<User *, Modes> *Channel::getMember(User *user) {
+	for (auto &member : this->members) {
+		if (member.first->getSocket() == user->getSocket()) {
 			return &member;
 		}
 	}
 	return nullptr;
 }
 
-Member *Channel::getMember(const string &nickname) {
+pair<User *, Modes> *Channel::getMember(const string &nickname) {
 	// NOLINTNEXTLINE
-	for (auto &[member, _] : this->members) {
-		if (member->getNickname() == nickname) {
+	for (auto &member : this->members) {
+		if (member.first->getNickname() == nickname) {
 			return &member;
 		}
 	}
@@ -149,31 +147,31 @@ void Channel::broadcast(User *user, const string &message) {
 
 	stream.prefix(user, this).param("PRIVMSG").param(this->getName()).trail(message).end();
 
-	for (auto &[member, _] : *this->getMembers()) {
-		if (member->getSocket() != user->getSocket()) {
-			stream.sendPacket(member);
+	for (auto &member : *this->getMembers()) {
+		if (member.first->getSocket() != user->getSocket()) {
+			stream.sendPacket(member.first);
 		}
 	}
 }
 
 void Channel::broadcast(IRStream &stream, User *user) {
-	for (auto &[member, _] : *this->getMembers()) {
-		if (user != NULL && (member->getSocket() != user->getSocket())) {
-			stream.sendPacket(member);
+	for (auto &member : *this->getMembers()) {
+		if (user != NULL && (member.first->getSocket() != user->getSocket())) {
+			stream.sendPacket(member.first);
 		}
 	}
 }
 
 void Channel::broadcast(IRStream &stream) {
-	for (auto &[member, _] : *this->getMembers()) {
-		stream.sendPacket(member);
+	for (auto &member : *this->getMembers()) {
+		stream.sendPacket(member.first);
 	}
 }
 
 string Channel::getUserModes(User *user) {
-	for (auto &[member, _] : *this->getMembers()) {
-		if (member->getSocket() == user->getSocket()) {
-			return member.getString();
+	for (const auto &member : this->members) {
+		if (member.first->getSocket() == user->getSocket()) {
+			return member.second.getModesString();
 		}
 	}
 	return "";
@@ -195,7 +193,7 @@ time_t Channel::getCreated() const { return this->created; }
 
 void Channel::setLimit(size_t limit) {
 	this->limit = limit;
-	this->modes.add(M_LIMIT);
+	this->modes.addModes(M_LIMIT);
 }
 
-void Channel::removeLimit() { this->modes.remove(M_LIMIT); }
+void Channel::removeLimit() { this->modes.removeModes(M_LIMIT); }
