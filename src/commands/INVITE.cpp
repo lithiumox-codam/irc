@@ -27,7 +27,7 @@ void INVITE(IRStream &stream, string &args, User *user) {
 		}
 
 		Channel *channel = server.getChannel(channelName);
-		pair<User *, Modes> *inviter = channel->getMember(user);
+		Member *inviter = channel->getMember(user);
 
 		if (inviter == nullptr) {
 			throw NotOnChannelException(user->getNickname());

@@ -30,11 +30,11 @@ void KICK(IRStream &stream, string &args, User *user) {
 		if (!channel->hasUser(user)) {
 			throw NotOnChannelException(tokens[0]);
 		}
-		pair<User *, Modes> *target = channel->getMember(server.getUser(tokens[1]));
+		Member *target = channel->getMember(server.getUser(tokens[1]));
 		if (target == nullptr) {
 			throw UserNotOnChannelException(tokens[1]);
 		}
-		pair<User *, Modes> *kicker = channel->getMember(user);
+		Member *kicker = channel->getMember(user);
 		if (!kicker->second.has(M_OPERATOR)) {
 			throw UserNotOperatorException();
 		}

@@ -77,7 +77,7 @@ bool Modes::has(unsigned int modes) const { return (this->modes & modes) == mode
  * @brief Returns a string representation of the modes.
  * @return string
  */
-string Modes::getModesString() const {
+string Modes::getString() const {
 	string result;
 	const pair<unsigned int, char> modePairs[] = {{M_OPERATOR, 'o'},   {M_VOICE, 'v'},		 {M_INVISIBLE, 'i'},
 												  {M_MODERATED, 'm'},  {M_INVITE_ONLY, 'i'}, {M_PASSWORD, 'k'},

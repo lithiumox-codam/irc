@@ -60,7 +60,8 @@ void Channel::removeUser(User *user) {
 	IRStream stream;
 
 	for (auto it = this->members.begin(); it != this->members.end(); ++it) {
-		if (it->first->getSocket() == user->getSocket()) {
+		auto &[memberUser, _] = *it;
+		if (memberUser->getSocket() == user->getSocket()) {
 			this->members.erase(it);
 			return;
 		}
@@ -121,21 +122,21 @@ bool Channel::hasInvited(User *user) const {
 	return false;
 }
 
-std::deque<pair<User *, Modes>> *Channel::getMembers() { return &this->members; }
+std::deque<Member> *Channel::getMembers() { return &this->members; }
 
-std::pair<User *, Modes> *Channel::getMember(User *user) {
-	for (auto &member : this->members) {
-		if (member.first->getSocket() == user->getSocket()) {
+std::Member *Channel::getMember(User *user) {
+	for (auto &[member, _] : this->members) {
+		if (member->getSocket() == user->getSocket()) {
 			return &member;
 		}
 	}
 	return nullptr;
 }
 
-pair<User *, Modes> *Channel::getMember(const string &nickname) {
+Member *Channel::getMember(const string &nickname) {
 	// NOLINTNEXTLINE
-	for (auto &member : this->members) {
-		if (member.first->getNickname() == nickname) {
+	for (auto &[member, _] : this->members) {
+		if (member->getNickname() == nickname) {
 			return &member;
 		}
 	}
@@ -147,31 +148,31 @@ void Channel::broadcast(User *user, const string &message) {
 
 	stream.prefix(user, this).param("PRIVMSG").param(this->getName()).trail(message).end();
 
-	for (auto &member : *this->getMembers()) {
-		if (member.first->getSocket() != user->getSocket()) {
-			stream.sendPacket(member.first);
+	for (auto &[member, _] : *this->getMembers()) {
+		if (member->getSocket() != user->getSocket()) {
+			stream.sendPacket(member);
 		}
 	}
 }
 
 void Channel::broadcast(IRStream &stream, User *user) {
-	for (auto &member : *this->getMembers()) {
-		if (user != NULL && (member.first->getSocket() != user->getSocket())) {
-			stream.sendPacket(member.first);
+	for (auto &[member, _] : *this->getMembers()) {
+		if (user != NULL && (member->getSocket() != user->getSocket())) {
+			stream.sendPacket(member);
 		}
 	}
 }
 
 void Channel::broadcast(IRStream &stream) {
-	for (auto &member : *this->getMembers()) {
-		stream.sendPacket(member.first);
+	for (auto &[member, _] : *this->getMembers()) {
+		stream.sendPacket(member);
 	}
 }
 
 string Channel::getUserModes(User *user) {
-	for (const auto &member : this->members) {
-		if (member.first->getSocket() == user->getSocket()) {
-			return member.second.getString();
+	for (auto &[member, _] : *this->getMembers()) {
+		if (member->getSocket() == user->getSocket()) {
+			return member.getString();
 		}
 	}
 	return "";

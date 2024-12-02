@@ -15,9 +15,11 @@ using namespace std;
 
 #define MEMBER_LIMIT 50
 
+typedef pair<User*, Modes> Member;
+
 class Channel {
    private:
-	deque<pair<User *, Modes>> members;
+	deque<Member> members;
 	deque<User *> operators;
 	deque<User *> invited;
 	string name;
@@ -63,9 +65,9 @@ class Channel {
 	void removeInvited(User *user);
 	bool hasInvited(User *user) const;
 
-	[[nodiscard]] deque<pair<User *, Modes>> *getMembers();
-	[[nodiscard]] pair<User *, Modes> *getMember(User *user);
-	[[nodiscard]] pair<User *, Modes> *getMember(const string &nickname);
+	[[nodiscard]] deque<Member> *getMembers();
+	[[nodiscard]] Member *getMember(User *user);
+	[[nodiscard]] Member *getMember(const string &nickname);
 
 	void broadcast(User *user, const string &message);
 	void broadcast(IRStream &stream, User *user);
