@@ -20,6 +20,7 @@ void INVITE(IRStream &stream, string &args, User *user) {
 	}
 	if (ChannelName.empty() || InviteeName.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
+		return;
 	}
 	try {
 		Channel *channel = server.getChannel(ChannelName);
