@@ -23,7 +23,7 @@ void NICK(IRStream &stream, string &args, User *user) {
 		stream.prefix()
 			.code(ERR_NICKNAMEINUSE)
 			.param(user->getUsername())
-			.param(args)
+			.param(user->getNickname())
 			.param(args)
 			.param(" is already in use")
 			.end();
