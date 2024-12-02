@@ -216,7 +216,7 @@ static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *us
 }
 
 void MODE(IRStream &stream, string &args, User *user) {
-	if (!user->hasHandshake(USER_AUTHENTICATED)) {
+	if (!user->hasHandshake(H_AUTHENTICATED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}

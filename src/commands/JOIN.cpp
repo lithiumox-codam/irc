@@ -75,7 +75,7 @@ static void channelChecks(Channel *channel, User *user) {
 
 void JOIN(IRStream &stream, string &args, User *user) {
 	// Check if the user is registered
-	if (!user->hasHandshake(USER_REGISTERED)) {
+	if (!user->hasHandshake(H_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}

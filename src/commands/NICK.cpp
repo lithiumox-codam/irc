@@ -30,7 +30,7 @@ void NICK(IRStream &stream, string &args, User *user) {
 		return;
 	}
 
-	if (user->hasHandshake(USER_NICK)) {
+	if (user->hasHandshake(H_NICK)) {
 		for (auto &channel : server.getChannels()) {
 			IRStream serverStream;
 			serverStream.prefix(user).param("NICK").trail(args).end();
@@ -41,13 +41,13 @@ void NICK(IRStream &stream, string &args, User *user) {
 	}
 
 	user->setNickname(args);
-	user->addHandshake(USER_NICK);
+	user->addHandshake(H_NICK);
 
 	stream.prefix().command().param(user->getNickname()).end();
 
-	if (user->hasHandshake(USER_AUTHENTICATED) && !user->hasHandshake(USER_WELCOME)) {
+	if (user->hasHandshake(H_AUTHENTICATED) && !user->hasHandshake(H_WELCOME)) {
 		string empty;
 		MOTD(stream, empty, user);
-		user->addHandshake(USER_WELCOME);
+		user->addHandshake(H_WELCOME);
 	}
 }

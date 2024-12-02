@@ -15,7 +15,7 @@ extern Server server;
 using namespace std;
 
 void KICK(IRStream &stream, string &args, User *user) {
-	if (!user->hasHandshake(USER_AUTHENTICATED)) {
+	if (!user->hasHandshake(H_AUTHENTICATED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}

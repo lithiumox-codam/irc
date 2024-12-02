@@ -324,7 +324,7 @@ bool Server::operatorCheck(User *user) const {
 string Server::getUserCount() const {
 	size_t count = 0;
 	for (const auto &user : users) {
-		if (user.hasHandshake(USER_AUTHENTICATED)) {
+		if (user.hasHandshake(H_AUTHENTICATED)) {
 			count++;
 		}
 	}
