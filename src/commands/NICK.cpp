@@ -30,6 +30,16 @@ void NICK(IRStream &stream, string &args, User *user) {
 		return;
 	}
 
+	if (user->hasHandshake(USER_NICK)) {
+		for (auto &channel : server.getChannels()) {
+			IRStream serverStream;
+			serverStream.prefix(user).param("NICK").trail(args).end();
+			if (channel.hasUser(user)) {
+				channel.broadcast(serverStream);
+			}
+		}
+	}
+
 	user->setNickname(args);
 	user->addHandshake(USER_NICK);
 

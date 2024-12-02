@@ -23,6 +23,7 @@ class Channel {
 	string name;
 	string password;
 	string topic;
+	size_t limit;
 
 	time_t created;
 	string topicsetter;
@@ -70,10 +71,12 @@ class Channel {
 	void broadcast(IRStream &stream, User *user);
 	void broadcast(IRStream &stream);
 
-
 	string getUserModes(User *user);
 
 	[[nodiscard]] time_t getCreated() const;
+
+	void setLimit(size_t limit);
+	void removeLimit();
 };
 
 ostream &operator<<(ostream &stream, Channel &channel);

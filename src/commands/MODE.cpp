@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -77,18 +78,16 @@ static void broadcastModeChange(Channel *channel, User *user, const string &mode
 }
 
 static void sendModeChange(IRStream &stream, User *user, const string &modes) {
-	stream.prefix().code(RPL_UMODEIS).param(user->getNickname()).param(modes).end();
+	stream.prefix(user).code(RPL_UMODEIS).param(user->getNickname()).param(modes).end();
 }
 
 static void sendUnknownMode(IRStream &stream, User *user, const string &unsupportedModes) {
-	for (const auto mode : unsupportedModes) {
-		stream.prefix()
-			.code(ERR_UNKNOWNMODE)
-			.param(user->getNickname())
-			.param(mode)
-			.trail("is not a valid mode in this scope!")
-			.end();
-	}
+	stream.prefix()
+		.code(ERR_UNKNOWNMODE)
+		.param(user->getNickname())
+		.param(unsupportedModes)
+		.trail("is not a valid mode in this scope!")
+		.end();
 }
 
 /**
@@ -185,6 +184,19 @@ static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *us
 			} break;
 
 			case 3: {
+				// Check if token[2] is a number for limit mode
+				if (all_of(tokens[2].begin(), tokens[2].end(), ::isdigit)) {
+					// Only look for limit mode specifically
+					size_t limitPos = tokens[1].find('l');
+					if (limitPos != string::npos && tokens[1].rfind('+', limitPos) != string::npos) {
+						channel->setLimit(stoi(tokens[2]));
+					}
+					// Apply all mode changes including other modes
+					channel->modes.applyModeChanges(tokens[1]);
+					broadcastModeChange(channel, user, tokens[1], tokens[2]);
+					break;
+				}
+
 				auto *targetMember = channel->getMember(tokens[2]);
 				auto unsupportedModes = targetMember->second.applyModeChanges(tokens[1]);
 				if (!unsupportedModes.empty()) {
@@ -205,7 +217,8 @@ static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *us
 
 void MODE(IRStream &stream, string &args, User *user) {
 	if (args.empty()) {
-		throw NotEnoughParametersException();
+		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
+		return;
 	}
 
 	vector<string> tokens = split(args, ' ');
