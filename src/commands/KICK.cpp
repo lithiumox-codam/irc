@@ -15,7 +15,7 @@ extern Server server;
 using namespace std;
 
 void KICK(IRStream &stream, string &args, User *user) {
-	if (!user->hasHandshake(USER_AUTHENTICATED)) {
+	if (!user->hasHandshake(H_AUTHENTICATED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}
@@ -35,7 +35,7 @@ void KICK(IRStream &stream, string &args, User *user) {
 			throw UserNotOnChannelException(tokens[1]);
 		}
 		pair<User *, Modes> *kicker = channel->getMember(user);
-		if (!kicker->second.hasModes(M_OPERATOR)) {
+		if (!kicker->second.has(M_OPERATOR)) {
 			throw UserNotOperatorException();
 		}
 

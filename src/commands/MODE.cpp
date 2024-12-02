@@ -108,7 +108,7 @@ static void handleUserMode(IRStream &stream, vector<string> &tokens, User *user)
 					return;
 				}
 				auto *target = (tokens[0] != user->getNickname()) ? server.getUser(tokens[0]) : user;
-				sendModeChange(stream, user, target->modes.getModesString());
+				sendModeChange(stream, user, target->modes.getString());
 			} break;
 
 			case 2: {
@@ -120,7 +120,7 @@ static void handleUserMode(IRStream &stream, vector<string> &tokens, User *user)
 					stream.prefix().code(ERR_NOPRIVILEGES).param(user->getNickname()).trail("Permission denied").end();
 					return;
 				}
-				auto unsupportedModes = target->modes.applyModeChanges(tokens[1]);
+				auto unsupportedModes = target->modes.applyChanges(tokens[1]);
 				serverOperatorHelper(tokens[1], target);
 				if (!unsupportedModes.empty()) {
 					sendUnknownMode(stream, user, unsupportedModes);
@@ -153,7 +153,7 @@ static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *us
 		auto *channel = server.getChannel(tokens[0]);
 		auto *member = channel->getMember(user->getNickname());
 
-		if (!member->second.hasModes(M_OPERATOR)) {
+		if (!member->second.has(M_OPERATOR)) {
 			stream.prefix()
 				.code(ERR_CHANOPRIVSNEEDED)
 				.param(user->getNickname())
@@ -169,17 +169,17 @@ static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *us
 					.code(RPL_CHANNELMODEIS)
 					.param(user->getNickname())
 					.param(channel->getName())
-					.param(channel->modes.getModesString())
+					.param(channel->modes.getString())
 					.end();
 			} break;
 
 			case 2: {
 				if (tokens[1].starts_with("+") || tokens[1].starts_with("-")) {
-					channel->modes.applyModeChanges(tokens[1]);
+					channel->modes.applyChanges(tokens[1]);
 					broadcastModeChange(channel, user, tokens[1], "");
 				} else {
 					auto *targetMember = channel->getMember(tokens[1]);
-					sendModeChange(stream, user, targetMember->second.getModesString());
+					sendModeChange(stream, user, targetMember->second.getString());
 				}
 			} break;
 
@@ -192,13 +192,13 @@ static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *us
 						channel->setLimit(stoi(tokens[2]));
 					}
 					// Apply all mode changes including other modes
-					channel->modes.applyModeChanges(tokens[1]);
+					channel->modes.applyChanges(tokens[1]);
 					broadcastModeChange(channel, user, tokens[1], tokens[2]);
 					break;
 				}
 
 				auto *targetMember = channel->getMember(tokens[2]);
-				auto unsupportedModes = targetMember->second.applyModeChanges(tokens[1]);
+				auto unsupportedModes = targetMember->second.applyChanges(tokens[1]);
 				if (!unsupportedModes.empty()) {
 					sendUnknownMode(stream, user, unsupportedModes);
 				} else if (!diffModes(tokens[1], unsupportedModes).empty()) {
@@ -216,7 +216,7 @@ static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *us
 }
 
 void MODE(IRStream &stream, string &args, User *user) {
-	if (!user->hasHandshake(USER_AUTHENTICATED)) {
+	if (!user->hasHandshake(H_AUTHENTICATED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}

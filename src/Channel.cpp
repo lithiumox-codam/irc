@@ -19,7 +19,7 @@ Channel::Channel(const Channel &channel) noexcept
 	  name(channel.name),
 	  password(channel.password),
 	  topic(channel.password),
-	  modes(channel.modes) {}
+	  modes(channel.modes), limit(10) {}
 
 Channel &Channel::operator=(const Channel &channel) noexcept {
 	this->members = channel.members;
@@ -27,6 +27,7 @@ Channel &Channel::operator=(const Channel &channel) noexcept {
 	this->password = channel.password;
 	this->topic = channel.topic;
 	this->modes = channel.modes;
+	this->limit = channel.limit;
 	return *this;
 }
 
@@ -36,7 +37,7 @@ const string &Channel::getPassword() const { return this->password; }
 
 void Channel::setPassword(const string &password) {
 	this->password = password;
-	this->modes.addModes(M_PASSWORD);
+	this->modes.add(M_PASSWORD);
 }
 
 void Channel::setName(const string &name) { this->name = name; }
@@ -51,7 +52,7 @@ void Channel::setName(const string &name) { this->name = name; }
 void Channel::addUser(User *user) {
 	this->members.emplace_back(user, Modes(Type::CHANNELMEMBER));
 	if (this->hasOperator(user)) {
-		this->getMembers()->back().second.addModes(M_OPERATOR);
+		this->getMembers()->back().second.add(M_OPERATOR);
 	}
 }
 
@@ -170,7 +171,7 @@ void Channel::broadcast(IRStream &stream) {
 string Channel::getUserModes(User *user) {
 	for (const auto &member : this->members) {
 		if (member.first->getSocket() == user->getSocket()) {
-			return member.second.getModesString();
+			return member.second.getString();
 		}
 	}
 	return "";
@@ -192,7 +193,7 @@ time_t Channel::getCreated() const { return this->created; }
 
 void Channel::setLimit(size_t limit) {
 	this->limit = limit;
-	this->modes.addModes(M_LIMIT);
+	this->modes.add(M_LIMIT);
 }
 
-void Channel::removeLimit() { this->modes.removeModes(M_LIMIT); }
+void Channel::removeLimit() { this->modes.remove(M_LIMIT); }

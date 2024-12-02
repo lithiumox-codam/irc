@@ -14,9 +14,12 @@ extern Server server;
 void INVITE(IRStream &stream, string &args, User *user) {
 	auto [ChannelName, InviteeName] = splitPair(args, ' ');
 
+	if (!user->hasHandshake(H_AUTHENTICATED)) {
+		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
+		return;
+	}
 	if (ChannelName.empty() || InviteeName.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
-		return;
 	}
 	try {
 		Channel *channel = server.getChannel(ChannelName);
@@ -24,7 +27,8 @@ void INVITE(IRStream &stream, string &args, User *user) {
 		if (inviter == nullptr) {
 			throw NotOnChannelException(user->getNickname());
 		}
-		if (channel->modes.hasModes(M_INVITE_ONLY) && !inviter->second.hasModes(M_OPERATOR)) {
+
+		if (channel->modes.has(M_INVITE_ONLY) && !inviter->second.has(M_OPERATOR)) {
 			throw UserNotOperatorException();
 		}
 		User *invitee = server.getUser(InviteeName);

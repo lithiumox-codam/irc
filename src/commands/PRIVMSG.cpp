@@ -36,10 +36,10 @@ void handleChannelMessage(IRStream &stream, const pair<string, string> &token, U
 			throw NotOnChannelException(user->getNickname());
 		}
 
-		if (!channel->modes.hasModes(M_MODERATED)) {
+		if (!channel->modes.has(M_MODERATED)) {
 			channel->broadcast(user, token.second);
 		} else {
-			if (channel->getMember(user->getNickname())->second.hasModes(M_VOICE)) {
+			if (channel->getMember(user->getNickname())->second.has(M_VOICE)) {
 				channel->broadcast(user, token.second);
 			} else if (channel->hasOperator(user)) {
 				channel->broadcast(user, token.second);
@@ -53,7 +53,7 @@ void handleChannelMessage(IRStream &stream, const pair<string, string> &token, U
 }
 
 void PRIVMSG(IRStream &stream, string &args, User *user) {
-	if (!user->hasHandshake(USER_AUTHENTICATED)) {
+	if (!user->hasHandshake(H_AUTHENTICATED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}

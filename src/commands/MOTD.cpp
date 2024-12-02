@@ -11,7 +11,7 @@ extern Server server;
 void MOTD(IRStream &stream, std::string &args, User *user) {
 	(void)args;
 
-	if (!user->hasHandshake(USER_AUTHENTICATED)) {
+	if (!user->hasHandshake(H_AUTHENTICATED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}

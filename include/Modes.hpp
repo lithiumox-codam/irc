@@ -53,15 +53,15 @@ class Modes {
 	auto operator=(const Modes &modes) noexcept -> Modes &;
 
 	void setModes(unsigned int modes);
-	[[nodiscard]] unsigned int getModes() const;
-	void addModes(unsigned int modes);
-	void removeModes(unsigned int modes);
-	[[nodiscard]] bool hasModes(unsigned int modes) const;
-	string getModesString() const;
-	void clearModes();
+	[[nodiscard]] unsigned int get() const;
+	void add(unsigned int modes);
+	void remove(unsigned int modes);
+	[[nodiscard]] bool has(unsigned int modes) const;
+	string getString() const;
+	void clear();
 	Type getType() const;
 	bool changeHelper(char modeChar, const auto &modePairs, bool addMode);
-	string applyModeChanges(const string &modeChanges);
+	string applyChanges(const string &modeChanges);
 
 	friend ostream &operator<<(ostream &stream, const Modes &modes);
 };

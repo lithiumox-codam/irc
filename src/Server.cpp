@@ -83,53 +83,47 @@ void Server::epollAdd(int socket_fd) const {
 
 static void HandleEpollError(User *user) {
 	cerr << "Error: EPOLLERR" << '\n';
+	int err;
 
-	socklen_t len = sizeof(errno);
-	getsockopt(user->getSocket(), SOL_SOCKET, SO_ERROR, &errno, &len);
-	cerr << strerror(errno) << '\n';
-
-	server.removeUser(*user);
-}
-
-static void handleEpollDisconnect(User *user) {
-	cerr << "Error: EPOLLHUP or EPOLLRDHUP" << '\n';
-	server.removeUser(*user);
-}
-
-static void handleEpollRead(User *user) {
-	if (!user->readFromSocket()) {
-		server.removeUser(*user);
-	}
-}
-
-static void HandleEpollWrite(User *user) {
-	if (!user->sendToSocket()) {
-		server.removeUser(*user);
-	}
+	socklen_t len = sizeof(err);
+	getsockopt(user->getSocket(), SOL_SOCKET, SO_ERROR, &err, &len);
+	cerr << strerror(err) << '\n';
 }
 
 static void epollEvent(struct epoll_event &event) {
 	int socket_fd = event.data.fd;
 	User *user = server.getUser(socket_fd);
+	bool removeUser = false;
 
 	if ((event.events & EPOLLIN) != 0) {
-		handleEpollRead(user);
+		if (!user->readFromSocket()) {
+			removeUser = true;
+		}
 	}
 
 	if ((event.events & EPOLLOUT) != 0) {
-		HandleEpollWrite(user);
+		if (!user->sendToSocket()) {
+			removeUser = true;
+		}
 	}
 
 	if ((event.events & EPOLLERR) != 0) {
 		HandleEpollError(user);
+		removeUser = true;
 	}
 
 	if ((event.events & EPOLLHUP) != 0) {
-		handleEpollDisconnect(user);
+		cerr << "Error: EPOLLHUP (Client shutdown)" << '\n';
+		removeUser = true;
 	}
 
 	if ((event.events & EPOLLRDHUP) != 0) {
-		handleEpollDisconnect(user);
+		cerr << "Error: EPOLLRDHUP (Client shutdown)" << '\n';
+		removeUser = true;
+	}
+
+	if (removeUser) {
+		server.removeUser(*user);
 	}
 }
 
@@ -324,7 +318,7 @@ bool Server::operatorCheck(User *user) const {
 string Server::getUserCount() const {
 	size_t count = 0;
 	for (const auto &user : users) {
-		if (user.hasHandshake(USER_AUTHENTICATED)) {
+		if (user.hasHandshake(H_AUTHENTICATED)) {
 			count++;
 		}
 	}

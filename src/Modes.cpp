@@ -44,7 +44,7 @@ void Modes::setModes(unsigned int modes) { this->modes = modes; }
  *
  * @return unsigned int
  */
-unsigned int Modes::getModes() const { return modes; }
+unsigned int Modes::get() const { return modes; }
 
 /**
  * @brief Adds one or more modes to the class. This function will only add the modes that are allowed for the user type.
@@ -52,7 +52,7 @@ unsigned int Modes::getModes() const { return modes; }
  *
  * @param modes The modes to add.
  */
-void Modes::addModes(unsigned int modes) { this->modes |= modes; }
+void Modes::add(unsigned int modes) { this->modes |= modes; }
 
 /**
  * @brief Removes one or more modes from the class. This function will only remove the modes that are allowed for the
@@ -61,17 +61,17 @@ void Modes::addModes(unsigned int modes) { this->modes |= modes; }
  *
  * @param modes The modes to remove.
  */
-void Modes::removeModes(unsigned int modes) { this->modes &= ~modes; }
+void Modes::remove(unsigned int modes) { this->modes &= ~modes; }
 
 /**
  * @brief Checks if the user has one or more modes.
- * @example hasModes(M_OPERATOR | M_VOICE) will return true if the user has both modes.
+ * @example has(M_OPERATOR | M_VOICE) will return true if the user has both modes.
  *
  * @param modes The modes to check for.
  * @return true if the user has the modes
  * @return false if the user does not have the modes
  */
-bool Modes::hasModes(unsigned int modes) const { return (this->modes & modes) == modes; }
+bool Modes::has(unsigned int modes) const { return (this->modes & modes) == modes; }
 
 /**
  * @brief Returns a string representation of the modes.
@@ -84,7 +84,7 @@ string Modes::getModesString() const {
 												  {M_TOPIC_LOCK, 't'}, {M_LIMIT, 'l'}};
 
 	for (const auto &modePair : modePairs) {
-		if (hasModes(modePair.first)) {
+		if (has(modePair.first)) {
 			result.push_back(modePair.second);
 		}
 	}
@@ -94,7 +94,7 @@ string Modes::getModesString() const {
 /**
  * @brief Clears all modes.
  */
-void Modes::clearModes() { modes = 0; }
+void Modes::clear() { modes = 0; }
 
 /**
  * @brief Returns the type of the modes.
@@ -115,7 +115,7 @@ bool Modes::changeHelper(char modeChar, const auto &modePairs, bool addMode) {
 	const auto *const iter =
 		ranges::find_if(modePairs, [modeChar](const auto &pair) { return pair.second == modeChar; });
 	if (iter != modePairs.end()) {
-		addMode ? addModes(iter->first) : removeModes(iter->first);
+		addMode ? add(iter->first) : remove(iter->first);
 		return true;
 	}
 	return false;
@@ -128,7 +128,7 @@ bool Modes::changeHelper(char modeChar, const auto &modePairs, bool addMode) {
  * @param modeChanges The mode changes to apply. ex: "+ov" or "-o+v"
  * @return string The unsupported modes.
  */
-string Modes::applyModeChanges(const string &modeChanges) {
+string Modes::applyChanges(const string &modeChanges) {
 	string unsupportedModes;
 	bool addMode = false;
 
@@ -163,6 +163,6 @@ string Modes::applyModeChanges(const string &modeChanges) {
  * @return ostream&
  */
 ostream &operator<<(ostream &stream, const Modes &modes) {
-	stream << modes.getModesString();
+	stream << modes.getString();
 	return stream;
 }
