@@ -19,15 +19,16 @@ Channel::Channel(const Channel &channel) noexcept
 	  name(channel.name),
 	  password(channel.password),
 	  topic(channel.password),
-	  modes(channel.modes), limit(10) {}
+	  limit(channel.limit),
+	  modes(channel.modes) {}
 
 Channel &Channel::operator=(const Channel &channel) noexcept {
 	this->members = channel.members;
 	this->name = channel.name;
 	this->password = channel.password;
 	this->topic = channel.topic;
-	this->modes = channel.modes;
 	this->limit = channel.limit;
+	this->modes = channel.modes;
 	return *this;
 }
 
