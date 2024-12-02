@@ -193,3 +193,10 @@ void Channel::setTopicSetter(User *user) { this->topicsetter = user->getNickname
 string Channel::getTopicSetter() const { return this->topicsetter; }
 
 time_t Channel::getCreated() const { return this->created; }
+
+void Channel::setLimit(size_t limit) {
+	this->limit = limit;
+	this->modes.addModes(M_LIMIT);
+}
+
+void Channel::removeLimit() { this->modes.removeModes(M_LIMIT); }
