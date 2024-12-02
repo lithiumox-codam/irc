@@ -58,12 +58,8 @@ void Channel::addUser(User *user) {
 void Channel::removeUser(User *user) {
 	IRStream stream;
 
-	stream.prefix(user, this).param("PART").param(this->getName()).end();
-	// NOLINTNEXTLINE
 	for (auto it = this->members.begin(); it != this->members.end(); ++it) {
 		if (it->first->getSocket() == user->getSocket()) {
-			broadcast(stream, user);
-
 			this->members.erase(it);
 			return;
 		}

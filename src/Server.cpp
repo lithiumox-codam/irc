@@ -18,6 +18,7 @@
 
 #include "Exceptions.hpp"
 #include "General.hpp"
+#include "IRStream.hpp"
 #include "User.hpp"
 
 extern Server server;
@@ -245,9 +246,13 @@ void Server::addUser(unsigned int socket) {
 }
 
 void Server::removeUser(User &user) {
+	IRStream stream;
+
+	stream.prefix(&user).param("QUIT").trail("Disconnected").end();
 	// remove from channels
 	for (auto &channel : this->channels) {
 		if (channel.hasUser(&user)) {
+			channel.broadcast(stream, &user);
 			channel.removeUser(&user);
 
 			if (channel.getMembers()->empty()) {
