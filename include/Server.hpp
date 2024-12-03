@@ -66,7 +66,7 @@ class Server {
 	void acceptNewConnection();
 
 	void addUser(unsigned int socket);
-	void removeUser(User &user);
+	void removeUser(User &user, const string &reason);
 	[[nodiscard]] User *getUser(int socket);
 	[[nodiscard]] User *getUser(const string &nickname);
 	[[nodiscard]] deque<User> &getUsers();

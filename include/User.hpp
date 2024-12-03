@@ -79,8 +79,8 @@ class User {
 
 	[[nodiscard]] bool checkPacket();
 
-	bool readFromSocket();
-	bool sendToSocket();
+	void readFromSocket();
+	void sendToSocket();
 
 	[[nodiscard]] string &getInBuffer();
 

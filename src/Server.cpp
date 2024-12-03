@@ -81,49 +81,57 @@ void Server::epollAdd(int socket_fd) const {
 	}
 }
 
-static void HandleEpollError(User *user) {
+static string epollError(User *user) {
 	cerr << "Error: EPOLLERR" << '\n';
 	int err;
 
 	socklen_t len = sizeof(err);
 	getsockopt(user->getSocket(), SOL_SOCKET, SO_ERROR, &err, &len);
-	cerr << strerror(err) << '\n';
+	return strerror(err);
 }
 
 static void epollEvent(struct epoll_event &event) {
 	int socket_fd = event.data.fd;
 	User *user = server.getUser(socket_fd);
 	bool removeUser = false;
+	string reason;
 
 	if ((event.events & EPOLLIN) != 0) {
-		if (!user->readFromSocket()) {
+		try {
+			user->readFromSocket();
+			user->parse();
+		} catch (UserQuitException &e) {
 			removeUser = true;
+			reason = e.what();
 		}
 	}
 
 	if ((event.events & EPOLLOUT) != 0) {
-		if (!user->sendToSocket()) {
+		try {
+			user->sendToSocket();
+		} catch (UserQuitException &e) {
 			removeUser = true;
+			reason = e.what();
 		}
 	}
 
 	if ((event.events & EPOLLERR) != 0) {
-		HandleEpollError(user);
 		removeUser = true;
+		reason = "Error on socket" + epollError(user);
 	}
 
 	if ((event.events & EPOLLHUP) != 0) {
-		cerr << "Error: EPOLLHUP (Client shutdown)" << '\n';
 		removeUser = true;
+		reason = "Client shutdown (HANGUP)";
 	}
 
 	if ((event.events & EPOLLRDHUP) != 0) {
-		cerr << "Error: EPOLLRDHUP (Client shutdown)" << '\n';
 		removeUser = true;
+		reason = "Client shutdown (READ HANGUP)";
 	}
 
 	if (removeUser) {
-		server.removeUser(*user);
+		server.removeUser(*user, reason);
 	}
 }
 
@@ -239,10 +247,10 @@ void Server::addUser(unsigned int socket) {
 	this->epollAdd(socket);
 }
 
-void Server::removeUser(User &user) {
+void Server::removeUser(User &user, const string &reason) {
 	IRStream stream;
 
-	stream.prefix(&user).param("QUIT").trail("Disconnected").end();
+	stream.prefix(&user).param("QUIT").trail(reason).end();
 	// remove from channels
 	for (auto &channel : this->channels) {
 		if (channel.hasUser(&user)) {

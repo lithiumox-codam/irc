@@ -31,14 +31,16 @@ void KICK(IRStream& stream, string& args, User* user);
 void INVITE(IRStream& stream, string& args, User* user);
 void MODE(IRStream& stream, string& args, User* user);
 void LIST(IRStream& stream, string& args, User* user);
+void QUIT(IRStream& stream, string& args, User* user);
 
 /**
  * @brief The store of all the commands. This is a map of strings to function pointers. Used by the parser to determine
  * which function to call.
  */
 const map<string, void (*)(IRStream&, string&, User*)> store = {
-	{"PASS", PASS}, {"CAP", CAP},		{"NICK", NICK},		  {"MOTD", MOTD}, {"USER", USER},	{"INFO", INFO},
-	{"JOIN", JOIN}, {"PING", PING},		{"PRIVMSG", PRIVMSG}, {"WHO", WHO},	  {"TOPIC", TOPIC}, {"PART", PART},
-	{"KICK", KICK}, {"INVITE", INVITE}, {"MODE", MODE},		  {"LIST", LIST}};
+	{"PASS", PASS}, {"CAP", CAP}, {"NICK", NICK}, {"MOTD", MOTD}, {"USER", USER}, {"INFO", INFO},
+	{"JOIN", JOIN}, {"PING", PING}, {"PRIVMSG", PRIVMSG}, {"WHO", WHO}, {"TOPIC", TOPIC}, {"PART", PART},
+	{"KICK", KICK}, {"INVITE", INVITE}, {"MODE", MODE}, {"LIST", LIST}, {"QUIT", QUIT}
+};
 
 void parse(User* user);

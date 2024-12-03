@@ -157,3 +157,14 @@ class NoOtherUserModeException : public IrcException {
 		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
 	}
 };
+
+class UserQuitException : public exception {
+   private:
+	string reason;
+
+   public:
+	UserQuitException(const string &reason) { this->reason = reason; }
+	~UserQuitException() {}
+
+	const char *what() const noexcept override { return reason.c_str(); }
+};

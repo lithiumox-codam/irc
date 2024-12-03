@@ -62,10 +62,11 @@ void User::closeSocket() {
 		} else {
 			cerr << "Error: shutdown failed" << "\n";
 		}
-		cerr << "Error: shutdown failed" << "\n";
+		exit(EXIT_FAILURE);
 	}
 	if (close(this->socket) == -1) {
 		cerr << "Error: close failed" << "\n";
+		exit(EXIT_FAILURE);
 	}
 
 	this->socket = -1;
@@ -133,63 +134,52 @@ unsigned int User::getHandshake() const { return this->handshake; }
 
 bool User::hasHandshake(unsigned int handshake) const { return (this->handshake & handshake) == handshake; }
 
-bool User::readFromSocket() {
+void User::readFromSocket() {
 	char buffer[UserConfig::BUFFER_SIZE];
 	int ret = recv(this->socket, buffer, sizeof(buffer) + 1, 0);
 
 	if (ret == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
-			return true;
+			return ;
 		}
-		cerr << "Error: recv(): " << strerror(errno) << '\n';
-		return false;
+		throw (UserQuitException("Unexpected error in recv:" + string(strerror(errno))));
 	}
 
 	if (ret == 0) {
-		cerr << "Connection to user " << this->getNickname() << " lost..." << '\n';
-		return false;
+		throw (UserQuitException("Connection lost"));
 	}
 
 	buffer[ret] = '\0';
 	this->in_buffer.append(buffer, ret);
-	// cout << RED << "DEBUG: Received: " << this->in_buffer << RESET << '\n';
-
-	this->parse();
-
-	return true;
 }
 
-bool User::sendToSocket() {
+void User::sendToSocket() {
 	while (!this->out_buffer.empty()) {
-		// cout << GREEN << "DEBUG: Sending: " << this->out_buffer << RESET << '\n';
-
 		int ret = send(this->socket, this->out_buffer.data(), this->out_buffer.size(), 0);
 
 		if (ret == -1) {
 			if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				return true;
+				return ;
 			}
-			cerr << "Error: send():" << strerror(errno) << '\n';
-			return false;
+			throw (UserQuitException("Unexpected error in send:" + string(strerror(errno))));
 		}
 
 		if (ret == 0) {
-			cerr << "DEBUG: User " << this->getNickname() << " gracefully disconnected" << '\n';
-			return false;
+			throw (UserQuitException("Connection lost"));
 		}
 
 		this->out_buffer.erase(0, ret);
 	}
 
 	server.epollChange(this->socket, EPOLLIN);
-
-	return true;
 }
 
 void User::addToBuffer(const string &data) {
 	this->out_buffer.append(data);
 
-	if (!this->out_buffer.empty()) server.epollChange(this->socket, EPOLLIN | EPOLLOUT);
+	if (!this->out_buffer.empty()) {
+		server.epollChange(this->socket, EPOLLIN | EPOLLOUT);
+	}
 };
 
 ostream &operator<<(std::ostream &stream, const User &user) {
