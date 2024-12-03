@@ -79,49 +79,49 @@
 #define RPL_TIME "391"			   // Server time
 #define RPL_PART
 
-#define ERR_UNKNOWNERROR "400"		// Unknown error
-#define ERR_NOSUCHNICK "401"		// Nickname not found
-#define ERR_NOSUCHSERVER "402"		// No such server
-#define ERR_NOSUCHCHANNEL "403"		// No such channel
-#define ERR_CANNOTSENDTOCHAN "404"	// Cannot send to channel
-#define ERR_TOOMANYCHANNELS "405"	// Too many channels
-#define ERR_WASNOSUCHNICK "406"		// Nickname not found
-#define ERR_TOOMANYTARGETS "407"	// Too many targets
-#define ERR_NOORIGIN "409"			// No origin specified
-#define ERR_NORECIPIENT "411"		// No recipient specified
-#define ERR_NOTEXTTOSEND "412"		// No text to send
-#define ERR_NOTOPLEVEL "413"		// No top level domain
-#define ERR_WILDTOPLEVEL "414"		// Wildcard in top level domain
-#define ERR_UNKNOWNCOMMAND "421"	// Unknown command
-#define ERR_NOMOTD "422"			// No MOTD file
-#define ERR_NOADMININFO "423"		// No admin info
-#define ERR_FILEERROR "424"			// File error
-#define ERR_NONICKNAMEGIVEN "431"	// No nickname given
-#define ERR_ERRONEOUSNICKNAME "432"	// Erroneous nickname
-#define ERR_NICKNAMEINUSE "433"		// Nickname in use
-#define ERR_NICKCOLLISION "436"		// Nickname collision
-#define ERR_USERNOTINCHANNEL "441"	// User not in channel
-#define ERR_NOTONCHANNEL "442"		// Not on channel
-#define ERR_USERONCHANNEL "443"		// User is already on channel
-#define ERR_NOLOGIN "444"			// No login
-#define ERR_SUMMONDISABLED "445"	// Summon disabled
-#define ERR_USERSDISABLED "446"		// Users disabled
-#define ERR_NOTREGISTERED "451"		// Not registered
-#define ERR_NEEDMOREPARAMS "461"	// Need more parameters
-#define ERR_ALREADYREGISTRED "462"	// Already registered
-#define ERR_NOPERMFORHOST "463"		// No permission for host
-#define ERR_PASSWDMISMATCH "464"	// Password mismatch
-#define ERR_YOUREBANNEDCREEP "465"	// You're banned
-#define ERR_KEYSET "467"			// Key set
-#define ERR_CHANNELISFULL "471"		// Channel is full
-#define ERR_UNKNOWNMODE "501"		// Unknown mode
-#define ERR_INVITEONLYCHAN "473"	// Invite only channel
-#define ERR_BANNEDFROMCHAN "474"	// Banned from channel
-#define ERR_BADCHANNELKEY "475"		// Bad channel key
-#define ERR_NOPRIVILEGES "481"		// No privileges
-#define ERR_CHANOPRIVSNEEDED "482"	// Channel operator privileges needed
-#define ERR_CANTKILLSERVER "483"	// Can't kill server
-#define ERR_RESTRICTED "484"		// Restricted
-#define ERR_UNIQOPRIVSNEEDED "485"	// Unique operator privileges needed
-#define ERR_UMODEUNKNOWNFLAG "501"	// Unknown user mode flag
-#define ERR_USERSDONTMATCH "502"	// Users don't match
+#define ERR_UNKNOWNERROR "400"		 // Unknown error
+#define ERR_NOSUCHNICK "401"		 // Nickname not found
+#define ERR_NOSUCHSERVER "402"		 // No such server
+#define ERR_NOSUCHCHANNEL "403"		 // No such channel
+#define ERR_CANNOTSENDTOCHAN "404"	 // Cannot send to channel
+#define ERR_TOOMANYCHANNELS "405"	 // Too many channels
+#define ERR_WASNOSUCHNICK "406"		 // Nickname not found
+#define ERR_TOOMANYTARGETS "407"	 // Too many targets
+#define ERR_NOORIGIN "409"			 // No origin specified
+#define ERR_NORECIPIENT "411"		 // No recipient specified
+#define ERR_NOTEXTTOSEND "412"		 // No text to send
+#define ERR_NOTOPLEVEL "413"		 // No top level domain
+#define ERR_WILDTOPLEVEL "414"		 // Wildcard in top level domain
+#define ERR_UNKNOWNCOMMAND "421"	 // Unknown command
+#define ERR_NOMOTD "422"			 // No MOTD file
+#define ERR_NOADMININFO "423"		 // No admin info
+#define ERR_FILEERROR "424"			 // File error
+#define ERR_NONICKNAMEGIVEN "431"	 // No nickname given
+#define ERR_ERRONEOUSNICKNAME "432"	 // Erroneous nickname
+#define ERR_NICKNAMEINUSE "433"		 // Nickname in use
+#define ERR_NICKCOLLISION "436"		 // Nickname collision
+#define ERR_USERNOTINCHANNEL "441"	 // User not in channel
+#define ERR_NOTONCHANNEL "442"		 // Not on channel
+#define ERR_USERONCHANNEL "443"		 // User is already on channel
+#define ERR_NOLOGIN "444"			 // No login
+#define ERR_SUMMONDISABLED "445"	 // Summon disabled
+#define ERR_USERSDISABLED "446"		 // Users disabled
+#define ERR_NOTREGISTERED "451"		 // Not registered
+#define ERR_NEEDMOREPARAMS "461"	 // Need more parameters
+#define ERR_ALREADYREGISTRED "462"	 // Already registered
+#define ERR_NOPERMFORHOST "463"		 // No permission for host
+#define ERR_PASSWDMISMATCH "464"	 // Password mismatch
+#define ERR_YOUREBANNEDCREEP "465"	 // You're banned
+#define ERR_KEYSET "467"			 // Key set
+#define ERR_CHANNELISFULL "471"		 // Channel is full
+#define ERR_UNKNOWNMODE "501"		 // Unknown mode
+#define ERR_INVITEONLYCHAN "473"	 // Invite only channel
+#define ERR_BANNEDFROMCHAN "474"	 // Banned from channel
+#define ERR_BADCHANNELKEY "475"		 // Bad channel key
+#define ERR_NOPRIVILEGES "481"		 // No privileges
+#define ERR_CHANOPRIVSNEEDED "482"	 // Channel operator privileges needed
+#define ERR_CANTKILLSERVER "483"	 // Can't kill server
+#define ERR_RESTRICTED "484"		 // Restricted
+#define ERR_UNIQOPRIVSNEEDED "485"	 // Unique operator privileges needed
+#define ERR_UMODEUNKNOWNFLAG "501"	 // Unknown user mode flag
+#define ERR_USERSDONTMATCH "502"	 // Users don't match

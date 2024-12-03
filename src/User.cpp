@@ -10,9 +10,9 @@
 #include <iomanip>
 #include <iostream>
 #include <ostream>
+#include <map>
 
 #include "Exceptions.hpp"
-#include "General.hpp"
 #include "Server.hpp"
 
 extern Server server;
@@ -140,13 +140,13 @@ void User::readFromSocket() {
 
 	if (ret == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
-			return ;
+			return;
 		}
-		throw (UserQuitException("Unexpected error in recv:" + string(strerror(errno))));
+		throw(UserQuitException("Unexpected error in recv:" + string(strerror(errno))));
 	}
 
 	if (ret == 0) {
-		throw (UserQuitException("Connection lost"));
+		throw(UserQuitException("Connection lost"));
 	}
 
 	buffer[ret] = '\0';
@@ -159,13 +159,13 @@ void User::sendToSocket() {
 
 		if (ret == -1) {
 			if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				return ;
+				return;
 			}
-			throw (UserQuitException("Unexpected error in send:" + string(strerror(errno))));
+			throw(UserQuitException("Unexpected error in send:" + string(strerror(errno))));
 		}
 
 		if (ret == 0) {
-			throw (UserQuitException("Connection lost"));
+			throw(UserQuitException("Connection lost"));
 		}
 
 		this->out_buffer.erase(0, ret);

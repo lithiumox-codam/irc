@@ -1,5 +1,4 @@
-
-#include <stdexcept>
+#include <algorithm>
 
 #include "Channel.hpp"
 #include "Codes.hpp"
@@ -9,7 +8,6 @@
 #include "Modes.hpp"
 #include "Server.hpp"
 #include "User.hpp"
-#include <algorithm>
 
 extern Server server;
 

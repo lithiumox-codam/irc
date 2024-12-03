@@ -1,4 +1,3 @@
-#include <stdexcept>
 #include <algorithm>
 
 #include "Codes.hpp"

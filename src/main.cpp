@@ -1,7 +1,9 @@
 #include <csignal>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 
+#include "Exceptions.hpp"
 #include "Server.hpp"
 
 Server server;
@@ -29,25 +31,40 @@ int main(int argc, char **argv) {
 	signal(SIGKILL, signalHandler);
 
 	getEnv();
-	if (server.getPassword().empty() && !server.isBound()) {
-		if (argc != 3) {
-			cerr << "Error: Password and/or port not set by env. Please provide them like:" << '\n';
-			cerr << "./ircserver [port] [password]" << '\n';
-			return 1;
+	try {
+		if (!server.isBound()) {
+			if (argc < 2) {
+				throw ArgumentNotProvidedException("Port");
+			}
+			server.bindSocket(argv[1]);
 		}
+
+		if (server.getPassword().empty()) {
+			if (argc < 3) {
+				throw ArgumentNotProvidedException("Password");
+			}
+			server.setPassword(argv[2]);
+		}
+
 		if (server.getHostname().empty()) {
 			server.setHostname("localhost");
 		}
-		server.bindSocket(argv[1]);
-		server.setPassword(argv[2]);
-	} else {
-		if (server.getPassword().empty() || !server.isBound()) {
-			cerr << "Error: Password and/or port not set by env. Please provide them like:" << '\n';
-			cerr << "./ircserver [port] [password]" << '\n';
-			return 1;
-		}
+
+		server.start();
+
+	} catch (const ArgumentNotProvidedException &e) {
+		cerr << "Error: " << e.what() << " not set by env. Please provide it like:" << '\n';
+		cerr << "./ircserver [port] [password]" << '\n';
+		return EXIT_FAILURE;
+
+	} catch (const SetUpException &e) {
+		cerr << "Error during setup: " << e.what() << ": " << strerror(errno) << '\n';
+		return EXIT_FAILURE;
+
+	} catch (const ExecutionException &e) {
+		cerr << "Error during execution: " << e.what() << ": " << strerror(errno) << '\n';
+		return EXIT_FAILURE;
 	}
 
-	server.start();
-	return 0;
+	return EXIT_SUCCESS;
 }

@@ -37,7 +37,8 @@ class NoSuchUserException : public IrcException {
 
 class ErroneousNicknameException : public IrcException {
    public:
-	ErroneousNicknameException(const string &param) : IrcException("Erroneous nickname", ERR_ERRONEOUSNICKNAME, param) {}
+	ErroneousNicknameException(const string &param)
+		: IrcException("Erroneous nickname", ERR_ERRONEOUSNICKNAME, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
 		string nickname = user->getNickname().empty() ? "*" : user->getNickname();
 		stream.prefix().code(code).param(nickname).param(param).trail(message).end();
@@ -46,7 +47,8 @@ class ErroneousNicknameException : public IrcException {
 
 class NicknameInUseException : public IrcException {
    public:
-	NicknameInUseException(const string &param) : IrcException("Nickname is already in use", ERR_NICKNAMEINUSE, param) {}
+	NicknameInUseException(const string &param)
+		: IrcException("Nickname is already in use", ERR_NICKNAMEINUSE, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
 		string nickname = user->getNickname().empty() ? "*" : user->getNickname();
 		stream.prefix().code(code).param(nickname).param(param).trail(message).end();
@@ -55,7 +57,8 @@ class NicknameInUseException : public IrcException {
 
 class ErroneousUsernameException : public IrcException {
    public:
-	ErroneousUsernameException(const string &param) : IrcException("Erroneous username", ERR_ERRONEOUSNICKNAME, param) {}
+	ErroneousUsernameException(const string &param)
+		: IrcException("Erroneous username", ERR_ERRONEOUSNICKNAME, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
 		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
 	}
@@ -158,13 +161,22 @@ class NoOtherUserModeException : public IrcException {
 	}
 };
 
-class UserQuitException : public exception {
-   private:
-	string reason;
-
+class SetUpException : public runtime_error {
    public:
-	UserQuitException(const string &reason) { this->reason = reason; }
-	~UserQuitException() {}
+	SetUpException(const string &msg) : runtime_error(msg) {}
+};
 
-	const char *what() const noexcept override { return reason.c_str(); }
+class ArgumentNotProvidedException : public runtime_error {
+   public:
+	ArgumentNotProvidedException(const string &msg) : runtime_error(msg) {}
+};
+
+class ExecutionException : public runtime_error {
+   public:
+	ExecutionException(const string &msg) : runtime_error(msg) {}
+};
+
+class UserQuitException : public runtime_error {
+   public:
+	UserQuitException(const string &reason) : runtime_error(reason) {}
 };

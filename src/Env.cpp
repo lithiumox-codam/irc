@@ -99,7 +99,7 @@ bool getEnv() {
 		}
 		file.close();
 	} else if (file.bad()) {
-		cerr << "Error: Unable to open .env file this is not fatal using provided arguments & defaults" << '\n';
+		cerr << "Error: Unable to open .env file. Using provided arguments & defaults" << '\n';
 		return false;
 	}
 	return true;

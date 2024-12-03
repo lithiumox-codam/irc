@@ -1,5 +1,4 @@
 #include <iostream>
-#include <stdexcept>
 #include <string>
 
 #include "Codes.hpp"
@@ -36,6 +35,8 @@ void User::parse(void) {
 		bool found = false;
 
 		string baseCommand = command.substr(0, command.find(' '));
+
+		cout << "Command: " << command << endl;
 
 		for (const auto &pair : store) {
 			if (baseCommand == pair.first) {

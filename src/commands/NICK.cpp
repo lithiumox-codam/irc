@@ -1,6 +1,3 @@
-#include <algorithm>
-#include <vector>
-
 #include "Codes.hpp"
 #include "Exceptions.hpp"
 #include "General.hpp"
@@ -15,7 +12,7 @@ void NICK(IRStream &stream, string &args, User *user) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).trail("Not enough parameters").end();
 		return;
 	}
-	
+
 	IRStream updateStream;
 	updateStream.prefix(user);
 
