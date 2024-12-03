@@ -97,7 +97,7 @@
 #define ERR_NOADMININFO "423"		// No admin info
 #define ERR_FILEERROR "424"			// File error
 #define ERR_NONICKNAMEGIVEN "431"	// No nickname given
-#define ERR_ERRONEUSNICKNAME "432"	// Erroneous nickname
+#define ERR_ERRONEOUSNICKNAME "432"	// Erroneous nickname
 #define ERR_NICKNAMEINUSE "433"		// Nickname in use
 #define ERR_NICKCOLLISION "436"		// Nickname collision
 #define ERR_USERNOTINCHANNEL "441"	// User not in channel
