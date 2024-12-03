@@ -56,10 +56,6 @@ static void correct_realname(vector<string> &args) {
 	realname.erase(0, realname.find_first_not_of(':'));
 	args.erase(args.begin() + 3, args.end());
 	args.push_back(realname);
-
-	if (args.size() != 4) {
-		throw NotEnoughParametersException();
-	}
 }
 
 /**
@@ -78,12 +74,18 @@ void USER(IRStream &stream, string &args, User *user) {
 			throw NotEnoughParametersException();
 		}
 		correct_realname(tokens);
+
 		string hostname = getHostnameFromSocket(user->getSocket());
 
 		user->setHostname(hostname);
 		user->setUsername(tokens[0]);
 		user->setRealname(tokens[3]);
+
 		user->addHandshake(H_USER);
+
+		if (server.operatorCheck(user)) {
+			user->modes.add(M_OPERATOR);
+		}
 
 		if (user->hasHandshake(H_AUTHENTICATED) && !user->hasHandshake(H_WELCOME)) {
 			string empty;

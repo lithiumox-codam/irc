@@ -73,6 +73,25 @@ static void channelChecks(Channel *channel, User *user) {
 	}
 }
 
+void makeNewChannel(IRStream &stream, User *user, string &channelName, vector<string> &passwords, auto &password) {
+	try {
+		Channel *channel = &server.addChannel(channelName);
+		channel->addOperator(user);
+		channel->addUser(user);
+
+		if (password != passwords.end()) {
+			channel->setPassword(*password);
+			channel->modes.add(M_PASSWORD);
+			password++;
+		}
+
+		stream.prefix(user).command().param(channel->getName()).end();
+		makeNamesList(stream, channel, user);
+	} catch (const IrcException &e) {
+		e.e_stream(stream, user);
+	}
+}
+
 void JOIN(IRStream &stream, string &args, User *user) {
 	// Check if the user is registered
 	if (!user->hasHandshake(H_REGISTERED)) {
@@ -95,12 +114,9 @@ void JOIN(IRStream &stream, string &args, User *user) {
 	vector<string> channelNames = split(parts[0], ',');
 	vector<string> passwords = (parts.size() > 1) ? split(parts[1], ',') : vector<string>();
 	auto password = passwords.begin();
+
 	// Try joining the channels
 	for (string &channelName : channelNames) {
-		if (channelName[0] != '#') {
-			NoSuchChannelException(channelName).e_stream(stream, user);
-			continue;
-		}
 		try {
 			Channel *channel = server.getChannel(channelName);
 
@@ -115,28 +131,16 @@ void JOIN(IRStream &stream, string &args, User *user) {
 				}
 				password++;
 			}
+
 			channel->addUser(user);
 			stream.prefix(user).command().param(channel->getName()).end();
 			channel->broadcast(stream, user);
 			sendChannelTopic(stream, channel, user);
 			makeNamesList(stream, channel, user);
+		} catch (NoSuchChannelException &e) {
+			makeNewChannel(stream, user, channelName, passwords, password);
 		} catch (const IrcException &e) {
-			if (e.GetCode() != ERR_NOSUCHCHANNEL) {
-				e.e_stream(stream, user);
-				continue;
-			}
-			server.addChannel(channelName);
-			Channel *channel = server.getChannel(channelName);
-			channel->addOperator(user);
-			channel->addUser(user);
-
-			if (password != passwords.end()) {
-				channel->setPassword(*password);
-				channel->modes.add(M_PASSWORD);
-				password++;
-			}
-			stream.prefix(user).command().param(channel->getName()).end();
-			makeNamesList(stream, channel, user);
+			e.e_stream(stream, user);
 		}
 	}
 }

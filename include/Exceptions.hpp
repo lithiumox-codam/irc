@@ -35,6 +35,32 @@ class NoSuchUserException : public IrcException {
 	}
 };
 
+class ErroneousNicknameException : public IrcException {
+   public:
+	ErroneousNicknameException(const string &param) : IrcException("Erroneous nickname", ERR_ERRONEOUSNICKNAME, param) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		string nickname = user->getNickname().empty() ? "*" : user->getNickname();
+		stream.prefix().code(code).param(nickname).param(param).trail(message).end();
+	}
+};
+
+class NicknameInUseException : public IrcException {
+   public:
+	NicknameInUseException(const string &param) : IrcException("Nickname is already in use", ERR_NICKNAMEINUSE, param) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		string nickname = user->getNickname().empty() ? "*" : user->getNickname();
+		stream.prefix().code(code).param(nickname).param(param).trail(message).end();
+	}
+};
+
+class ErroneousUsernameException : public IrcException {
+   public:
+	ErroneousUsernameException(const string &param) : IrcException("Erroneous username", ERR_ERRONEOUSNICKNAME, param) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
+	}
+};
+
 class NoSuchChannelException : public IrcException {
    public:
 	NoSuchChannelException(const string &param) : IrcException("No such channel", ERR_NOSUCHCHANNEL, param) {}

@@ -1,5 +1,6 @@
 #include "Channel.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <utility>
 
@@ -12,7 +13,9 @@ using namespace std;
 
 Channel::Channel() : modes(Type::CHANNEL) {};
 
-Channel::Channel(const string &name) : name(name), created(time(nullptr)), modes(Type::CHANNEL) {}
+Channel::Channel(const string &name) : created(time(nullptr)), modes(Type::CHANNEL) {
+	this->setName(name);
+}
 
 Channel::Channel(const Channel &channel) noexcept
 	: members(channel.members),
@@ -41,7 +44,22 @@ void Channel::setPassword(const string &password) {
 	this->modes.add(M_PASSWORD);
 }
 
-void Channel::setName(const string &name) { this->name = name; }
+void Channel::setName(const string &name) {
+	// Name validation
+	if (name.size() < 2 || name.size() > 16) {
+		throw NoSuchChannelException(name);
+	}
+	if (!name.starts_with('#')) {
+		throw NoSuchChannelException(name);
+	}
+	for (const auto &c : name) {
+		if (isprint(c) == 0 || c == ' ' || c == ',') {
+			throw NoSuchChannelException(name);
+		}
+	}
+
+	this->name = name;
+}
 
 /**
  * @brief Adds a user to the channel.

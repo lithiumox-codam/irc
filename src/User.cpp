@@ -11,6 +11,7 @@
 #include <iostream>
 #include <ostream>
 
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "Server.hpp"
 
@@ -80,18 +81,51 @@ const string &User::getRealname() const { return this->realname; }
 
 const string &User::getHostname() const { return this->hostname; }
 
-void User::setNickname(string &nickname) { this->nickname = std::move(nickname); }
-
-void User::setUsername(string &username) {
-	this->username = std::move(username);
-	if (server.operatorCheck(this)) {
-		this->modes.add(M_OPERATOR);
+void User::setNickname(string &nickname) {
+	// Name validation
+	for (const auto &user : server.getUsers()) {
+		if (user.getNickname() == nickname) {
+			throw NicknameInUseException(nickname);
+		}
 	}
+
+	if (nickname.size() < 2) {
+		throw ErroneousNicknameException(nickname);
+	}
+	if (nickname.size() > 12) {
+		nickname = nickname.substr(0, 12);
+	}
+	if (isdigit(nickname[0]) > 0) {
+		throw ErroneousNicknameException(nickname);
+	}
+	for (const auto &c : nickname) {
+		if (isprint(c) == 0 || c == ' ') {
+			throw ErroneousNicknameException(nickname);
+		}
+	}
+
+	this->nickname = nickname;
 }
 
-void User::setRealname(string &realname) { this->realname = std::move(realname); }
+void User::setUsername(string &username) {
+	if (username.size() < 2) {
+		throw ErroneousUsernameException(username);
+	}
+	if (username.size() > 16) {
+		username = username.substr(0, 12);
+	}
+	for (const auto &c : username) {
+		if (isprint(c) == 0 || c == ' ') {
+			throw ErroneousUsernameException(username);
+		}
+	}
 
-void User::setHostname(string &hostname) { this->hostname = std::move(hostname); }
+	this->username = username;
+}
+
+void User::setRealname(string &realname) { this->realname = realname; }
+
+void User::setHostname(string &hostname) { this->hostname = hostname; }
 
 void User::addHandshake(unsigned int handshake) { this->handshake |= handshake; }
 
