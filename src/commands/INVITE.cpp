@@ -12,12 +12,12 @@
 extern Server server;
 
 void INVITE(IRStream &stream, string &args, User *user) {
-	auto [InviteeName, ChannelName] = splitPair(args, ' ');
-
 	if (!user->hasHandshake(H_AUTHENTICATED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}
+	auto [InviteeName, ChannelName] = splitPair(args, ' ');
+
 	if (ChannelName.empty() || InviteeName.empty()) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 		return;

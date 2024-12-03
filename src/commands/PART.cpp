@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <algorithm>
 
 #include "Codes.hpp"
 #include "Exceptions.hpp"
@@ -35,7 +36,8 @@ void PART(IRStream &stream, string &args, User *user) {
 			}
 			stream.prefix(user).command().param(channel->getName());
 			if (parts.size() > 1) {
-				stream.param(join(parts, 1)).end();
+				for_each(parts.begin() + 1, parts.end(), [&stream](const string &str) { stream.param(str); });
+				stream.end();
 			} else {
 				stream.param("Leaving").end();
 			}

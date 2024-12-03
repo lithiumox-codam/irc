@@ -9,6 +9,7 @@
 #include "Modes.hpp"
 #include "Server.hpp"
 #include "User.hpp"
+#include <algorithm>
 
 extern Server server;
 
@@ -41,7 +42,7 @@ void KICK(IRStream &stream, string &args, User *user) {
 
 		stream.prefix(user).command().param(channel->getName()).param(target->first->getNickname());
 		if (tokens.size() > 2) {
-			stream.param(join(tokens, 2));
+			for_each(tokens.begin() + 2, tokens.end(), [&stream](const string &str) { stream.param(str); });
 		} else {
 			stream.param(kicker->first->getNickname());
 		}
