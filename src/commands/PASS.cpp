@@ -30,7 +30,8 @@ void PASS(IRStream &stream, string &args, User *user) {	 // if pass fails, disco
 	if (args == server.getPassword()) {
 		user->addHandshake(H_PASS);
 	} else {
-		stream.prefix().code(ERR_PASSWDMISMATCH).param(user->getNickname()).trail("Password incorrect").end();
+		string nickname = user->getNickname().empty() ? "*" : user->getNickname();
+		stream.prefix().code(ERR_PASSWDMISMATCH).param(nickname).trail("Password incorrect").end();
 		return;
 	}
 
