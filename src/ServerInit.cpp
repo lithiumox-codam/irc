@@ -79,8 +79,6 @@ void Server::setPort(string &port) {
 
 	try {
 		portNum = stoi(port);
-	} catch (const std::invalid_argument &e) {
-		throw SetUpException("Invalid port number: " + port);
 	} catch (const std::out_of_range &e) {
 		throw SetUpException("Port number out of range: " + port);
 	} catch (const std::exception &e) {
@@ -124,7 +122,7 @@ static void setOperators(string &operators) {
 		operators = getFromSystemEnv("OPERATORS");
 
 		if (operators.empty()) {
-			cerr << "Error: OPERATORS not set" << '\n';
+			cerr << "No server operators set" << '\n';
 			return;
 		}
 	}
