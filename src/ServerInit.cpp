@@ -75,7 +75,17 @@ void Server::setPort(string &port) {
 		}
 	}
 
-	int portNum = stoi(port);
+	int portNum;
+
+	try {
+		portNum = stoi(port);
+	} catch (const std::invalid_argument &e) {
+		throw SetUpException("Invalid port number: " + port);
+	} catch (const std::out_of_range &e) {
+		throw SetUpException("Port number out of range: " + port);
+	} catch (const std::exception &e) {
+		throw SetUpException("Invalid port number: " + port);
+	}
 
 	if (portNum <= MIN_PORT || portNum > MAX_PORT) {
 		throw SetUpException("Invalid port number: " + port);
