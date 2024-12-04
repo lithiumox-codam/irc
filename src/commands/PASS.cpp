@@ -14,23 +14,22 @@ extern Server server;
  * @param user The user that sent the PASS command.
  * @return true If the PASS command was successful.
  */
-void PASS(IRStream &stream, string &args, User *user) {	 // if pass fails, disconnect user
-	if (args.empty()) {
-		stream.str("");
-		stream.code(ERR_NEEDMOREPARAMS).trail("Not enough parameters").end();
+void PASS(IRStream &stream, string &args, User *user) {
+	string nickname = user->getNickname().empty() ? "*" : user->getNickname();
 
+	if (args.empty()) {
+		stream.prefix().code(ERR_NEEDMOREPARAMS).param(nickname).trail("Not enough parameters").end();
 		return;
 	}
+
 	if (user->hasHandshake(H_PASS)) {
-		stream.str("");
-		stream.code(ERR_ALREADYREGISTRED).param(user->getNickname()).trail("You are already authenticated").end();
+		stream.prefix().code(ERR_ALREADYREGISTRED).param(nickname).trail("You are already authenticated").end();
 		return;
 	}
 
 	if (args == server.getPassword()) {
 		user->addHandshake(H_PASS);
 	} else {
-		string nickname = user->getNickname().empty() ? "*" : user->getNickname();
 		stream.prefix().code(ERR_PASSWDMISMATCH).param(nickname).trail("Password incorrect").end();
 		return;
 	}
