@@ -24,52 +24,6 @@ Server::Server() : socket(0), port(0), running(false) {}
 
 Server::~Server() { this->stop(); }
 
-void Server::setPassword(const string &password) { this->password = password; }
-
-const string &Server::getPassword() const { return this->password; }
-
-void Server::bindSocket(const string &portString) {
-	in_port_t port = htons(stoi(portString));
-
-	this->socket = ::socket(AF_INET, SOCK_STREAM, 0);
-
-	if (this->socket == -1) {
-		throw SetUpException("Socket creation failed");
-	}
-
-	if (fcntl(this->socket, F_SETFL, O_NONBLOCK) == -1) {
-		throw ExecutionException("Setting server socket flags failed");
-	}
-
-	int flags = fcntl(this->socket, F_GETFL, 0);
-
-	if (flags == -1) {
-		throw SetUpException("Getting socket flags failed");
-	}
-
-	if (fcntl(this->socket, F_SETFL, flags | O_NONBLOCK) == -1) {
-		throw SetUpException("Setting socket flags failed");
-	}
-
-	const struct sockaddr_in addr = {
-		.sin_family = AF_INET, .sin_port = port, .sin_addr = {INADDR_ANY}, .sin_zero = {0}};
-
-	if (bind(this->socket, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-		throw SetUpException("Socket bind failed");
-	}
-
-	cout << "Socket bound to port " << portString << '\n';
-}
-
-void Server::setHostname(const string &hostString) { hostname = hostString; }
-
-void Server::epollCreate() {
-	this->epoll_fd = epoll_create1(0);
-	if (this->epoll_fd == -1) {
-		throw SetUpException("Creating epoll instance failed");
-	}
-}
-
 void Server::epollAdd(int socket_fd) const {
 	struct epoll_event event = {.events = EPOLLIN, .data = {.fd = socket_fd}};
 
@@ -125,11 +79,6 @@ static void epollEvent(struct epoll_event &event) {
 		}
 	}
 
-	if ((event.events & EPOLLERR) != 0) {
-		removeUser = true;
-		reason = "Error on socket: " + epollErrorEvent(user);
-	}
-
 	if ((event.events & EPOLLHUP) != 0) {
 		removeUser = true;
 		reason = "Client shutdown (HANGUP)";
@@ -138,6 +87,11 @@ static void epollEvent(struct epoll_event &event) {
 	if ((event.events & EPOLLRDHUP) != 0) {
 		removeUser = true;
 		reason = "Client shutdown (READ HANGUP)";
+	}
+
+	if ((event.events & EPOLLERR) != 0) {
+		removeUser = true;
+		reason = "Error on socket: " + epollErrorEvent(user);
 	}
 
 	if (removeUser) {
@@ -180,18 +134,15 @@ void Server::start() {
 	}
 
 	this->running = true;
+
 	cout << "Server started on socket fd " << socket << '\n';
-	cout << "Press Ctrl+C to stop the server" << '\n';
+	cout << "Server set to listen on " << this->hostname << ':' << this->port << '\n';
 	cout << "Password: " << this->password << '\n';
+	cout << "\nPress Ctrl+C to stop the server" << '\n';
 	cout << "\nListening for incoming connections..." << '\n';
 
-	this->epollCreate();
-
-	string message;
-	this->epollAdd(this->socket);
-	while (true) {
-		const int maxEvents = 10;
-		array<struct epoll_event, maxEvents> events;
+	while (this->running) {
+		EventArray events;
 		int numberOfEvents = epoll_wait(this->epoll_fd, events.data(), (int)ServerConfig::MAX_EVENTS, -1);
 
 		if (numberOfEvents == -1) {
@@ -206,9 +157,14 @@ void Server::stop() {
 	if (!this->running) {
 		return;
 	}
+
 	close(this->socket);
+	close(this->epoll_fd);
+
 	this->running = false;
 }
+
+const string &Server::getPassword() const { return this->password; }
 
 deque<User> &Server::getUsers() { return this->users; }
 
@@ -286,8 +242,6 @@ Channel *Server::getChannel(const string &name) {
 
 const string &Server::getHostname() { return this->hostname; }
 
-bool Server::isBound() const { return this->socket != 0; }
-
 void Server::addOperator(const string &nickname) { this->operators.push_back(nickname); }
 
 void Server::removeOperator(const string &nickname) {
@@ -297,6 +251,21 @@ void Server::removeOperator(const string &nickname) {
 			break;
 		}
 	}
+}
+
+bool Server::operatorCheck(const string &nickname) const {
+	if (this->operators.empty()) {
+		return false;
+	}
+
+	// NOLINTNEXTLINE
+	for (const string &oper : this->operators) {
+		if (oper == nickname) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 bool Server::operatorCheck(User *user) const {

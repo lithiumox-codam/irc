@@ -30,31 +30,17 @@ int main(int argc, char **argv) {
 	signal(SIGTERM, signalHandler);
 	signal(SIGKILL, signalHandler);
 
-	getEnv();
 	try {
-		if (!server.isBound()) {
-			if (argc < 2) {
-				throw ArgumentNotProvidedException("Port");
-			}
-			server.bindSocket(argv[1]);
-		}
-
-		if (server.getPassword().empty()) {
-			if (argc < 3) {
-				throw ArgumentNotProvidedException("Password");
-			}
-			server.setPassword(argv[2]);
-		}
-
-		if (server.getHostname().empty()) {
-			server.setHostname("localhost");
-		}
+		server.init(argc, argv);
 
 		server.start();
 
 	} catch (const ArgumentNotProvidedException &e) {
-		cerr << "Error: " << e.what() << " not set by env. Please provide it like:" << '\n';
-		cerr << "./ircserver [port] [password]" << '\n';
+		cerr << "Error: " << e.what() << " not set by environment or parameter." << '\n';
+		cerr << "Please provide it like:" << "\n\n";
+		cerr << "       ./ircserver [port] [password]" << '\n';
+		cerr << "                 or" << '\n';
+		cerr << "PORT=[port] PASSWORD=[password] ./ircserver" << '\n';
 		return EXIT_FAILURE;
 
 	} catch (const SetUpException &e) {
