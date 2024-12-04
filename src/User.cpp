@@ -99,6 +99,9 @@ void User::setNickname(string &nickname) {
 	if (isdigit(nickname[0]) > 0) {
 		throw ErroneousNicknameException(nickname);
 	}
+	if (nickname == "*") {
+		throw ErroneousNicknameException(nickname);
+	}
 	for (const auto &c : nickname) {
 		if (isprint(c) == 0 || c == ' ') {
 			throw ErroneousNicknameException(nickname);
