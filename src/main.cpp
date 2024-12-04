@@ -12,17 +12,13 @@ void signalHandler(int signum) {
 	switch (signum) {
 		case SIGINT:  // ctrl + c
 			server.stop();
+			exit (EXIT_SUCCESS);
 			break;
 		case SIGTERM:  // kill command
 			server.stop();
-			break;
-		case SIGKILL:  // kill -9 command
-			server.stop();
-			break;
-		default:
+			exit (signum);
 			break;
 	}
-	exit(signum);
 }
 
 int main(int argc, char **argv) {
@@ -32,7 +28,6 @@ int main(int argc, char **argv) {
 
 	try {
 		server.init(argc, argv);
-
 		server.start();
 
 	} catch (const ArgumentNotProvidedException &e) {

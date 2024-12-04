@@ -9,7 +9,7 @@ extern Server server;
 
 void NICK(IRStream &stream, string &args, User *user) {
 	if (args.empty()) {
-		stream.prefix().code(ERR_NEEDMOREPARAMS).trail("Not enough parameters").end();
+		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
 		return;
 	}
 

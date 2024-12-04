@@ -33,7 +33,7 @@ extern Server server;
 void CAP(IRStream &stream, string &args, User *user) {
 	string nickname = user->getNickname().empty() ? "*" : user->getNickname();
 	if (args.empty()) {
-		stream.prefix().param(nickname).param(" :Not enough parameters").end();
+		stream.prefix().code(ERR_NEEDMOREPARAMS).param(nickname).param(" :Not enough parameters").end();
 		return;
 	}
 

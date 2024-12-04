@@ -64,7 +64,7 @@ static void correct_realname(vector<string> &args) {
  */
 void USER(IRStream &stream, string &args, User *user) {
 	if (user->hasHandshake(H_USER)) {
-		stream.code(ERR_ALREADYREGISTRED).param(user->getNickname()).trail("You may not reregister").end();
+		stream.prefix().code(ERR_ALREADYREGISTRED).param(user->getNickname()).trail("You may not reregister").end();
 		return;
 	}
 

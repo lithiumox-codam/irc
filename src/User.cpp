@@ -74,7 +74,9 @@ void User::closeSocket() {
 
 int User::getSocket() const { return this->socket; }
 
-const string &User::getNickname() const { return this->nickname; }
+string User::getNickname() const {
+	return this->nickname.empty() ? "*" : this->nickname;
+}
 
 const string &User::getUsername() const { return this->username; };
 

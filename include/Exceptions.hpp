@@ -40,8 +40,7 @@ class ErroneousNicknameException : public IrcException {
 	ErroneousNicknameException(const string &param)
 		: IrcException("Erroneous nickname", ERR_ERRONEOUSNICKNAME, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
-		string nickname = user->getNickname().empty() ? "*" : user->getNickname();
-		stream.prefix().code(code).param(nickname).param(param).trail(message).end();
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
 	}
 };
 
@@ -50,8 +49,7 @@ class NicknameInUseException : public IrcException {
 	NicknameInUseException(const string &param)
 		: IrcException("Nickname is already in use", ERR_NICKNAMEINUSE, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
-		string nickname = user->getNickname().empty() ? "*" : user->getNickname();
-		stream.prefix().code(code).param(nickname).param(param).trail(message).end();
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
 	}
 };
 
