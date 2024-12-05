@@ -86,6 +86,10 @@ void	Bot::addToBuffer(const string &data) {
 	this->out_buffer.append(data);
 }
 
+static void	readyToSend(void) {
+	myEpoll.change(server, EPOLLIN | EPOLLOUT);
+}
+
 void Bot::join(void) {
 	cout << "Joining the server..." << '\n';
 
@@ -96,11 +100,8 @@ void Bot::join(void) {
 	this->addToBuffer("PASS test\r\n");
 	this->addToBuffer("CAP END\r\n");
 
-	// Join the #bot channel
-	this->addToBuffer("JOIN #bot\r\n");
-
 	// Set the epoll to be ready to write
-	myEpoll.change(server, EPOLLIN | EPOLLOUT);
+	readyToSend();
 }
 
 // Bot Functions
@@ -187,7 +188,7 @@ static string replyJOIN(const vector<string> &parts) {
 	string nick = getNick(parts[0]);
 
 	if (nick == "ircbot") {
-		cout << "DEBUG: Joined the server" << '\n';
+		cout << "DEBUG: Joined the channel" << '\n';
 	} else {
 		cout << "DEBUG: " << nick << " joined the channel" << '\n';
 		return "PRIVMSG " + parts[2] + " :Hello " + nick + ", welcome to the channel!\r\n";
@@ -201,7 +202,9 @@ static string replyPRIVMSG(vector<string> &parts) {
 
 	cout << "DEBUG: " << nick << " said: " << message << '\n';
 
-	return "PRIVMSG " + parts[2] + " :" + getGPTResponse(nick, message) + "\r\n";
+	string response = getGPTResponse(nick, message);
+
+	return "PRIVMSG " + parts[2] + " :" + response + "\r\n";
 }
 
 static string replyPART(const vector<string> &parts) {
@@ -210,6 +213,17 @@ static string replyPART(const vector<string> &parts) {
 	cout << "DEBUG: " << nick << " left the channel" << '\n';
 
 	return "PRIVMSG " + parts[2] + " :Goodbye " + nick + "! Have a nice day!\r\n";
+}
+
+static string replyINVITE(const vector<string> &parts) {
+	cout << parts[0] << " invited me to " << parts[3] << '\n';
+	string channel = parts[3].starts_with(':') ? parts[3].substr(1) : parts[3];
+	string response;
+
+	response = "JOIN " + channel + "\r\n";
+	response += "PRIVMSG " + channel + " :Hello! I'm ircbot. Thanks for inviting me, " + getNick(parts[0]) + "!\n I'm here to help you with your questions. Ask me anything!\r\n";
+
+	return response;
 }
 
 void Bot::parse(void) {
@@ -235,10 +249,14 @@ void Bot::parse(void) {
 		else if (parts[1] == "PART") {
 			response = replyPART(parts);
 		}
+
+		else if (parts[1] == "INVITE") {
+			response = replyINVITE(parts);
+		}
 		
 		if (!response.empty()) {
 			this->addToBuffer(response);
-			this->sendToServer();
+			readyToSend();
 		}
 	}
 }

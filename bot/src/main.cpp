@@ -22,8 +22,8 @@ static void createSocket(void) {
 	// Create a socket
 	server = ::socket(AF_INET, SOCK_STREAM, 0);
 
-	int			reuseAddr = 1;
-	setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr));
+	int		optval = 1;
+	setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
 	if (server == -1) {
 		cerr << "Error: socket creation failed" << '\n';
