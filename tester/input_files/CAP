@@ -1,0 +1,18 @@
+# Valid CAP commands
+CAP LS
+CAP LS 302
+CAP REQ :multi-prefix
+CAP REQ :sasl
+CAP REQ :multi-prefix sasl
+CAP * ACK :multi-prefix
+CAP * ACK :sasl
+CAP END
+
+# Invalid CAP commands
+CAP
+CAP LSS
+CAP LS LS
+CA P LS
+CAP LIST
+CAP UNKNOWN
+CAP REQ
