@@ -40,7 +40,7 @@ void INVITE(IRStream &stream, string &args, User *user) {
 		channel->addInvited(invitee);
 		stream.prefix().code(RPL_INVITING).param(user->getNickname()).param(InviteeName).param(ChannelName).end();
 		IRStream invStream;
-		invStream.prefix(user).param("INVITE").param(InviteeName).param(ChannelName).end().sendPacket(invitee);
+		invStream.prefix(user).param("INVITE").param(InviteeName).trail(ChannelName).end().sendPacket(invitee);
 	} catch (const IrcException &e) {
 		e.e_stream(stream, user);
 	}
