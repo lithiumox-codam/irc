@@ -8,7 +8,7 @@
 
 extern Server server;
 
-#define CAPABILITIES ":multi-prefix sasl"
+#define CAPABILITIES ":multi-prefix"
 
 /*
 	CAP LS: List supported capabilities.
@@ -43,6 +43,8 @@ void CAP(IRStream &stream, string &args, User *user) {
 
 	if (command == "LS") {
 		stream.prefix().command().param("*").param("LS").param(CAPABILITIES).end();
+	} else if (command == "LIST") {
+		stream.prefix().command().param(user->getNickname()).param("LIST").param(CAPABILITIES).end();
 	} else if (command == "REQ") {
 		stream.prefix().command().param("*").param("ACK").params(tokens).end();
 	} else if (command == "END") {
