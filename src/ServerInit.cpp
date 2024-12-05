@@ -59,7 +59,7 @@ void Server::epollCreate() {
 static string getFromSystemEnv(const string &key) {
 	const char *value = getenv(key.c_str());
 
-	return (value == nullptr) ? value : "";
+	return (value == nullptr) ? "" : value;
 }
 
 void Server::setPort(string &port) {
