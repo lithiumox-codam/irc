@@ -31,9 +31,8 @@ extern Server server;
 		server: 421 [NICK] CAP :Unknown command
 */
 void CAP(IRStream &stream, string &args, User *user) {
-	string nickname = user->getNickname().empty() ? "*" : user->getNickname();
 	if (args.empty()) {
-		stream.prefix().code(ERR_NEEDMOREPARAMS).param(nickname).param(" :Not enough parameters").end();
+		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).param(" :Not enough parameters").end();
 		return;
 	}
 
@@ -55,6 +54,6 @@ void CAP(IRStream &stream, string &args, User *user) {
 			user->addHandshake(H_WELCOME);
 		}
 	} else {
-		stream.prefix().code(ERR_UNKNOWNCOMMAND).param(nickname).trail("CAP :Unknown command").end();
+		stream.prefix().code(ERR_UNKNOWNCOMMAND).param(user->getNickname()).trail("CAP :Unknown command").end();
 	}
 }
