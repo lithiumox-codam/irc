@@ -59,11 +59,7 @@ void Server::epollCreate() {
 static string getFromSystemEnv(const string &key) {
 	const char *value = getenv(key.c_str());
 
-	if (value == nullptr) {
-		return "";
-	}
-
-	return value;
+	return (value == nullptr) ? value : "";
 }
 
 void Server::setPort(string &port) {
@@ -154,7 +150,7 @@ static void parseEnvFile(const string &filename) {
 	}
 
 	while (std::getline(file, line)) {
-		if (file.fail()) {
+		if (file.bad()) {
 			cerr << "Error: Unable to read env file " << filename << '\n';
 			break ;
 		}
