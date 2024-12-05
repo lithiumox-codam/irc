@@ -4,6 +4,7 @@
 SERVER=localhost
 PORT=6667
 DEFAULTNICK=opelser
+PASSWORD=test
 
 # Files
 LOGFILE="output.log"
@@ -22,10 +23,30 @@ RESET='\033[0m'
 
 # Function to log with timestamp and color
 log_with_timestamp() {
-    local color=$1
-    local message=$2
-    echo -e "$(date '+%Y-%m-%d %H:%M:%S') - ${color}${message}${RESET}" | tee -a $LOGFILE
+	local color=$1
+	local message=$2
+	echo -e "$(date '+%Y-%m-%d %H:%M:%S') - ${color}${message}${RESET}" | tee -a $LOGFILE
 }
+
+# Compile the server
+log_with_timestamp "$BLUE" "Compiling the server..."
+make DEBUG=1 -C ../
+if [ $? -ne 0 ]; then
+	log_with_timestamp "$RED" "Failed to compile the server"
+	exit 1
+fi
+
+# Start the server in the background
+log_with_timestamp "$BLUE" "Starting the server..."
+../ircserv $PORT $PASSWORD &
+SERVER_PID=$!
+sleep 2
+
+# Check if the server starting failed
+if ! kill -0 $SERVER_PID 2>/dev/null; then
+	log_with_timestamp "$RED" "Failed to start the server"
+	exit 1
+fi
 
 # Loop through input files
 for INPUTFILE in "$@"
@@ -96,6 +117,9 @@ do
 	log_with_timestamp "$BLUE" "Finished processing $INPUTFILE\n"
 done
 
+# Stop the server
+log_with_timestamp "$BLUE" "Stopping the server..."
+kill $SERVER_PID
+
 # Add a break line at the end of the log
 echo -e "\n\n\n[TESTER END]" | tee -a $LOGFILE
-
