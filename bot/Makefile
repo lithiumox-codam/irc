@@ -37,7 +37,7 @@ all: ${NAME}
 
 $(NAME): $(OBJ)
 	@ printf "%b%s%b" "$(YELLOW)$(BOLD)" "Compiling $(NICKNAME)..." "$(RESET)"
-	@ $(CC) $(OBJ) $(LDFLAGS) -o $(NAME)
+	@ $(CC) $(OBJ) $(CFLAGS) $(LDFLAGS) -o $(NAME)
 	@ printf "\t\t%b%s%b\n" "$(GREEN)$(BOLD)" "[OK]" "$(RESET)"
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HDR)
