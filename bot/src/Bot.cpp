@@ -6,16 +6,21 @@
 #include <cstring>
 #include <string>
 #include <vector>
+#include <iostream>
+
+#include <unistd.h>
+
+using namespace std;
 
 extern EpollClass	myEpoll;
-extern int			server;
 
 // Constructors
 
-Bot::Bot() {}
+Bot::Bot() : socketfd(-1) {}
 
 Bot &Bot::operator=(const Bot &other) {
 	if (this != &other) {
+		this->socketfd = other.socketfd;
 		this->in_buffer = other.in_buffer;
 		this->out_buffer = other.out_buffer;
 	}
@@ -26,26 +31,35 @@ Bot::Bot(const Bot &other) {
 	*this = other;
 }
 
-Bot::~Bot() {}
+Bot::~Bot() {
+	if (this->socketfd == -1) {
+		return;
+	}
+
+	if (close(socketfd) == -1) {
+		cerr << "Shutting down the bot failed: " << strerror(errno) << '\n';
+		exit(EXIT_FAILURE);
+	}
+	
+	this->socketfd = -1;
+}
 
 // Server Functions
 void Bot::readFromServer(void) {
 	char	buffer[4096];
 	int		ret;
 
-	ret = recv(server, buffer, sizeof(buffer) + 1, 0);
+	ret = recv(this->socketfd, buffer, sizeof(buffer), 0);
 
 	if (ret == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return;
 		}
-		cerr << "Error: recv(): " << strerror(errno) << '\n';
-		exit(EXIT_FAILURE);
+		throw ExecutionException("Unexpected error in recv:" + string(strerror(errno)));
 	}
 
 	if (ret == 0) {
-		cerr << "Server connection lost..." << '\n';
-		exit(EXIT_FAILURE);
+		throw ExecutionException("Connection to server lost...");
 	}
 
 	buffer[ret] = '\0';
@@ -59,49 +73,45 @@ void Bot::sendToServer(void) {
 	cout << "DEBUG: Sending: " << this->out_buffer << '\n';
 
 	// Send the buffer
-	while (!this->out_buffer.empty()) {
-		int ret = send(server, this->out_buffer.data(), this->out_buffer.size(), 0);
+	int ret = send(this->socketfd, this->out_buffer.data(), this->out_buffer.size(), 0);
 
-		if (ret == -1) {
-			if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				return;
-			}
-			cerr << "Error: send():" << strerror(errno) << '\n';
-			exit(EXIT_FAILURE);
+	cout << "DEBUG: Sent " << ret << " bytes" << '\n';
+
+	if (ret == -1) {
+		if (errno == EWOULDBLOCK || errno == EAGAIN) {
+			return;
 		}
-
-		if (ret == 0) {
-			cerr << "DEBUG: Server gracefully disconnected..." << '\n';
-			exit(EXIT_FAILURE);
-		}
-
-		this->out_buffer.erase(0, ret);
+		throw ExecutionException("Unexpected error in send:" + string(strerror(errno)));
 	}
 
+	if (ret == 0) {
+		throw ExecutionException("Connection to server lost...");
+	}
+
+	this->out_buffer.erase(0, ret);
+
 	// Change the epoll to remove the EPOLLOUT flag
-	myEpoll.change(server, EPOLLIN);
+	if (this->out_buffer.empty()) {
+		myEpoll.change(this->socketfd, EPOLLIN);
+	}
 }
 
 void	Bot::addToBuffer(const string &data) {
 	this->out_buffer.append(data);
 }
 
-static void	readyToSend(void) {
-	myEpoll.change(server, EPOLLIN | EPOLLOUT);
-}
-
-void Bot::join(void) {
+void Bot::join(const string &password) {
 	cout << "Joining the server..." << '\n';
 
 	// Join the server
 	this->addToBuffer("NICK ircbot\r\n");
 	this->addToBuffer("USER ircbot 0 * :ircbot\r\n");
+	this->addToBuffer("PASS " + password + "\r\n");
 	this->addToBuffer("CAP LS\r\n");
-	this->addToBuffer("PASS test\r\n");
 	this->addToBuffer("CAP END\r\n");
 
 	// Set the epoll to be ready to write
-	readyToSend();
+	myEpoll.change(this->socketfd, EPOLLIN | EPOLLOUT);
 }
 
 // Bot Functions
@@ -168,7 +178,7 @@ static vector<string> getCommands(string &buffer, const string &delim) {
 	return commands;
 }
 
-// :<server> 433 <username> <nickname> :Nickname is already in use
+// :<this->socketfd> 433 <username> <nickname> :Nickname is already in use
 // :ircbot!ircbot@localhost JOIN #bot
 // :opelser!olebol@localhost JOIN :#bot
 // :opelser!olebol@localhost PRIVMSG #bot :hello bot!
@@ -256,7 +266,7 @@ void Bot::parse(void) {
 		
 		if (!response.empty()) {
 			this->addToBuffer(response);
-			readyToSend();
+			myEpoll.change(this->socketfd, EPOLLIN | EPOLLOUT);
 		}
 	}
 }

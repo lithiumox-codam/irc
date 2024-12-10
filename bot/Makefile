@@ -62,7 +62,7 @@ format:
 	@ clang-format -i $(SRC) $(HDR)
 
 run: all
-	@ ./$(NAME) localhost 6667
+	@ ./$(NAME) localhost 6667 test
 
 bear: fclean
 	@ bear -- make
