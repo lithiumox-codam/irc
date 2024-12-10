@@ -51,25 +51,6 @@ void Bot::createSocket() {
 }
 
 void waitForConnection(int socketfd) {
-	fd_set fds;
-	FD_ZERO(&fds);
-	FD_SET(socketfd, &fds);
-
-	struct timeval timeout = {5, 0};
-
-	int ret = select(socketfd + 1, &fds, nullptr, nullptr, &timeout);
-	if (ret == -1) {
-		throw SetUpException("Select failed");
-	}
-
-	if (ret == 0) {
-		throw SetUpException("Connecting to server timed out");
-	}
-
-	if (!FD_ISSET(socketfd, &fds)) {
-		throw SetUpException("Connecting to server failed... Is it running?");
-	}
-
 	int &error = errno;
 	socklen_t len = sizeof(error);
 	if (getsockopt(socketfd, SOL_SOCKET, SO_ERROR, &error, &len) == -1) {
