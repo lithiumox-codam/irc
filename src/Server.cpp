@@ -20,7 +20,7 @@
 
 extern Server server;
 
-Server::Server() : socket(0), port(0), running(false) {}
+Server::Server() : socket(0), port(0), running(false), epoll_fd(-1) {}
 
 Server::~Server() { this->stop(); }
 
@@ -120,8 +120,12 @@ void Server::handleEvents(array<struct epoll_event, (size_t)ServerConfig::BACKLO
 	for (int i = 0; i < numberOfEvents; i++) {
 		struct epoll_event &event = events[i];
 
-		if (event.data.fd == socket && (event.events & EPOLLIN)) {
+		if (event.data.fd == socket) {
+			if ((event.events & EPOLLIN) == 0) {
+				throw ExecutionException("Received server socket event that is not EPOLLIN");
+			}
 			acceptNewConnection();
+
 		} else {
 			epollEvent(event);
 		}

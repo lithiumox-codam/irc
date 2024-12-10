@@ -52,20 +52,8 @@ void User::closeSocket() {
 		return;
 	}
 
-	if (shutdown(this->socket, SHUT_RDWR) == -1) {
-		if (errno == ENOTCONN) {
-			cerr << "Error: socket not connected" << "\n";
-		} else if (errno == ENOTSOCK) {
-			cerr << "Error: socket is not a socket" << "\n";
-		} else if (errno == EBADF) {
-			cerr << "Error: socket is not a valid file descriptor" << "\n";
-		} else {
-			cerr << "Error: shutdown failed" << "\n";
-		}
-		exit(EXIT_FAILURE);
-	}
 	if (close(this->socket) == -1) {
-		cerr << "Error: close failed" << "\n";
+		cerr << "Error: close failed: " << strerror(errno) << '\n';
 		exit(EXIT_FAILURE);
 	}
 
@@ -159,24 +147,24 @@ void User::readFromSocket() {
 }
 
 void User::sendToSocket() {
-	while (!this->out_buffer.empty()) {
-		int ret = send(this->socket, this->out_buffer.data(), this->out_buffer.size(), 0);
+	int ret = send(this->socket, this->out_buffer.data(), this->out_buffer.size(), 0);
 
-		if (ret == -1) {
-			if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				return;
-			}
-			throw(UserQuitException("Unexpected error in send:" + string(strerror(errno))));
+	if (ret == -1) {
+		if (errno == EWOULDBLOCK || errno == EAGAIN) {
+			return;
 		}
-
-		if (ret == 0) {
-			throw(UserQuitException("Connection lost"));
-		}
-
-		this->out_buffer.erase(0, ret);
+		throw(UserQuitException("Unexpected error in send:" + string(strerror(errno))));
 	}
 
-	server.epollChange(this->socket, EPOLLIN);
+	if (ret == 0) {
+		throw(UserQuitException("Connection lost"));
+	}
+
+	this->out_buffer.erase(0, ret);
+
+	if (this->out_buffer.empty()) {
+		server.epollChange(this->socket, EPOLLIN);
+	}
 }
 
 void User::addToBuffer(const string &data) {
