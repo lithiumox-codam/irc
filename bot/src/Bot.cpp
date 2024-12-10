@@ -7,10 +7,16 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <iomanip>
 
 #include <unistd.h>
 
 using namespace std;
+
+#define RED "\033[1;31m"
+#define YELLOW "\033[1;33m"
+#define GREEN "\033[1;32m"
+#define RESET "\033[0m"
 
 extern EpollClass	myEpoll;
 
@@ -64,18 +70,13 @@ void Bot::readFromServer(void) {
 
 	buffer[ret] = '\0';
 	this->in_buffer.append(buffer, ret);
-	cout << "DEBUG: Received: " << this->in_buffer << '\n';
 
 	this->parse();
 }
 
 void Bot::sendToServer(void) {
-	cout << "DEBUG: Sending: " << this->out_buffer << '\n';
-
 	// Send the buffer
 	int ret = send(this->socketfd, this->out_buffer.data(), this->out_buffer.size(), 0);
-
-	cout << "DEBUG: Sent " << ret << " bytes" << '\n';
 
 	if (ret == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
@@ -101,7 +102,7 @@ void	Bot::addToBuffer(const string &data) {
 }
 
 void Bot::join(const string &password) {
-	cout << "Joining the server..." << '\n';
+	cout << "Joining the server as [ircbot] with password [" << password << "]..." << "\n\n\n";
 
 	// Join the server
 	this->addToBuffer("NICK ircbot\r\n");
@@ -178,11 +179,26 @@ static vector<string> getCommands(string &buffer, const string &delim) {
 	return commands;
 }
 
+#define WIDTH 12
 // :<this->socketfd> 433 <username> <nickname> :Nickname is already in use
 // :ircbot!ircbot@localhost JOIN #bot
 // :opelser!olebol@localhost JOIN :#bot
 // :opelser!olebol@localhost PRIVMSG #bot :hello bot!
 // :opelser!olebol@localhost PART #bot :Leaving
+static void logMessage(const string &nick, const string &channel, const string &message) {
+	// Set width for nickname
+	int width;
+
+	width = nick.size() > WIDTH ? nick.size() : WIDTH;
+	cout << YELLOW << setw(width) << left << "[" + nick + "] " << RESET;
+
+	// Set width for channel
+	width = channel.size() > WIDTH ? channel.size() : WIDTH;
+	cout << RED << setw(width) << left << "[" + channel + "] " << RESET;
+
+	// Print the message
+	cout << message << '\n';
+}
 
 static string getNick(const string &sender) {
 	size_t nickEnd = sender.find('!');
@@ -196,44 +212,49 @@ static string getNick(const string &sender) {
 
 static string replyJOIN(const vector<string> &parts) {
 	string nick = getNick(parts[0]);
+	string response;
 
 	if (nick == "ircbot") {
-		cout << "DEBUG: Joined the channel" << '\n';
-	} else {
-		cout << "DEBUG: " << nick << " joined the channel" << '\n';
-		return "PRIVMSG " + parts[2] + " :Hello " + nick + ", welcome to the channel!\r\n";
+		response = "Hello! I'm ircbot. Thanks for inviting me! Ask me anything!";
 	}
-	return string();
+	else {
+		response = "Hello " + nick + ", welcome to the channel!";
+	}
+
+	logMessage(nick, parts[2], "joined the channel");
+	logMessage("ircbot", parts[2], response);
+
+	return "PRIVMSG " + parts[2] + " :" + response + "\r\n";
 }
 
 static string replyPRIVMSG(vector<string> &parts) {
 	string nick = getNick(parts[0]);
 	string message = parts.back();
-
-	cout << "DEBUG: " << nick << " said: " << message << '\n';
-
 	string response = getGPTResponse(nick, message);
+
+	logMessage(nick, parts[2], message);
+	logMessage("ircbot", parts[2], response);
 
 	return "PRIVMSG " + parts[2] + " :" + response + "\r\n";
 }
 
 static string replyPART(const vector<string> &parts) {
 	string nick = getNick(parts[0]);
+	string response = "Goodbye " + nick + "! Have a nice day!";
 
-	cout << "DEBUG: " << nick << " left the channel" << '\n';
+	logMessage(nick, parts[2], "left the channel");
+	logMessage("ircbot", parts[2], response);
 
-	return "PRIVMSG " + parts[2] + " :Goodbye " + nick + "! Have a nice day!\r\n";
+	return "PRIVMSG " + parts[2] + response + "\r\n";
 }
 
 static string replyINVITE(const vector<string> &parts) {
-	cout << parts[0] << " invited me to " << parts[3] << '\n';
+	string nick = getNick(parts[0]);
 	string channel = parts[3].starts_with(':') ? parts[3].substr(1) : parts[3];
-	string response;
 
-	response = "JOIN " + channel + "\r\n";
-	response += "PRIVMSG " + channel + " :Hello! I'm ircbot. Thanks for inviting me, " + getNick(parts[0]) + "!\n I'm here to help you with your questions. Ask me anything!\r\n";
+	logMessage(nick, channel, "invited me to the channel");
 
-	return response;
+	return "JOIN " + channel + "\r\n";
 }
 
 void Bot::parse(void) {
@@ -248,7 +269,12 @@ void Bot::parse(void) {
 			exit(EXIT_FAILURE);
 		}
 
-		else if (parts[1] == "JOIN") {
+		if (parts[1] == "376") {
+			logMessage("ircbot", "server", "Connected to the server");
+			continue ;
+		}
+
+		if (parts[1] == "JOIN") {
 			response = replyJOIN(parts);
 		}
 
@@ -263,7 +289,7 @@ void Bot::parse(void) {
 		else if (parts[1] == "INVITE") {
 			response = replyINVITE(parts);
 		}
-		
+
 		if (!response.empty()) {
 			this->addToBuffer(response);
 			myEpoll.change(this->socketfd, EPOLLIN | EPOLLOUT);
