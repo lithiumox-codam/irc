@@ -36,7 +36,8 @@ void User::parse(void) {
 
 		string baseCommand = command.substr(0, command.find(' '));
 
-		cout << "Command: " << command << endl;
+		// Yellow bold text
+		cout << "\033[1;33m[" << this->getNickname() << "] " << command << "\033[0m\n";
 
 		for (const auto &pair : store) {
 			if (baseCommand == pair.first) {
