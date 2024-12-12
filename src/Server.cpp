@@ -202,7 +202,6 @@ void Server::start() {
 		const int maxEvents = 10;
 		array<struct epoll_event, maxEvents> events;
 		int numberOfEvents = epoll_wait(this->epoll_fd, events.data(), (int)ServerConfig::MAX_EVENTS, -1);
-
 		if (numberOfEvents == -1) {
 			cerr << strerror(errno) << '\n';
 			cerr << "Error: epoll_wait failed" << '\n';

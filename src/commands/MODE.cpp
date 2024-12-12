@@ -1,8 +1,11 @@
 #include <algorithm>
+#include <exception>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <utility>
 
 #include "Channel.hpp"
 #include "Codes.hpp"
@@ -44,8 +47,49 @@ static string diffModes(const string &modes, const string &unsupportedModes) {
 		}
 		diff += chr;
 	}
-
+	cerr << "diff: " << diff << '\n';
 	return diff;
+}
+
+static string diffModes(const string &modes){
+	vector<string> modeGroups;
+	stringstream currentGroup;
+
+	for (char chr : modes) {
+		if (chr == '+' || chr == '-') {
+			if (!currentGroup.str().empty()) {
+				modeGroups.push_back(currentGroup.str());
+			}
+			currentGroup.str(string());
+			currentGroup << chr;
+		} else {
+			currentGroup << chr;
+		}
+	}
+	if (!currentGroup.str().empty()) {
+		modeGroups.push_back(currentGroup.str());
+	}
+
+	for (auto &group : modeGroups) {
+		char sign = group[0];
+		unordered_set<char> seenModes;
+		string cleanedGroup(1, sign);
+
+		for (size_t i = 1; i < group.size(); ++i) {
+			char chr = group[i];
+			if (seenModes.find(chr) == seenModes.end()) {
+				cleanedGroup += chr;
+				seenModes.insert(chr);
+			}
+		}
+		group = cleanedGroup;
+	}
+
+	string result;
+	for (const auto &group : modeGroups) {
+		result += group;
+	}
+	return result;
 }
 
 static void serverOperatorHelper(const string &modes, User *user) {
@@ -90,15 +134,29 @@ static void sendUnknownMode(IRStream &stream, User *user, const string &unsuppor
 		.end();
 }
 
+static void channelOperatorHelper(const string &mode, User *user, Channel *channel, string &targetnick) {
+	auto *target = channel->getMember(targetnick);
+
+	if (!channel->hasOperator(user)) {
+		throw UserNotOperatorException();
+	}
+	if (mode[0] == '+') {
+		channel->addOperator(target->first);
+	} else {
+		channel->removeOperator(target->first);
+	}
+	broadcastModeChange(channel, user, mode, targetnick);
+}
+
 /**
- * @brief Handles the MODE command for users. This function will handle the following:
- * - MODE user			 : Returns the modes of the user.
- * - MODE user (+|-)mode : (Un)sets a mode from the user. Only operators can change other users' modes.
- *
- * @param stream The stream to output to.
- * @param tokens The tokens from the command.
- * @param user The user that sent the command.
- */
+* @brief Handles the MODE command for users. This function will handle the following:
+* - MODE user           : Returns the modes of the user.
+* - MODE user (+|-)mode : (Un)sets a mode from the user. Only operators can change other users' modes.
+*
+* @param stream The stream to output to.
+* @param tokens The tokens from the command.
+* @param user The user that sent the command.
+*/
 static void handleUserMode(IRStream &stream, vector<string> &tokens, User *user) {
 	try {
 		switch (tokens.size()) {
@@ -137,83 +195,140 @@ static void handleUserMode(IRStream &stream, vector<string> &tokens, User *user)
 	}
 }
 
-/**
- * @brief Handles the MODE command for channels. This function will handle the following:
- * - MODE #channel				  : Returns the modes of the channel.
- * - MODE #channel (+|-)mode	  : (Un)sets a mode from the channel.
- * - MODE #channel user 		  : Returns the modes of the user in the channel.
- * - MODE #channel (+|-)mode user : (Un)sets the modes of the user in the channel. Only for operators.
- *
- * @param stream The stream to output to.
- * @param tokens The tokens from the command.
- * @param user The user that sent the command.
- */
-static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *user) {
-	try {
-		auto *channel = server.getChannel(tokens[0]);
-		auto *member = channel->getMember(user->getNickname());
+static void handleChannelModes(IRStream &stream, vector<string> &tokens, User *user) {
+	char sign = '\0';
+	string modes = diffModes(tokens[1]);
+	auto tokenIt = tokens.begin() + 2;
+	Channel *channel = server.getChannel(tokens[0]);
 
-		if (!member->second.has(M_OPERATOR)) {
-			stream.prefix()
-				.code(ERR_CHANOPRIVSNEEDED)
-				.param(user->getNickname())
-				.param(channel->getName() + ":")
-				.trail("You're not channel operator")
-				.end();
-			return;
+	for (size_t i = 0; i < modes.length(); ++i) {
+		char chr = modes[i];
+
+		if (chr == '+' || chr == '-') {
+			sign = chr;
+			continue;
 		}
-
-		switch (tokens.size()) {
-			case 1: {
-				stream.prefix()
-					.code(RPL_CHANNELMODEIS)
-					.param(user->getNickname())
-					.param(channel->getName())
-					.param(channel->modes.getString())
-					.end();
-			} break;
-
-			case 2: {
-				if (tokens[1].starts_with("+") || tokens[1].starts_with("-")) {
-					channel->modes.applyChanges(tokens[1]);
-					broadcastModeChange(channel, user, tokens[1], "");
-				} else {
-					auto *targetMember = channel->getMember(tokens[1]);
-					sendModeChange(stream, user, targetMember->second.getString());
-				}
-			} break;
-
-			case 3: {
-				// Check if token[2] is a number for limit mode
-				if (all_of(tokens[2].begin(), tokens[2].end(), ::isdigit)) {
-					// Only look for limit mode specifically
-					size_t limitPos = tokens[1].find('l');
-					if (limitPos != string::npos && tokens[1].rfind('+', limitPos) != string::npos) {
-						channel->setLimit(stoi(tokens[2]));
+		try {
+			switch (chr) {
+				case 'o':
+					if (tokenIt != tokens.end()) {
+						channelOperatorHelper({sign, chr}, user, channel, *tokenIt);
+					} else {
+						throw NotEnoughParametersException();
 					}
-					// Apply all mode changes including other modes
-					channel->modes.applyChanges(tokens[1]);
-					broadcastModeChange(channel, user, tokens[1], tokens[2]);
 					break;
-				}
-
-				auto *targetMember = channel->getMember(tokens[2]);
-				auto unsupportedModes = targetMember->second.applyChanges(tokens[1]);
-				if (!unsupportedModes.empty()) {
-					sendUnknownMode(stream, user, unsupportedModes);
-				} else if (!diffModes(tokens[1], unsupportedModes).empty()) {
-					broadcastModeChange(channel, user, diffModes(tokens[1], unsupportedModes), tokens[2]);
-				}
-			} break;
-
-			default: {
-				throw NotEnoughParametersException();
+				case 'l':
+					if (sign == '+') {
+						tokenIt != tokens.end() ? channel->setLimit(stoi(*tokenIt)) : throw NotEnoughParametersException();
+						broadcastModeChange(channel, user, {sign, chr}, *tokenIt);
+						++tokenIt;
+					} else {
+						channel->removeLimit();
+						broadcastModeChange(channel, user, {sign, chr}, "");
+					}
+					break;
+				case 'k':
+					if (sign == '+') {
+						tokenIt != tokens.end() ? channel->setPassword(*tokenIt) : throw NotEnoughParametersException();
+						broadcastModeChange(channel, user, {sign, chr}, *tokenIt);
+						++tokenIt;
+					} else {
+						channel->removePassword();
+						broadcastModeChange(channel, user, {sign, chr}, channel->getName());
+					}
+					break;
+				default:
+					auto unsupportedModes = channel->modes.applyChanges({sign, chr});
+					if (!unsupportedModes.empty()) {
+						sendUnknownMode(stream, user, unsupportedModes);
+					}
+					break;
 			}
+		} catch (const IrcException &e) {
+			e.e_stream(stream, user);
+		} catch (const exception &e) {
+			NotEnoughParametersException().e_stream(stream, user);
 		}
-	} catch (const IrcException &e) {
-		e.e_stream(stream, user);
 	}
 }
+
+/**
+* @brief Handles the MODE command for channels. This function will handle the following:
+* - MODE #channel                : Returns the modes of the channel.
+* - MODE #channel (+|-)mode      : (Un)sets a mode from the channel.
+* - MODE #channel user           : Returns the modes of the user in the channel.
+* - MODE #channel (+|-)mode user : (Un)sets the modes of the user in the channel. Only for operators.
+*
+* @param stream The stream to output to.
+* @param tokens The tokens from the command.
+* @param user The user that sent the command.
+*/
+// static void handleChannelMode(IRStream &stream, vector<string> &tokens, User *user) {
+//  try {
+//      auto *channel = server.getChannel(tokens[0]);
+//      auto *member = channel->getMember(user->getNickname());
+
+//      if (!member->second.has(M_OPERATOR)) {
+//          stream.prefix()
+//              .code(ERR_CHANOPRIVSNEEDED)
+//              .param(user->getNickname())
+//              .param(channel->getName() + ":")
+//              .trail("You're not channel operator")
+//              .end();
+//          return;
+//      }
+
+//      switch (tokens.size()) {
+//          case 1: {
+//              stream.prefix()
+//                  .code(RPL_CHANNELMODEIS)
+//                  .param(user->getNickname())
+//                  .param(channel->getName())
+//                  .param(channel->modes.getString())
+//                  .end();
+//          } break;
+
+//          case 2: {
+//              if (tokens[1].starts_with("+") || tokens[1].starts_with("-")) {
+//                  channel->modes.applyChanges(tokens[1]);
+//                  broadcastModeChange(channel, user, tokens[1], "");
+//              } else {
+//                  auto *targetMember = channel->getMember(tokens[1]);
+//                  sendModeChange(stream, user, targetMember->second.getString());
+//              }
+//          } break;
+
+//          case 3: {
+//              // Check if token[2] is a number for limit mode
+//              if (all_of(tokens[2].begin(), tokens[2].end(), ::isdigit)) {
+//                  // Only look for limit mode specifically
+//                  size_t limitPos = tokens[1].find('l');
+//                  if (limitPos != string::npos && tokens[1].rfind('+', limitPos) != string::npos) {
+//                      channel->setLimit(stoi(tokens[2]));
+//                  }
+//                  // Apply all mode changes including other modes
+//                  channel->modes.applyChanges(tokens[1]);
+//                  broadcastModeChange(channel, user, tokens[1], tokens[2]);
+//                  break;
+//              }
+
+//              auto *targetMember = channel->getMember(tokens[2]);
+//              auto unsupportedModes = targetMember->second.applyChanges(tokens[1]);
+//              if (!unsupportedModes.empty()) {
+//                  sendUnknownMode(stream, user, unsupportedModes);
+//              } else if (!diffModes(tokens[1], unsupportedModes).empty()) {
+//                  broadcastModeChange(channel, user, diffModes(tokens[1], unsupportedModes), tokens[2]);
+//              }
+//          } break;
+
+//          default: {
+//              throw NotEnoughParametersException();
+//          }
+//      }
+//  } catch (const IrcException &e) {
+//      e.e_stream(stream, user);
+//  }
+// }
 
 void MODE(IRStream &stream, string &args, User *user) {
 	if (!user->hasHandshake(H_AUTHENTICATED)) {
@@ -237,8 +352,53 @@ void MODE(IRStream &stream, string &args, User *user) {
 	}
 
 	if (tokens.front().starts_with("#")) {
-		handleChannelMode(stream, tokens, user);
+		try {
+			handleChannelModes(stream, tokens, user);
+		} catch (const IrcException &e) {
+			e.e_stream(stream, user);
+		}
 	} else {
 		handleUserMode(stream, tokens, user);
 	}
 }
+
+// static void oHandler(IRStream &stream, vector<string> &args, User *user, char sign) {
+// 	if (args.size() < 3) {
+// 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
+// 		return;
+// 	}
+
+// 	auto *channel = server.getChannel(args[0]);
+// 	auto *member = channel->getMember(user->getNickname());
+
+// 	if (!member->second.has(M_OPERATOR)) {
+// 		stream.prefix()
+// 			.code(ERR_CHANOPRIVSNEEDED)
+// 			.param(user->getNickname())
+// 			.param(channel->getName() + ":")
+// 			.trail("You're not channel operator")
+// 			.end();
+// 		return;
+// 	}
+
+// 	auto *target = channel->getMember(args[2]);
+// 	if (target == nullptr) {
+// 		stream.prefix()
+// 			.code(ERR_USERNOTINCHANNEL)
+// 			.param(user->getNickname())
+// 			.param(args[2])
+// 			.param(channel->getName())
+// 			.trail("They aren't on that channel")
+// 			.end();
+// 		return;
+// 	}
+
+// 	if (sign == '+') {
+// 		target->second.add(M_OPERATOR);
+// 	} else {
+// 		target->second.remove(M_OPERATOR);
+// 	}
+
+// 	broadcastModeChange(channel, user, string(1, sign) + "o", args[2]);
+// }
+
