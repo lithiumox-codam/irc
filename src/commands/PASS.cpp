@@ -21,22 +21,22 @@ void PASS(IRStream &stream, string &args, User *user) {	 // if pass fails, disco
 
 		return;
 	}
-	if (user->hasHandshake(USER_PASS)) {
+	if (user->hasHandshake(H_PASS)) {
 		stream.str("");
 		stream.code(ERR_ALREADYREGISTRED).param(user->getNickname()).trail("You are already authenticated").end();
 		return;
 	}
 
 	if (args == server.getPassword()) {
-		user->addHandshake(USER_PASS);
+		user->addHandshake(H_PASS);
 	} else {
 		stream.prefix().code(ERR_PASSWDMISMATCH).param(user->getNickname()).trail("Password incorrect").end();
 		return;
 	}
 
-	if (user->hasHandshake(USER_AUTHENTICATED) && !user->hasHandshake(USER_WELCOME)) {
+	if (user->hasHandshake(H_AUTHENTICATED) && !user->hasHandshake(H_WELCOME)) {
 		string empty;
 		MOTD(stream, empty, user);
-		user->addHandshake(USER_WELCOME);
+		user->addHandshake(H_WELCOME);
 	}
 }

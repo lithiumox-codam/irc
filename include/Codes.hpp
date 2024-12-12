@@ -97,7 +97,7 @@
 #define ERR_NOADMININFO "423"		// No admin info
 #define ERR_FILEERROR "424"			// File error
 #define ERR_NONICKNAMEGIVEN "431"	// No nickname given
-#define ERR_ERRONEUSNICKNAME "432"	// Erroneous nickname
+#define ERR_ERRONEOUSNICKNAME "432"	// Erroneous nickname
 #define ERR_NICKNAMEINUSE "433"		// Nickname in use
 #define ERR_NICKCOLLISION "436"		// Nickname collision
 #define ERR_USERNOTINCHANNEL "441"	// User not in channel
@@ -114,7 +114,7 @@
 #define ERR_YOUREBANNEDCREEP "465"	// You're banned
 #define ERR_KEYSET "467"			// Key set
 #define ERR_CHANNELISFULL "471"		// Channel is full
-#define ERR_UNKNOWNMODE "472"		// Unknown mode
+#define ERR_UNKNOWNMODE "501"		// Unknown mode
 #define ERR_INVITEONLYCHAN "473"	// Invite only channel
 #define ERR_BANNEDFROMCHAN "474"	// Banned from channel
 #define ERR_BADCHANNELKEY "475"		// Bad channel key

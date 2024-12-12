@@ -1,6 +1,7 @@
 #pragma once
 
 #include <exception>
+#include <stdexcept>
 #include <string>
 
 #include "Channel.hpp"
@@ -14,35 +15,65 @@ class IrcException : public exception {
    protected:
 	const string message;
 	const string code;
-	IrcException(const string &msg, const string &I_code) : message(msg), code(I_code) {}
-	~IrcException() {}
+	const string param;
 
    public:
+	IrcException(const string &msg, const string &I_code) : message(msg), code(I_code) {}
+	IrcException(const string &msg, const string &I_code, const string &I_param)
+		: message(msg), code(I_code), param(I_param) {}
+	~IrcException() {}
+	const string &GetCode() const { return code; }
 	virtual void e_stream(IRStream &stream, User *user) const = 0;
 	const char *what() const noexcept override { return message.c_str(); }
 };
 
 class NoSuchUserException : public IrcException {
    public:
-	NoSuchUserException() : IrcException("No such nickname", ERR_NOSUCHNICK) {}
+	NoSuchUserException(const string &param) : IrcException("No such nickname", ERR_NOSUCHNICK, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
-		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
+	}
+};
+
+class ErroneousNicknameException : public IrcException {
+   public:
+	ErroneousNicknameException(const string &param) : IrcException("Erroneous nickname", ERR_ERRONEOUSNICKNAME, param) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		string nickname = user->getNickname().empty() ? "*" : user->getNickname();
+		stream.prefix().code(code).param(nickname).param(param).trail(message).end();
+	}
+};
+
+class NicknameInUseException : public IrcException {
+   public:
+	NicknameInUseException(const string &param) : IrcException("Nickname is already in use", ERR_NICKNAMEINUSE, param) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		string nickname = user->getNickname().empty() ? "*" : user->getNickname();
+		stream.prefix().code(code).param(nickname).param(param).trail(message).end();
+	}
+};
+
+class ErroneousUsernameException : public IrcException {
+   public:
+	ErroneousUsernameException(const string &param) : IrcException("Erroneous username", ERR_ERRONEOUSNICKNAME, param) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
 	}
 };
 
 class NoSuchChannelException : public IrcException {
    public:
-	NoSuchChannelException() : IrcException("No such channel", ERR_NOSUCHCHANNEL) {}
+	NoSuchChannelException(const string &param) : IrcException("No such channel", ERR_NOSUCHCHANNEL, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
-		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
 	}
 };
 
 class NotOnChannelException : public IrcException {
    public:
-	NotOnChannelException() : IrcException("You're not in that channel", ERR_NOTONCHANNEL) {}
+	NotOnChannelException(const string &param) : IrcException("You're not in that channel", ERR_NOTONCHANNEL, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
-		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
 	}
 };
 
@@ -52,4 +83,88 @@ class UserNotOperatorException : public IrcException {
 	void e_stream(IRStream &stream, User *user) const override {
 		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
 	}
+};
+
+class UserAlreadyOnChannelException : public IrcException {
+   public:
+	UserAlreadyOnChannelException() : IrcException("User is already on channel", ERR_USERONCHANNEL) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
+
+class ChannelFullException : public IrcException {
+   public:
+	ChannelFullException(const string &param) : IrcException("Channel is full", ERR_CHANNELISFULL, param) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
+	}
+};
+
+class InviteOnlyChannelException : public IrcException {
+   public:
+	InviteOnlyChannelException() : IrcException("Cannot join channel (Invite only)", ERR_INVITEONLYCHAN) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
+
+class BadChannelKeyException : public IrcException {
+   public:
+	BadChannelKeyException(const string &param)
+		: IrcException("Cannot join channel (+k) - bad key", ERR_BADCHANNELKEY, param) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
+	}
+};
+
+class NotEnoughParametersException : public IrcException {
+   public:
+	NotEnoughParametersException() : IrcException("Not enough parameters", ERR_NEEDMOREPARAMS) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
+
+class UserNotOnChannelException : public IrcException {
+   public:
+	UserNotOnChannelException(const string &param) : IrcException("User not in channel", ERR_USERNOTINCHANNEL, param) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
+	}
+};
+
+class CannotSendToChannelException : public IrcException {
+   public:
+	CannotSendToChannelException() : IrcException("Cannot send to channel missing voice! (+m)", ERR_CANNOTSENDTOCHAN) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
+
+class NoRecipientException : public IrcException {
+   public:
+	NoRecipientException() : IrcException("No recipient", ERR_NORECIPIENT) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
+
+class NoOtherUserModeException : public IrcException {
+   public:
+	NoOtherUserModeException() : IrcException("Cannot see modes for other users", ERR_USERSDONTMATCH) {}
+	void e_stream(IRStream &stream, User *user) const override {
+		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+	}
+};
+
+class UserQuitException : public exception {
+   private:
+	string reason;
+
+   public:
+	UserQuitException(const string &reason) { this->reason = reason; }
+	~UserQuitException() {}
+
+	const char *what() const noexcept override { return reason.c_str(); }
 };

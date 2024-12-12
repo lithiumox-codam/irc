@@ -1,21 +1,28 @@
 #include "Channel.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <utility>
 
+#include "Exceptions.hpp"
 #include "IRStream.hpp"
 #include "Modes.hpp"
+#include "User.hpp"
 
 using namespace std;
 
 Channel::Channel() : modes(Type::CHANNEL) {};
 
-Channel::Channel(const string &name) : name(name), created(time(nullptr)), modes(Type::CHANNEL) {}
+Channel::Channel(const string &name) : created(time(nullptr)), modes(Type::CHANNEL) {
+	this->setName(name);
+}
 
 Channel::Channel(const Channel &channel) noexcept
 	: members(channel.members),
 	  name(channel.name),
 	  password(channel.password),
 	  topic(channel.password),
+	  limit(channel.limit),
 	  modes(channel.modes) {}
 
 Channel &Channel::operator=(const Channel &channel) noexcept {
@@ -23,6 +30,7 @@ Channel &Channel::operator=(const Channel &channel) noexcept {
 	this->name = channel.name;
 	this->password = channel.password;
 	this->topic = channel.topic;
+	this->limit = channel.limit;
 	this->modes = channel.modes;
 	return *this;
 }
@@ -33,10 +41,30 @@ const string &Channel::getPassword() const { return this->password; }
 
 void Channel::setPassword(const string &password) {
 	this->password = password;
-	this->modes.addModes(M_PASSWORD);
+	this->modes.add(M_PASSWORD);
 }
 
-void Channel::setName(const string &name) { this->name = name; }
+void Channel::removePassword() {
+	this->password.clear();
+	this->modes.remove(M_PASSWORD);
+}
+
+void Channel::setName(const string &name) {
+	// Name validation
+	if (name.size() < 2 || name.size() > 16) {
+		throw NoSuchChannelException(name);
+	}
+	if (!name.starts_with('#')) {
+		throw NoSuchChannelException(name);
+	}
+	for (const auto &c : name) {
+		if (isprint(c) == 0 || c == ' ' || c == ',') {
+			throw NoSuchChannelException(name);
+		}
+	}
+
+	this->name = name;
+}
 
 /**
  * @brief Adds a user to the channel.
@@ -46,14 +74,15 @@ void Channel::setName(const string &name) { this->name = name; }
  * @param user The user to add.
  */
 void Channel::addUser(User *user) {
-	this->members.emplace_back(user, Modes(Type::CHANNEL));
+	this->members.emplace_back(user, Modes(Type::CHANNELMEMBER));
 	if (this->hasOperator(user)) {
-		this->getMembers()->back().second.addModes(M_OPERATOR);
+		this->getMembers()->back().second.add(M_OPERATOR);
 	}
 }
 
 void Channel::removeUser(User *user) {
-	// NOLINTNEXTLINE
+	IRStream stream;
+
 	for (auto it = this->members.begin(); it != this->members.end(); ++it) {
 		if (it->first->getSocket() == user->getSocket()) {
 			this->members.erase(it);
@@ -70,16 +99,6 @@ bool Channel::hasUser(User *user) const {
 		}
 	}
 	return false;
-}
-
-pair<User *, Modes> &Channel::getMember(const string &nickname) {
-	// NOLINTNEXTLINE
-	for (auto &member : this->members) {
-		if (member.first->getNickname() == nickname) {
-			return member;
-		}
-	}
-	throw runtime_error(nickname + " is not in the channel");
 }
 
 void Channel::addOperator(User *user) { operators.push_back(user); }
@@ -126,15 +145,25 @@ bool Channel::hasInvited(User *user) const {
 	return false;
 }
 
-std::vector<pair<User *, Modes>> *Channel::getMembers() { return &this->members; }
+std::deque<Member> *Channel::getMembers() { return &this->members; }
 
-std::pair<User *, Modes> *Channel::getMember(User *user) {
+Member *Channel::getMember(User *user) {
 	for (auto &member : this->members) {
 		if (member.first->getSocket() == user->getSocket()) {
 			return &member;
 		}
 	}
 	return nullptr;
+}
+
+Member *Channel::getMember(const string &nickname) {
+	// NOLINTNEXTLINE
+	for (auto &member : this->members) {
+		if (member.first->getNickname() == nickname) {
+			return &member;
+		}
+	}
+	throw UserNotOnChannelException(nickname);
 }
 
 void Channel::broadcast(User *user, const string &message) {
@@ -149,10 +178,24 @@ void Channel::broadcast(User *user, const string &message) {
 	}
 }
 
+void Channel::broadcast(IRStream &stream, User *user) {
+	for (auto &member : *this->getMembers()) {
+		if (user != NULL && (member.first->getSocket() != user->getSocket())) {
+			stream.sendPacket(member.first);
+		}
+	}
+}
+
+void Channel::broadcast(IRStream &stream) {
+	for (auto &member : *this->getMembers()) {
+		stream.sendPacket(member.first);
+	}
+}
+
 string Channel::getUserModes(User *user) {
 	for (const auto &member : this->members) {
 		if (member.first->getSocket() == user->getSocket()) {
-			return member.second.getModesString();
+			return member.second.getString();
 		}
 	}
 	return "";
@@ -162,4 +205,21 @@ const string &Channel::getTopic() const { return this->topic; }
 
 void Channel::setTopic(const string &topic) { this->topic = topic; }
 
+void Channel::setTopicTime(time_t time) { this->topictime = time; }
+
+time_t Channel::getTopicTime() const { return this->topictime; }
+
+void Channel::setTopicSetter(User *user) { this->topicsetter = user->getNickname(); }
+
+string Channel::getTopicSetter() const { return this->topicsetter; }
+
 time_t Channel::getCreated() const { return this->created; }
+
+void Channel::setLimit(size_t limit) {
+	this->limit = limit;
+	this->modes.add(M_LIMIT);
+}
+
+size_t Channel::getLimit() const { return this->limit; }
+
+void Channel::removeLimit() { this->modes.remove(M_LIMIT); }

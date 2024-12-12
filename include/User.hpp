@@ -14,30 +14,30 @@ enum UserConfig : uint16_t {
 /**
  * @brief Bitmask representing the completion status of a user.
  *
- * @details The UserFlags enum is a bitmask that represents the completion status of a user. The flags are used to
+ * @details The Handshake enum is a bitmask that represents the completion status of a user. The flags are used to
  determine
  * if a user has completed all necessary steps to be considered registered.
 
- * - The USER_INFO flag is set when the user has completed CAP negotiation.
- * - The USER_USER flag is set when the user has user information.
- * - The USER_NICK flag is set when the user has a nickname.
- * - The USER_PASS flag is set when the user has entered the correct password.
- * - The USER_WELCOME flag is set when the user has received a welcome message.
+ * - The H_INFO flag is set when the user has completed CAP negotiation.
+ * - The H_USER flag is set when the user has user information.
+ * - The H_NICK flag is set when the user has a nickname.
+ * - The H_PASS flag is set when the user has entered the correct password.
+ * - The H_WELCOME flag is set when the user has received a welcome message.
  *
- * - The USER_AUTHENTICATED flag is set when the user has completed all necessary steps, except for sending the welcome
+ * - The H_AUTHENTICATED flag is set when the user has completed all necessary steps, except for sending the welcome
  message.
- * - The USER_REGISTERED flag is set when the user has completed all necessary steps.
+ * - The H_REGISTERED flag is set when the user has completed all necessary steps.
  */
-enum UserFlags : uint8_t {
-	USER_INFO = 1 << 0,		// User has completed CAP negotiation.
-	USER_USER = 1 << 1,		// User has user information.
-	USER_NICK = 1 << 2,		// User has a nickname.
-	USER_PASS = 1 << 3,		// User has entered the correct password.
-	USER_WELCOME = 1 << 4,	// User has received a welcome message.
+enum Handshake : uint8_t {
+	H_INFO = 1 << 0,	 // User has completed CAP negotiation.
+	H_USER = 1 << 1,	 // User has user information.
+	H_NICK = 1 << 2,	 // User has a nickname.
+	H_PASS = 1 << 3,	 // User has entered the correct password.
+	H_WELCOME = 1 << 4,	 // User has received a welcome message.
 
-	USER_AUTHENTICATED = USER_USER | USER_NICK | USER_PASS |
-						 USER_INFO,	 // User has completed all necessary steps, except for sending the welcome message.
-	USER_REGISTERED = USER_AUTHENTICATED | USER_WELCOME,  // User has completed all necessary steps.
+	H_AUTHENTICATED = H_USER | H_NICK | H_PASS |
+					  H_INFO,  // User has completed all necessary steps, except for sending the welcome message.
+	H_REGISTERED = H_AUTHENTICATED | H_WELCOME,	 // User has completed all necessary steps.
 };
 
 class User {
@@ -77,12 +77,14 @@ class User {
 	[[nodiscard]] bool hasHandshake(unsigned int handshake) const;
 	[[nodiscard]] unsigned int getHandshake() const;
 
-	[[nodiscard]] string &getInBuffer();
-	[[nodiscard]] string &getOutBuffer();
+	[[nodiscard]] bool checkPacket();
 
-	// Socket I/O
-	bool readFromSocket();
-	bool sendToSocket();
+	void readFromSocket();
+	void sendToSocket();
+
+	[[nodiscard]] string &getInBuffer();
+
+	[[nodiscard]] string &getOutBuffer();
 	void addToBuffer(const string &data);
 
 	void parse(void);

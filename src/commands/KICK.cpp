@@ -9,23 +9,18 @@
 #include "Modes.hpp"
 #include "Server.hpp"
 #include "User.hpp"
+#include <algorithm>
 
 extern Server server;
 
 using namespace std;
 
-string join(const vector<string> &tokens, size_t start) {
-	string result;
-	for (size_t i = start; i < tokens.size(); ++i) {
-		if (i > start) {
-			result += " ";
-		}
-		result += tokens[i];
-	}
-	return result;
-}
-
 void KICK(IRStream &stream, string &args, User *user) {
+	if (!user->hasHandshake(H_AUTHENTICATED)) {
+		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
+		return;
+	}
+
 	vector<string> tokens = split(args, ' ');
 	if (tokens.size() < 2) {
 		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
@@ -34,36 +29,27 @@ void KICK(IRStream &stream, string &args, User *user) {
 	try {
 		Channel *channel = server.getChannel(tokens[0]);
 		if (!channel->hasUser(user)) {
-			stream.prefix().code(ERR_NOTONCHANNEL).param(user->getNickname()).trail("You're not in that channel").end();
-			return;
+			throw NotOnChannelException(tokens[0]);
 		}
-		pair<User *, Modes> *target = channel->getMember(server.getUser(tokens[1]));
+		Member *target = channel->getMember(server.getUser(tokens[1]));
 		if (target == nullptr) {
-			stream.prefix().code(ERR_USERNOTINCHANNEL).param(user->getNickname()).trail("User not in channel").end();
-			return;
+			throw UserNotOnChannelException(tokens[1]);
 		}
-		pair<User *, Modes> *kicker = channel->getMember(user);
-		if (!kicker->second.hasModes(M_OPERATOR)) {
-			stream.prefix()
-				.code(ERR_CHANOPRIVSNEEDED)
-				.param(user->getNickname())
-				.trail("You're not a channel operator")
-				.end();
-			return;
+		Member *kicker = channel->getMember(user);
+		if (!kicker->second.has(M_OPERATOR)) {
+			throw UserNotOperatorException();
 		}
-		channel->removeUser(target->first);
+
 		stream.prefix(user).command().param(channel->getName()).param(target->first->getNickname());
 		if (tokens.size() > 2) {
-			stream.param(join(tokens, 2));
+			for_each(tokens.begin() + 2, tokens.end(), [&stream](const string &str) { stream.param(str); });
 		} else {
 			stream.param(kicker->first->getNickname());
 		}
 		stream.end();
-	} catch (const runtime_error &e) {
-		if (std::string(e.what()) == "Channel not found") {
-			stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
-		} else {
-			stream.prefix().code(ERR_NOSUCHNICK).param(user->getNickname()).trail("No such nickname").end();
-		}
+		channel->broadcast(stream, kicker->first);
+		channel->removeUser(target->first);
+	} catch (const IrcException &e) {
+		e.e_stream(stream, user);
 	}
 }

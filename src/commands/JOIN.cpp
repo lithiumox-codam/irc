@@ -1,9 +1,11 @@
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 
 #include "Channel.hpp"
 #include "Codes.hpp"
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "IRStream.hpp"
 #include "Modes.hpp"
@@ -12,54 +14,90 @@
 
 extern Server server;
 
-static void broadcast(Channel *channel, User *user) {
-	IRStream stream;
-
-	stream.setCommand("JOIN");
-
-	stream.prefix(user).command().trail(channel->getName()).end();
-	for (auto &member : *channel->getMembers()) {
-		if (member.first->getSocket() != user->getSocket()) {
-			stream.sendPacket(member.first);
-		}
-	}
-}
-
-static void addToChannel(IRStream &stream, Channel *channel, User *user) {
-	channel->addUser(user);
-
-	stream.prefix(user).command().param(channel->getName()).end();
-	if (channel->getTopic().empty()) {
-		stream.prefix().code(RPL_NOTOPIC).param(channel->getName()).trail("No topic is set").end();
-	} else {
+static void sendChannelTopic(IRStream &stream, Channel *channel, User *user) {
+	if (!channel->getTopic().empty()) {
 		stream.prefix()
 			.code(RPL_TOPIC)
 			.param(user->getNickname())
 			.param(channel->getName())
 			.trail(channel->getTopic())
 			.end();
+		stream.prefix()
+			.code(RPL_TOPICTIME)
+			.param(user->getNickname())
+			.param(channel->getName())
+			.param(channel->getTopicSetter())
+			.trail(to_string(channel->getTopicTime()))
+			.end();
 	}
+}
 
-	// Send the names list
-	stream.prefix().code(RPL_NAMREPLY).param(user->getNickname()).param("=").param(channel->getName()).trail("");
+static vector<string> getVisibleMembers(Channel *channel) {
+	vector<string> members;
 	for (auto &member : *channel->getMembers()) {
-		stream.param(member.first->getNickname());
+		if (!member.second.has(M_INVISIBLE)) {
+			members.push_back((member.second.has(M_OPERATOR) ? "@" : "") + member.first->getNickname());
+		}
 	}
-	stream.end();
+	return members;
+}
 
+static void makeNamesList(IRStream &stream, Channel *channel, User *user) {
+	stream.prefix()
+		.code(RPL_NAMREPLY)
+		.param(user->getNickname())
+		.param("=")
+		.param(channel->getName())
+		.trail(getVisibleMembers(channel))
+		.end();
 	stream.prefix()
 		.code(RPL_ENDOFNAMES)
 		.param(user->getNickname())
 		.param(channel->getName())
 		.trail("End of /NAMES list")
 		.end();
+}
 
-	broadcast(channel, user);
+static void channelChecks(Channel *channel, User *user) {
+	if (channel->hasUser(user)) {
+		throw UserAlreadyOnChannelException();
+	}
+	if (channel->modes.has(M_LIMIT) && channel->getMembers()->size() >= channel->getLimit()) {
+		throw ChannelFullException(channel->getName());
+	}
+	if (channel->getMembers()->size() >= MEMBER_LIMIT) {
+		throw ChannelFullException(channel->getName());
+	}
+
+	if (channel->hasInvited(user)) {
+		channel->removeInvited(user);
+	} else if (channel->modes.has(M_INVITE_ONLY)) {
+		throw InviteOnlyChannelException();
+	}
+}
+
+void makeNewChannel(IRStream &stream, User *user, string &channelName, vector<string> &passwords, auto &password) {
+	try {
+		Channel *channel = &server.addChannel(channelName);
+		channel->addOperator(user);
+		channel->addUser(user);
+
+		if (password != passwords.end()) {
+			channel->setPassword(*password);
+			channel->modes.add(M_PASSWORD);
+			password++;
+		}
+
+		stream.prefix(user).command().param(channel->getName()).end();
+		makeNamesList(stream, channel, user);
+	} catch (const IrcException &e) {
+		e.e_stream(stream, user);
+	}
 }
 
 void JOIN(IRStream &stream, string &args, User *user) {
 	// Check if the user is registered
-	if (!user->hasHandshake(USER_REGISTERED)) {
+	if (!user->hasHandshake(H_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}
@@ -80,96 +118,32 @@ void JOIN(IRStream &stream, string &args, User *user) {
 	vector<string> passwords = (parts.size() > 1) ? split(parts[1], ',') : vector<string>();
 	auto password = passwords.begin();
 
-	if (channelNames.empty()) {
-		stream.prefix().code(ERR_NEEDMOREPARAMS).param(user->getNickname()).trail("Not enough parameters").end();
-		return;
-	}
-
 	// Try joining the channels
 	for (string &channelName : channelNames) {
-		if (channelName[0] != '#') {
-			stream.prefix()
-				.code(ERR_NOSUCHCHANNEL)
-				.param(user->getNickname())
-				.param(channelName)
-				.trail("No such channel")
-				.end();	 // Channel names must start with #
-			continue;
-		}
-
 		try {
 			Channel *channel = server.getChannel(channelName);
 
-			if (channel->hasUser(user)) {
-				stream.prefix()
-					.code(ERR_USERONCHANNEL)
-					.param(user->getNickname())
-					.param(channel->getName())
-					.trail("You're already on that channel")
-					.end();
-				continue;
-			}
-			if (channel->getMembers()->size() >= MEMBER_LIMIT) {
-				stream.prefix()
-					.code(ERR_CHANNELISFULL)
-					.param(user->getNickname())
-					.param(channel->getName())
-					.trail("Channel is full")
-					.end();
-				continue;
-			}
-
-			if (channel->hasInvited(user)) {
-				channel->removeInvited(user);
-			} else if (channel->modes.hasModes(M_INVITE_ONLY)) {
-				stream.prefix()
-					.code(ERR_INVITEONLYCHAN)
-					.param(user->getNickname())
-					.param(channel->getName())
-					.trail("Cannot join channel (+i)")
-					.end();
-				continue;
-			}
-
-			if (channel->modes.hasModes(M_PASSWORD)) {
+			channelChecks(channel, user);
+			if (channel->modes.has(M_PASSWORD)) {
 				if (password == passwords.end()) {
-					stream.prefix()
-						.code(ERR_BADCHANNELKEY)
-						.param(user->getNickname())
-						.param(channelName)
-						.trail("Cannot join channel (+k) - bad key")
-						.end();
-					continue;
+					throw BadChannelKeyException(channelName);
 				}
 				if (*password != channel->getPassword()) {
-					stream.prefix()
-						.code(ERR_BADCHANNELKEY)
-						.param(user->getNickname())
-						.param(channelName)
-						.trail("Cannot join channel (+k) - bad key")
-						.end();
 					password++;
-					continue;
+					throw BadChannelKeyException(channelName);
 				}
 				password++;
 			}
 
-			addToChannel(stream, channel, user);
-
-		} catch (const runtime_error &e) {	// Channel not found
-			server.addChannel(
-				channelName);  // We're not running any checks on the channel name, maybe alpha-numeric only?
-			Channel *channel = server.getChannel(channelName);
-			channel->addOperator(user);
 			channel->addUser(user);
-
-			if (password != passwords.end()) {
-				channel->setPassword(*password);
-				channel->modes.addModes(M_PASSWORD);
-				password++;
-			}
-
 			stream.prefix(user).command().param(channel->getName()).end();
+			channel->broadcast(stream, user);
+			sendChannelTopic(stream, channel, user);
+			makeNamesList(stream, channel, user);
+		} catch (NoSuchChannelException &e) {
+			makeNewChannel(stream, user, channelName, passwords, password);
+		} catch (const IrcException &e) {
+			e.e_stream(stream, user);
 		}
 	}
 }

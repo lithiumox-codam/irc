@@ -5,16 +5,20 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <array>
 #include <cerrno>
 #include <climits>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <new>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
+#include "Exceptions.hpp"
 #include "General.hpp"
+#include "IRStream.hpp"
 #include "User.hpp"
 
 extern Server server;
@@ -58,7 +62,96 @@ void Server::bindSocket(const string &portString) {
 
 void Server::setHostname(const string &hostString) { hostname = hostString; }
 
-void Server::userReadyToSend(User &user) { this->myEpoll.change(user.getSocket(), EPOLLIN | EPOLLOUT); }
+void Server::epollCreate() {
+	this->epoll_fd = epoll_create1(0);
+	if (this->epoll_fd == -1) {
+		cerr << strerror(errno) << '\n';
+		cerr << "Error: epoll_create1 failed" << '\n';
+		exit(EXIT_FAILURE);
+	}
+}
+
+void Server::epollAdd(int socket_fd) const {
+	struct epoll_event event = {.events = EPOLLIN, .data = {.fd = socket_fd}};
+
+	if (epoll_ctl(this->epoll_fd, EPOLL_CTL_ADD, socket_fd, &event) == -1) {
+		cerr << strerror(errno) << '\n';
+		cerr << "Error: epoll_ctl failed" << '\n';
+		exit(EXIT_FAILURE);
+	}
+}
+
+static string epollError(User *user) {
+	cerr << "Error: EPOLLERR" << '\n';
+	int err;
+
+	socklen_t len = sizeof(err);
+	getsockopt(user->getSocket(), SOL_SOCKET, SO_ERROR, &err, &len);
+	return strerror(err);
+}
+
+static void epollEvent(struct epoll_event &event) {
+	int socket_fd = event.data.fd;
+	User *user = server.getUser(socket_fd);
+	bool removeUser = false;
+	string reason;
+
+	if ((event.events & EPOLLIN) != 0) {
+		try {
+			user->readFromSocket();
+			user->parse();
+		} catch (UserQuitException &e) {
+			removeUser = true;
+			reason = e.what();
+		}
+	}
+
+	if ((event.events & EPOLLOUT) != 0) {
+		try {
+			user->sendToSocket();
+		} catch (UserQuitException &e) {
+			removeUser = true;
+			reason = e.what();
+		}
+	}
+
+	if ((event.events & EPOLLERR) != 0) {
+		removeUser = true;
+		reason = "Error on socket" + epollError(user);
+	}
+
+	if ((event.events & EPOLLHUP) != 0) {
+		removeUser = true;
+		reason = "Client shutdown (HANGUP)";
+	}
+
+	if ((event.events & EPOLLRDHUP) != 0) {
+		removeUser = true;
+		reason = "Client shutdown (READ HANGUP)";
+	}
+
+	if (removeUser) {
+		server.removeUser(*user, reason);
+	}
+}
+
+void Server::epollRemove(int socket_fd) const {
+	if (epoll_ctl(this->epoll_fd, EPOLL_CTL_DEL, socket_fd, nullptr) == -1) {
+		cerr << strerror(errno) << '\n';
+		cerr << "Error: epoll_ctl failed" << '\n';
+		exit(EXIT_FAILURE);
+	}
+}
+
+void Server::epollChange(int socket_fd, uint32_t events) const {
+	struct epoll_event event = {.events = events, .data = {.fd = socket_fd}};
+
+	if (epoll_ctl(this->epoll_fd, EPOLL_CTL_MOD, socket_fd, &event) == -1) {
+		cerr << strerror(errno) << '\n';
+		cerr << "Error: epoll_ctl failed" << '\n';
+		exit(EXIT_FAILURE);
+	}
+}
 
 void Server::acceptNewConnection() {
 	const int clientSocket = accept(this->socket, nullptr, nullptr);
@@ -75,56 +168,17 @@ void Server::acceptNewConnection() {
 	bool opt = true;
 	setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 	this->addUser(clientSocket);
-
-	cout << GREEN << "New connection on socket " << clientSocket << RESET << '\n';
 }
 
-void Server::handleEvent(epoll_event &event) {
-	if (event.data.fd == this->socket && (event.events & EPOLLIN) != 0) {
-		acceptNewConnection();
-		return;
-	}
+void Server::handleEvents(array<struct epoll_event, (size_t)ServerConfig::BACKLOG> &events, int numberOfEvents) {
+	for (int i = 0; i < numberOfEvents; i++) {
+		struct epoll_event &event = events[i];
 
-	try {
-		User *user = server.getUser(event.data.fd);
-
-		if ((event.events & EPOLLIN) != 0) {
-			if (!user->readFromSocket()) {
-				server.removeUser(*user);
-				return;
-			}
+		if (event.data.fd == socket && (event.events & EPOLLIN)) {
+			acceptNewConnection();
+		} else {
+			epollEvent(event);
 		}
-
-		if ((event.events & EPOLLOUT) != 0) {
-			if (!user->sendToSocket()) {
-				server.removeUser(*user);
-				return;
-			}
-
-			if (user->getOutBuffer().empty()) {
-				this->myEpoll.change(event.data.fd, EPOLLIN);
-			}
-		}
-
-		if ((event.events & EPOLLERR) != 0) {
-			cerr << "Error: EPOLLERR: " << strerror(errno) << '\n';
-			server.removeUser(*user);
-			return;
-		}
-
-		if ((event.events & EPOLLHUP) != 0) {
-			cerr << "Client shut down: EPOLLHUP" << '\n';
-			server.removeUser(*user);
-			return;
-		}
-
-		if ((event.events & EPOLLRDHUP) != 0) {
-			cerr << "client shut down: EPOLLRDHUP" << '\n';
-			server.removeUser(*user);
-			return;
-		}
-	} catch (const runtime_error &e) {
-		cerr << "Error: " << e.what() << '\n';
 	}
 }
 
@@ -140,18 +194,21 @@ void Server::start() {
 	}
 	this->running = true;
 
-	this->myEpoll.add(this->socket);
+	this->epollCreate();
 
 	string message;
-
+	this->epollAdd(this->socket);
 	while (true) {
-		this->myEpoll.wait();
-
-		for (epoll_event &event : this->myEpoll.events) {
-			if (event.events != 0) {
-				handleEvent(event);
-			}
+		const int maxEvents = 10;
+		array<struct epoll_event, maxEvents> events;
+		int numberOfEvents = epoll_wait(this->epoll_fd, events.data(), (int)ServerConfig::MAX_EVENTS, -1);
+		if (numberOfEvents == -1) {
+			cerr << strerror(errno) << '\n';
+			cerr << "Error: epoll_wait failed" << '\n';
+			exit(EXIT_FAILURE);
 		}
+
+		handleEvents(events, numberOfEvents);
 	}
 }
 
@@ -161,8 +218,6 @@ void Server::stop() {
 	}
 	close(this->socket);
 	this->running = false;
-
-	cout << RED << "\rServer stopped" << RESET << '\n';
 }
 
 deque<User> &Server::getUsers() { return this->users; }
@@ -173,7 +228,7 @@ User *Server::getUser(const int socket) {
 			return &user;
 		}
 	}
-	throw runtime_error("User not found");
+	throw NoSuchUserException("");	////////////////////change this later maybe
 }
 
 User *Server::getUser(const string &nickname) {
@@ -183,18 +238,22 @@ User *Server::getUser(const string &nickname) {
 			return &user;
 		}
 	}
-	throw runtime_error("User not found");
+	throw NoSuchUserException(nickname);
 }
 
 void Server::addUser(unsigned int socket) {
 	this->users.emplace_back(socket);
-	this->myEpoll.add(socket);
+	this->epollAdd(socket);
 }
 
-void Server::removeUser(User &user) {
+void Server::removeUser(User &user, const string &reason) {
+	IRStream stream;
+
+	stream.prefix(&user).param("QUIT").trail(reason).end();
 	// remove from channels
 	for (auto &channel : this->channels) {
 		if (channel.hasUser(&user)) {
+			channel.broadcast(stream, &user);
 			channel.removeUser(&user);
 
 			if (channel.getMembers()->empty()) {
@@ -205,7 +264,7 @@ void Server::removeUser(User &user) {
 
 	for (auto it = this->users.begin(); it != this->users.end(); ++it) {
 		if (it->getSocket() == user.getSocket()) {
-			this->myEpoll.remove(user.getSocket());
+			this->epollRemove(user.getSocket());
 			user.closeSocket();
 			this->users.erase(it);
 			break;
@@ -232,7 +291,7 @@ Channel *Server::getChannel(const string &name) {
 			return &channel;
 		}
 	}
-	throw runtime_error("Channel " + name + " not found");
+	throw NoSuchChannelException(name);
 }
 
 const string &Server::getHostname() { return this->hostname; }
@@ -240,6 +299,15 @@ const string &Server::getHostname() { return this->hostname; }
 bool Server::isBound() const { return this->socket != 0; }
 
 void Server::addOperator(const string &nickname) { this->operators.push_back(nickname); }
+
+void Server::removeOperator(const string &nickname) {
+	for (auto it = this->operators.begin(); it != this->operators.end(); ++it) {
+		if (*it == nickname) {
+			this->operators.erase(it);
+			break;
+		}
+	}
+}
 
 bool Server::operatorCheck(User *user) const {
 	if (this->operators.empty()) {
@@ -252,4 +320,14 @@ bool Server::operatorCheck(User *user) const {
 		}
 	}
 	return false;
+}
+
+string Server::getUserCount() const {
+	size_t count = 0;
+	for (const auto &user : users) {
+		if (user.hasHandshake(H_AUTHENTICATED)) {
+			count++;
+		}
+	}
+	return to_string(count);
 }

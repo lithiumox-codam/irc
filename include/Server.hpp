@@ -5,12 +5,12 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <array>
 #include <csignal>
 #include <deque>
 #include <string>
 
 #include "Channel.hpp"
-#include "Epoll.hpp"
 #include "User.hpp"
 
 using namespace std;
@@ -39,7 +39,6 @@ class Server {
 	bool running;  // Server running status
 
 	int epoll_fd;  // File descriptor for epoll
-	EpollClass myEpoll;
 
    public:
 	Server();
@@ -57,13 +56,17 @@ class Server {
 	void start();
 	void stop();
 
-	void userReadyToSend(User &user);
+	void epollCreate();
+	void epollAdd(int socket) const;
+	void epollRemove(int socket) const;
+	void epollChange(int socket, uint32_t events) const;
+	int epollWait();
 
+	void handleEvents(array<struct epoll_event, (size_t)ServerConfig::BACKLOG> &events, int numberOfEvents);
 	void acceptNewConnection();
-	void handleEvent(struct epoll_event &event);
 
 	void addUser(unsigned int socket);
-	void removeUser(User &user);
+	void removeUser(User &user, const string &reason);
 	[[nodiscard]] User *getUser(int socket);
 	[[nodiscard]] User *getUser(const string &nickname);
 	[[nodiscard]] deque<User> &getUsers();
@@ -75,7 +78,10 @@ class Server {
 
 	[[nodiscard]] const string &getHostname();
 	void addOperator(const string &nickname);
-	bool operatorCheck(User *user) const;
+	void removeOperator(const string &nickname);
+	[[nodiscard]] bool operatorCheck(User *user) const;
+
+	string getUserCount() const;
 };
 
 ostream &operator<<(ostream &stream, Server &server);

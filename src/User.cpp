@@ -11,16 +11,13 @@
 #include <iostream>
 #include <ostream>
 
+#include "Exceptions.hpp"
 #include "General.hpp"
 #include "Server.hpp"
 
 extern Server server;
 
-User::User(int socket) : socket(socket), handshake(0), modes(Type::USER) {
-	if (server.operatorCheck(this)) {
-		modes.addModes(M_OPERATOR);
-	}
-}
+User::User(int socket) : socket(socket), handshake(0), modes(Type::USER) {}
 
 User::User(const User &user) noexcept : modes(user.modes) {
 	this->socket = user.socket;
@@ -65,10 +62,11 @@ void User::closeSocket() {
 		} else {
 			cerr << "Error: shutdown failed" << "\n";
 		}
-		cerr << "Error: shutdown failed" << "\n";
+		exit(EXIT_FAILURE);
 	}
 	if (close(this->socket) == -1) {
 		cerr << "Error: close failed" << "\n";
+		exit(EXIT_FAILURE);
 	}
 
 	this->socket = -1;
@@ -84,13 +82,51 @@ const string &User::getRealname() const { return this->realname; }
 
 const string &User::getHostname() const { return this->hostname; }
 
-void User::setNickname(string &nickname) { this->nickname = std::move(nickname); }
+void User::setNickname(string &nickname) {
+	// Name validation
+	for (const auto &user : server.getUsers()) {
+		if (user.getNickname() == nickname) {
+			throw NicknameInUseException(nickname);
+		}
+	}
 
-void User::setUsername(string &username) { this->username = std::move(username); }
+	if (nickname.size() < 2) {
+		throw ErroneousNicknameException(nickname);
+	}
+	if (nickname.size() > 12) {
+		nickname = nickname.substr(0, 12);
+	}
+	if (isdigit(nickname[0]) > 0) {
+		throw ErroneousNicknameException(nickname);
+	}
+	for (const auto &c : nickname) {
+		if (isprint(c) == 0 || c == ' ') {
+			throw ErroneousNicknameException(nickname);
+		}
+	}
 
-void User::setRealname(string &realname) { this->realname = std::move(realname); }
+	this->nickname = nickname;
+}
 
-void User::setHostname(string &hostname) { this->hostname = std::move(hostname); }
+void User::setUsername(string &username) {
+	if (username.size() < 2) {
+		throw ErroneousUsernameException(username);
+	}
+	if (username.size() > 16) {
+		username = username.substr(0, 12);
+	}
+	for (const auto &c : username) {
+		if (isprint(c) == 0 || c == ' ') {
+			throw ErroneousUsernameException(username);
+		}
+	}
+
+	this->username = username;
+}
+
+void User::setRealname(string &realname) { this->realname = realname; }
+
+void User::setHostname(string &hostname) { this->hostname = hostname; }
 
 void User::addHandshake(unsigned int handshake) { this->handshake |= handshake; }
 
@@ -98,64 +134,58 @@ unsigned int User::getHandshake() const { return this->handshake; }
 
 bool User::hasHandshake(unsigned int handshake) const { return (this->handshake & handshake) == handshake; }
 
-bool User::readFromSocket(void) {
+void User::readFromSocket() {
 	char buffer[UserConfig::BUFFER_SIZE];
-	int ret;
-
-	ret = recv(this->socket, buffer, sizeof(buffer) + 1, 0);
+	int ret = recv(this->socket, buffer, sizeof(buffer) + 1, 0);
 
 	if (ret == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
-			return true;
+			return ;
 		}
-		cerr << "Error: recv(): " << strerror(errno) << '\n';
-		return false;
+		throw (UserQuitException("Unexpected error in recv:" + string(strerror(errno))));
 	}
 
 	if (ret == 0) {
-		cerr << "Connection to user " << this->getNickname() << " lost..." << '\n';
-		return false;
+		throw (UserQuitException("Connection lost"));
 	}
 
 	buffer[ret] = '\0';
 	this->in_buffer.append(buffer, ret);
-	cout << RED << "DEBUG: Received: " << this->in_buffer << RESET << '\n';
-
-	this->parse();
-	return true;
 }
 
-bool User::sendToSocket() {
+void User::sendToSocket() {
 	while (!this->out_buffer.empty()) {
-		cout << GREEN << "DEBUG: Sending: " << this->out_buffer << RESET << '\n';
-
 		int ret = send(this->socket, this->out_buffer.data(), this->out_buffer.size(), 0);
 
 		if (ret == -1) {
 			if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				return true;
+				return ;
 			}
-			cerr << "Error: send():" << strerror(errno) << '\n';
-			return false;
+			throw (UserQuitException("Unexpected error in send:" + string(strerror(errno))));
 		}
 
 		if (ret == 0) {
-			cerr << "DEBUG: User " << this->getNickname() << " gracefully disconnected" << '\n';
-			return false;
+			throw (UserQuitException("Connection lost"));
 		}
 
 		this->out_buffer.erase(0, ret);
 	}
 
-	return true;
+	server.epollChange(this->socket, EPOLLIN);
 }
 
-void User::addToBuffer(const string &data) { this->out_buffer.append(data); };
+void User::addToBuffer(const string &data) {
+	this->out_buffer.append(data);
+
+	if (!this->out_buffer.empty()) {
+		server.epollChange(this->socket, EPOLLIN | EPOLLOUT);
+	}
+};
 
 ostream &operator<<(std::ostream &stream, const User &user) {
 	const int WIDTH = 52;
 	const std::map<unsigned int, char> handshakeMap = {
-		{USER_INFO, 'I'}, {USER_USER, 'U'}, {USER_NICK, 'N'}, {USER_PASS, 'P'}, {USER_WELCOME, 'W'}};
+		{H_INFO, 'I'}, {H_USER, 'U'}, {H_NICK, 'N'}, {H_PASS, 'P'}, {H_WELCOME, 'W'}};
 
 	// NOLINTNEXTLINE
 	auto line = [](char l, char m, char r) { return l + std::string(WIDTH - 2, m) + r; };

@@ -1,7 +1,9 @@
 #include <utility>
 #include <vector>
 
+#include "Codes.hpp"
 #include "General.hpp"
+#include "IRStream.hpp"
 
 /**
  * @brief Splits a string by a delimiter.

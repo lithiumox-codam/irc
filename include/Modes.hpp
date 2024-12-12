@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+#include <cstdint>
 #include <string>
 
 using namespace std;
@@ -29,7 +31,14 @@ unsigned int const M_TOPIC_LOCK = 1 << 7;
 /** Determines if the channel has a limit. (+l) */
 unsigned int const M_LIMIT = 1 << 8;
 
-enum class Type { USER, CHANNEL };
+static constexpr array<pair<unsigned int, char>, 3> channelMemberPairs{{{M_OPERATOR, 'o'}, {M_VOICE, 'v'}}};
+
+static constexpr array<pair<unsigned int, char>, 2> userModePairs{{{M_OPERATOR, 'o'}, {M_INVISIBLE, 'i'}}};
+
+static constexpr array<pair<unsigned int, char>, 5> channelModePairs{
+	{{M_MODERATED, 'm'}, {M_INVITE_ONLY, 'i'}, {M_PASSWORD, 'k'}, {M_TOPIC_LOCK, 't'}, {M_LIMIT, 'l'}}};
+
+enum class Type : uint8_t { USER, CHANNEL, CHANNELMEMBER };
 
 class Modes {
    private:
@@ -39,16 +48,20 @@ class Modes {
    public:
 	Modes(Type type);
 	~Modes() = default;
-	Modes(unsigned int modes);
+	Modes(unsigned int modes, Type type);
 	Modes(const Modes &modes) noexcept;
 	auto operator=(const Modes &modes) noexcept -> Modes &;
 
 	void setModes(unsigned int modes);
-	[[nodiscard]] unsigned int getModes() const;
-	void addModes(unsigned int modes);
-	void removeModes(unsigned int modes);
-	[[nodiscard]] bool hasModes(unsigned int modes) const;
-	string getModesString() const;
-	void clearModes();
+	[[nodiscard]] unsigned int get() const;
+	void add(unsigned int modes);
+	void remove(unsigned int modes);
+	[[nodiscard]] bool has(unsigned int modes) const;
+	string getString() const;
+	void clear();
 	Type getType() const;
+	bool changeHelper(char modeChar, const auto &modePairs, bool addMode);
+	string applyChanges(const string &modeChanges);
+
+	friend ostream &operator<<(ostream &stream, const Modes &modes);
 };

@@ -12,7 +12,7 @@
 extern Server server;
 
 void TOPIC(IRStream &stream, string &args, User *user) {
-	if (!user->hasHandshake(USER_REGISTERED)) {
+	if (!user->hasHandshake(H_REGISTERED)) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}
@@ -21,12 +21,11 @@ void TOPIC(IRStream &stream, string &args, User *user) {
 		return;
 	}
 	pair<string, string> tokens = splitPair(args, ' ');
-	cerr << "parser gives: " << tokens.first << " and [" << tokens.second << "]\n";
+	// cerr << "parser gives: " << tokens.first << " and [" << tokens.second << "]\n";
 	try {
 		Channel *channel = server.getChannel(tokens.first);
 		if (!channel->hasUser(user)) {
-			stream.prefix().code(ERR_NOTONCHANNEL).param(user->getNickname()).trail("You're not in that channel").end();
-			return;
+			throw NotOnChannelException(tokens.first);
 		}
 		if (tokens.second.empty()) {
 			if (channel->getTopic().empty()) {
@@ -52,6 +51,8 @@ void TOPIC(IRStream &stream, string &args, User *user) {
 			return;
 		}
 		channel->setTopic(tokens.second);
+		channel->setTopicTime(time(nullptr));
+		channel->setTopicSetter(user);
 		stream.prefix()
 			.code(RPL_TOPIC)
 			.param(user->getNickname())
@@ -63,10 +64,11 @@ void TOPIC(IRStream &stream, string &args, User *user) {
 			.param(user->getNickname())
 			.param(channel->getName())
 			.param(user->getNickname())
-			.trail(to_string(time(nullptr)))
+			.trail(to_string(channel->getTopicTime()))
 			.end();
+		channel->broadcast(stream, user);
 		return;
-	} catch (runtime_error &e) {
-		stream.prefix().code(ERR_NOSUCHCHANNEL).param(user->getNickname()).trail("No such channel").end();
+	} catch (const IrcException &e) {
+		e.e_stream(stream, user);
 	}
 }

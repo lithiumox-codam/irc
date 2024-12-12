@@ -46,12 +46,12 @@ void CAP(IRStream &stream, string &args, User *user) {
 	} else if (command == "REQ") {
 		stream.prefix().command().param("*").param("ACK").params(tokens).end();
 	} else if (command == "END") {
-		user->addHandshake(USER_INFO);
+		user->addHandshake(H_INFO);
 
-		if (user->hasHandshake(USER_AUTHENTICATED) && !user->hasHandshake(USER_WELCOME)) {
+		if (user->hasHandshake(H_AUTHENTICATED) && !user->hasHandshake(H_WELCOME)) {
 			string empty;
 			MOTD(stream, empty, user);
-			user->addHandshake(USER_WELCOME);
+			user->addHandshake(H_WELCOME);
 		}
 	} else {
 		stream.prefix().code(ERR_UNKNOWNCOMMAND).param(user->getNickname()).trail("CAP :Unknown command").end();

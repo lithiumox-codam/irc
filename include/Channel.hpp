@@ -1,11 +1,13 @@
 #pragma once
 
 #include <ctime>
+#include <deque>
 #include <iostream>
 #include <string>
 #include <utility>
-#include <vector>
 
+class IRStream;
+#include "IRStream.hpp"
 #include "Modes.hpp"
 #include "User.hpp"
 
@@ -13,16 +15,21 @@ using namespace std;
 
 #define MEMBER_LIMIT 50
 
+typedef pair<User*, Modes> Member;
+
 class Channel {
    private:
-	vector<pair<User *, Modes>> members;
-	vector<User *> operators;
-	vector<User *> invited;
+	deque<Member> members;
+	deque<User *> operators;
+	deque<User *> invited;
 	string name;
 	string password;
 	string topic;
+	size_t limit;
 
 	time_t created;
+	string topicsetter;
+	time_t topictime;
 
    public:
 	Modes modes;
@@ -30,17 +37,27 @@ class Channel {
 	Channel(const string &name);
 	Channel(const Channel &channel) noexcept;
 	Channel &operator=(const Channel &channel) noexcept;
+	~Channel() = default;
 
 	[[nodiscard]] const string &getName() const;
 	void setName(const std::string &name);
 
 	[[nodiscard]] const string &getPassword() const;
 	void setPassword(const std::string &password);
+	void removePassword();
+
+	void setTopic(const string &topic);
+	[[nodiscard]] const string &getTopic() const;
+
+	void setTopicTime(time_t time);
+	[[nodiscard]] time_t getTopicTime() const;
+
+	void setTopicSetter(User *user);
+	[[nodiscard]] string getTopicSetter() const;
 
 	void addUser(User *user);
 	void removeUser(User *user);
 	bool hasUser(User *user) const;
-	pair<User *, Modes> &getMember(const string &nickname);
 
 	void addOperator(User *user);
 	void removeOperator(User *user);
@@ -50,15 +67,21 @@ class Channel {
 	void removeInvited(User *user);
 	bool hasInvited(User *user) const;
 
-	[[nodiscard]] vector<pair<User *, Modes>> *getMembers();
-	[[nodiscard]] pair<User *, Modes> *getMember(User *user);
+	[[nodiscard]] deque<Member> *getMembers();
+	[[nodiscard]] Member *getMember(User *user);
+	[[nodiscard]] Member *getMember(const string &nickname);
 
-	[[nodiscard]] const string &getTopic() const;
-	void setTopic(const string &topic);
 	void broadcast(User *user, const string &message);
+	void broadcast(IRStream &stream, User *user);
+	void broadcast(IRStream &stream);
+
 	string getUserModes(User *user);
 
 	[[nodiscard]] time_t getCreated() const;
+
+	void setLimit(size_t limit);
+	[[nodiscard]] size_t getLimit() const;
+	void removeLimit();
 };
 
 ostream &operator<<(ostream &stream, Channel &channel);
