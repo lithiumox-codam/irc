@@ -3,13 +3,22 @@
 
 #include <sys/socket.h>
 #include <sys/epoll.h>
+#include <unistd.h>
+
 #include <cstring>
 #include <string>
-#include <vector>
 #include <iostream>
 #include <iomanip>
 
-#include <unistd.h>
+#include <functional>
+#include <vector>
+#include <map>
+
+#define ERR_NICKNAMEINUSE "433"		 // Nickname in use
+#define ERR_PASSWDMISMATCH "464"	 // Password mismatch
+#define RPL_ENDOFMOTD "376"			 // End of MOTD
+
+using CommandHandler = std::function<string(const vector<string> &)>;
 
 using namespace std;
 
@@ -21,7 +30,6 @@ using namespace std;
 extern EpollClass	myEpoll;
 
 // Constructors
-
 Bot::Bot() : socketfd(-1) {}
 
 Bot &Bot::operator=(const Bot &other) {
@@ -210,26 +218,28 @@ static string getNick(const string &sender) {
 	return sender.substr(0, nickEnd);
 }
 
-static string replyJOIN(const vector<string> &parts) {
+static string JOIN(const vector<string> &parts) {
 	string nick = getNick(parts[0]);
 	string response;
 
 	if (nick == "ircbot") {
 		response = "Hello! I'm ircbot. Thanks for inviting me! Ask me anything!";
+		logMessage(nick, "server", "Joined channel " + parts[2]);
 	}
 	else {
 		response = "Hello " + nick + ", welcome to the channel!";
+		logMessage("server", parts[2], nick + " joined the channel");
 	}
 
-	logMessage(nick, parts[2], "joined the channel");
 	logMessage("ircbot", parts[2], response);
 
 	return "PRIVMSG " + parts[2] + " :" + response + "\r\n";
 }
 
-static string replyPRIVMSG(vector<string> &parts) {
+static string PRIVMSG(const vector<string> &parts) {
 	string nick = getNick(parts[0]);
-	string message = parts.back();
+	const string &message = parts.back();
+
 	string response = getGPTResponse(nick, message);
 
 	logMessage(nick, parts[2], message);
@@ -238,7 +248,7 @@ static string replyPRIVMSG(vector<string> &parts) {
 	return "PRIVMSG " + parts[2] + " :" + response + "\r\n";
 }
 
-static string replyPART(const vector<string> &parts) {
+static string PART(const vector<string> &parts) {
 	string nick = getNick(parts[0]);
 	string response = "Goodbye " + nick + "! Have a nice day!";
 
@@ -248,13 +258,52 @@ static string replyPART(const vector<string> &parts) {
 	return "PRIVMSG " + parts[2] + response + "\r\n";
 }
 
-static string replyINVITE(const vector<string> &parts) {
+static string INVITE(const vector<string> &parts) {
 	string nick = getNick(parts[0]);
 	string channel = parts[3].starts_with(':') ? parts[3].substr(1) : parts[3];
 
-	logMessage(nick, channel, "invited me to the channel");
+	logMessage(nick, "server", "Invited me to channel " + channel);
 
 	return "JOIN " + channel + "\r\n";
+}
+
+static string NICKNAMEINUSE(const vector<string> &parts) {
+	string nick = getNick(parts[0]);
+
+	throw ExecutionException("Nickname << " + nick + " >> is already in use");
+}
+
+static string PASSWDMISMATCH(const vector<string> &parts) {
+	(void)parts;
+	throw ExecutionException("Password mismatch");
+}
+
+static string ENDOFMOTD(const vector<string> &parts) {
+	(void)parts;
+	logMessage("ircbot", "server", "Connected to the server");
+	return "";
+}
+
+static string getResponse(vector<string> &parts) {
+	const string &command = parts[1];
+
+	static const map<string, CommandHandler> handlers = {
+		{"JOIN", JOIN},
+		{"PRIVMSG", PRIVMSG},
+		{"PART", PART},
+		{"INVITE", INVITE},
+		{ERR_NICKNAMEINUSE, NICKNAMEINUSE},
+		{ERR_PASSWDMISMATCH, PASSWDMISMATCH},
+		{RPL_ENDOFMOTD, ENDOFMOTD}
+	};
+
+	auto handler = handlers.find(command);
+
+	if (handler != handlers.end()) {
+		return handler->second(parts);
+	}
+
+	return "";
 }
 
 void Bot::parse(void) {
@@ -262,36 +311,12 @@ void Bot::parse(void) {
 	for (string &command : commands) {
 		vector<string> parts = getCommandParts(command);
 
-		string response;
-
-		if (parts[1] == "433") {
-			throw ExecutionException("Nickname is already in use");
-		}
-
-		if (parts[1] == "464") {
-			throw ExecutionException("Password incorrect");
-		}
-
-		if (parts[1] == "376") {
-			logMessage("ircbot", "server", "Connected to the server");
+		if (parts.size() < 2) {
+			cerr << "Warning: Redeived an invalid command: [" << command << "]" << '\n';
 			continue ;
 		}
 
-		if (parts[1] == "JOIN") {
-			response = replyJOIN(parts);
-		}
-
-		else if (parts[1] == "PRIVMSG") {
-			response = replyPRIVMSG(parts);
-		}
-
-		else if (parts[1] == "PART") {
-			response = replyPART(parts);
-		}
-
-		else if (parts[1] == "INVITE") {
-			response = replyINVITE(parts);
-		}
+		string response = getResponse(parts);
 
 		if (!response.empty()) {
 			this->addToBuffer(response);
