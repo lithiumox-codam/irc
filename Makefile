@@ -67,7 +67,7 @@ format:
 	@ clang-format -i $(SRC) $(HDR)
 
 run: all
-	@ ./$(NAME) 6667 test .env
+	@ ./$(NAME) 6667 test
 
 bear: fclean
 	@ bear -- make

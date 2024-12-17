@@ -170,7 +170,7 @@ void Bot::init(int argc, char **argv) {
 
 	for (const auto &[key, defaultValue] : defaultEnv) {
 		string &value = env[key];
-		
+
 		if (value.empty()) {
 			value = getFromSystemEnv(key);
 		}
