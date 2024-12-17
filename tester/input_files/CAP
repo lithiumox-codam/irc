@@ -4,11 +4,11 @@ CAP LS 302
 CAP REQ :multi-prefix
 CAP REQ :sasl
 CAP REQ :multi-prefix sasl
-CAP * ACK :multi-prefix
-CAP * ACK :sasl
 CAP END
 
 # Invalid CAP commands
+CAP * ACK :multi-prefix
+CAP * ACK :sasl
 CAP
 CAP LSS
 CAP LS LS
