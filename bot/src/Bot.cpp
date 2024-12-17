@@ -265,8 +265,11 @@ void Bot::parse(void) {
 		string response;
 
 		if (parts[1] == "433") {
-			cerr << "Error: Nickname is already in use" << '\n';
-			exit(EXIT_FAILURE);
+			throw ExecutionException("Nickname is already in use");
+		}
+
+		if (parts[1] == "464") {
+			throw ExecutionException("Password incorrect");
 		}
 
 		if (parts[1] == "376") {
