@@ -106,20 +106,6 @@ static string getFromSystemEnv(const string &key) {
 	return (value == nullptr) ? "" : value;
 }
 
-static bool setFromSystemEnv(const string &key) {
-	string &value = env[key];
-
-	if (value.empty()) {
-		value = getFromSystemEnv(key);
-
-		if (value.empty()) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
 static pair<string, string> splitPair(const string &str, const char &delim) {
 	size_t found = str.find(delim);
 	if (found == string::npos) {
@@ -174,20 +160,24 @@ void Bot::init(int argc, char **argv) {
 
 	parseEnvFile("../.env");
 
-	// Set the hostname, port and password in the environment
-	if (setFromSystemEnv(HOSTNAME) == false) {
-		cerr << "Warning: HOSTNAME not set. Using default: " << DEFAULT_HOSTNAME << '\n';
-		env[HOSTNAME] = DEFAULT_HOSTNAME;
-	}
+	// Set the environment variables from the system environment
+	const map<string, string> defaultEnv = {
+		{HOSTNAME,	DEFAULT_HOSTNAME},
+		{PORT,		DEFAULT_PORT},
+		{PASSWORD,	DEFAULT_PASSWORD}
+	};
 
-	if (setFromSystemEnv(PORT) == false) {
-		cerr << "Warning: PORT not set. Using default: " << DEFAULT_PORT << '\n';
-		env[PORT] = DEFAULT_PORT;
-	}
+	for (const auto &[key, defaultValue] : defaultEnv) {
+		string &value = env[key];
+		
+		if (value.empty()) {
+			value = getFromSystemEnv(key);
+		}
 
-	if (setFromSystemEnv(PASSWORD) == false) {
-		cerr << "Warning: PASSWORD not set. Using default: " << DEFAULT_PASSWORD << '\n';
-		env[PASSWORD] = DEFAULT_PASSWORD;
+		if (value.empty()) {
+			cerr << "Warning: " << key << " not set. Using default: " << defaultValue << '\n';
+			env[key] = defaultValue;
+		}
 	}
 
 	// Create the bot socket
