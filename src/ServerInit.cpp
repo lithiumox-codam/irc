@@ -15,6 +15,16 @@ using namespace std;
 #define MIN_PORT 0
 #define MAX_PORT 65535
 
+#define HOSTNAME			"HOSTNAME"
+#define PORT				"PORT"
+#define PASSWORD			"PASSWORD"
+#define OPERATORS			"OPERATORS"
+#define ENV_FILE			"../.env"
+
+#define DEFAULT_HOSTNAME	"localhost"
+#define DEFAULT_PORT		"6667"
+#define DEFAULT_PASSWORD	"test"
+
 extern Server server;
 map<string, string> env;
 
@@ -64,10 +74,10 @@ static string getFromSystemEnv(const string &key) {
 
 void Server::setPort(string &port) {
 	if (port.empty()) {
-		port = getFromSystemEnv("PORT");
+		port = getFromSystemEnv(PORT);
 
 		if (port.empty()) {
-			throw ArgumentNotProvidedException("PORT");
+			throw ArgumentNotProvidedException(PORT);
 		}
 	}
 
@@ -90,10 +100,10 @@ void Server::setPort(string &port) {
 
 void Server::setPassword(string &password) {
 	if (password.empty()) {
-		password = getFromSystemEnv("PASSWORD");
+		password = getFromSystemEnv(PASSWORD);
 
 		if (password.empty()) {
-			throw ArgumentNotProvidedException("PASSWORD");
+			throw ArgumentNotProvidedException(PASSWORD);
 		}
 	}
 
@@ -102,10 +112,10 @@ void Server::setPassword(string &password) {
 
 void Server::setHostname(string &hostname) {
 	if (hostname.empty()) {
-		hostname = getFromSystemEnv("HOSTNAME");
+		hostname = getFromSystemEnv(HOSTNAME);
 
 		if (hostname.empty()) {
-			cerr << "Error: HOSTNAME not set. Using default [localhost]" << '\n';
+			cerr << "Warning: HOSTNAME not set. Using default [localhost]" << '\n';
 			hostname = "localhost";
 		}
 	}
@@ -115,10 +125,10 @@ void Server::setHostname(string &hostname) {
 
 static void setOperators(string &operators) {
 	if (operators.empty()) {
-		operators = getFromSystemEnv("OPERATORS");
+		operators = getFromSystemEnv(OPERATORS);
 
 		if (operators.empty()) {
-			cerr << "No server operators set" << '\n';
+			cerr << "Warning: No server operators set" << '\n';
 			return;
 		}
 	}
@@ -145,7 +155,7 @@ static void parseEnvFile(const string &filename) {
 	string line;
 
 	if (!file.is_open()) {
-		cerr << "Error: Unable to open env file " << filename << '\n';
+		cerr << "Warning: Unable to find or open env file " << filename << '\n';
 		return ;
 	}
 
@@ -167,21 +177,23 @@ static void parseEnvFile(const string &filename) {
 
 void Server::init(int argc, char **argv) {
 	if (argc > 1) {
-		env["PORT"] = argv[1];
+		env[PORT] = argv[1];
 	}
 
 	if (argc > 2) {
-		env["PASSWORD"] = argv[2];
+		env[PASSWORD] = argv[2];
 	}
 
 	if (argc > 3) {
-		parseEnvFile(argv[3]);
+		env[HOSTNAME] = argv[3];
 	}
 
-	setPort(env["PORT"]);
-	setPassword(env["PASSWORD"]);
-	setHostname(env["HOSTNAME"]);
-	setOperators(env["OPERATORS"]);
+	parseEnvFile(ENV_FILE);
+
+	setPort(env[PORT]);
+	setPassword(env[PASSWORD]);
+	setHostname(env[HOSTNAME]);
+	setOperators(env[OPERATORS]);
 
 	epollCreate();
 	socketCreate();
