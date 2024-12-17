@@ -20,6 +20,14 @@ using namespace std;
 #define MIN_PORT 0
 #define MAX_PORT 65535
 
+#define HOSTNAME			"HOSTNAME"
+#define PORT				"PORT"
+#define PASSWORD			"PASSWORD"
+
+#define DEFAULT_HOSTNAME	"localhost"
+#define DEFAULT_PORT		"6667"
+#define DEFAULT_PASSWORD	"test"
+
 extern EpollClass myEpoll;
 map<string, string> env;
 
@@ -71,12 +79,12 @@ void Bot::connectToServer(void) {
 	preset.ai_family = AF_INET;			// IPv4
 	preset.ai_socktype = SOCK_STREAM;	// TCP
 
-	int status = getaddrinfo(env["HOSTNAME"].c_str(), env["PORT"].c_str(), &preset, &res);
+	int status = getaddrinfo(env[HOSTNAME].c_str(), env[PORT].c_str(), &preset, &res);
 	if (status != 0) {
 		throw SetUpException("Getting server address info failed: " + string(gai_strerror(status)));
 	}
 
-	cout << "Connecting to " << env["HOSTNAME"] << ':' << env["PORT"] << "..." << '\n';
+	cout << "Connecting to " << env[HOSTNAME] << ':' << env[PORT] << "..." << '\n';
 
 	if (connect(this->socketfd, res->ai_addr, res->ai_addrlen) == -1) {
 		freeaddrinfo(res);
@@ -98,43 +106,18 @@ static string getFromSystemEnv(const string &key) {
 	return (value == nullptr) ? "" : value;
 }
 
-static void setPort(void) {
-	string &port = env["PORT"];
+static bool setFromSystemEnv(const string &key) {
+	string &value = env[key];
 
-	if (port.empty()) {
-		port = getFromSystemEnv("PORT");
+	if (value.empty()) {
+		value = getFromSystemEnv(key);
 
-		if (port.empty()) {
-			cerr << "Warning: PORT not set. Using default [6667]" << '\n';
-			port = "6667";
+		if (value.empty()) {
+			return false;
 		}
 	}
-}
 
-static void setPassword(void) {
-	string &password = env["PASSWORD"];
-
-	if (password.empty()) {
-		password = getFromSystemEnv("PASSWORD");
-
-		if (password.empty()) {
-			cerr << "Warning: PASSWORD not set. Using default [test]" << '\n';
-			password = "test";
-		}
-	}
-}
-
-static void setHostname(void) {
-	string &hostname = env["HOSTNAME"];
-
-	if (hostname.empty()) {
-		hostname = getFromSystemEnv("HOSTNAME");
-
-		if (hostname.empty()) {
-			cerr << "Warning: HOSTNAME not set. Using default [localhost]" << '\n';
-			hostname = "localhost";
-		}
-	}
+	return true;
 }
 
 static pair<string, string> splitPair(const string &str, const char &delim) {
@@ -156,7 +139,7 @@ static void parseEnvFile(const string &filename) {
 	string line;
 
 	if (!file.is_open()) {
-		cerr << "Error: Unable to open env file " << filename << '\n';
+		cerr << "Error: Unable to find or open env file " << filename << '\n';
 		return ;
 	}
 
@@ -178,25 +161,34 @@ static void parseEnvFile(const string &filename) {
 
 void Bot::init(int argc, char **argv) {
 	if (argc > 1) {
-		env["HOSTNAME"] = argv[1];
+		env[HOSTNAME] = argv[1];
 	}
 
 	if (argc > 2) {
-		env["PORT"] = argv[2];
+		env[PORT] = argv[2];
 	}
 
 	if (argc > 3) {
-		env["PASSWORD"] = argv[3];
+		env[PASSWORD] = argv[3];
 	}
 
-	if (argc > 4) {
-		parseEnvFile(argv[4]);
-	}
+	parseEnvFile("../.env");
 
 	// Set the hostname, port and password in the environment
-	setHostname();
-	setPort();
-	setPassword();
+	if (setFromSystemEnv(HOSTNAME) == false) {
+		cerr << "Warning: HOSTNAME not set. Using default: " << DEFAULT_HOSTNAME << '\n';
+		env[HOSTNAME] = DEFAULT_HOSTNAME;
+	}
+
+	if (setFromSystemEnv(PORT) == false) {
+		cerr << "Warning: PORT not set. Using default: " << DEFAULT_PORT << '\n';
+		env[PORT] = DEFAULT_PORT;
+	}
+
+	if (setFromSystemEnv(PASSWORD) == false) {
+		cerr << "Warning: PASSWORD not set. Using default: " << DEFAULT_PASSWORD << '\n';
+		env[PASSWORD] = DEFAULT_PASSWORD;
+	}
 
 	// Create the bot socket
 	this->createSocket();
@@ -205,5 +197,5 @@ void Bot::init(int argc, char **argv) {
 	this->connectToServer();
 
 	// Join the server
-	this->join(env["PASSWORD"]);
+	this->join(env[PASSWORD]);
 }
