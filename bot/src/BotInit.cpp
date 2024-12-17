@@ -23,6 +23,7 @@ using namespace std;
 #define HOSTNAME			"HOSTNAME"
 #define PORT				"PORT"
 #define PASSWORD			"PASSWORD"
+#define ENV_FILE			"../.env"
 
 #define DEFAULT_HOSTNAME	"localhost"
 #define DEFAULT_PORT		"6667"
@@ -158,7 +159,7 @@ void Bot::init(int argc, char **argv) {
 		env[PASSWORD] = argv[3];
 	}
 
-	parseEnvFile("../.env");
+	parseEnvFile(ENV_FILE);
 
 	// Set the environment variables from the system environment
 	const map<string, string> defaultEnv = {
