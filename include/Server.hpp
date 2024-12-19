@@ -15,15 +15,14 @@
 
 using namespace std;
 
-/* env related */
-bool getEnv();
-
 enum class ServerConfig : std::uint16_t {
 	BACKLOG = 10,
 	MAX_EVENTS = 10,
 	VECTOR_RESERVE = 10,
 	BUFFER_SIZE = 1024,
 };
+
+typedef array<struct epoll_event, (size_t)ServerConfig::BACKLOG> EventArray;
 
 class Server {
    private:
@@ -40,48 +39,53 @@ class Server {
 
 	int epoll_fd;  // File descriptor for epoll
 
+	void setPassword(string &password);
+	void setPort(string &port);
+	void setHostname(string &hostname);
+
+	void socketCreate();
+	void epollCreate();
+
    public:
 	Server();
 	~Server();
 
 	// Getters and Setters
-	void setPassword(const string &password);
 	[[nodiscard]] const string &getPassword() const;
+	[[nodiscard]] const string &getHostname();
+	[[nodiscard]] string getUserCount() const;
 
 	// Public Methods
-	void bindSocket(const string &portString);
-	bool isBound() const;
-	void setHostname(const string &hostString);
-
+	void init(int argc, char **argv);
 	void start();
 	void stop();
 
-	void epollCreate();
+	void acceptNewConnection();
+
 	void epollAdd(int socket) const;
 	void epollRemove(int socket) const;
 	void epollChange(int socket, uint32_t events) const;
 	int epollWait();
+	void handleEvents(EventArray &events, int numberOfEvents);
 
-	void handleEvents(array<struct epoll_event, (size_t)ServerConfig::BACKLOG> &events, int numberOfEvents);
-	void acceptNewConnection();
-
+	// User management
 	void addUser(unsigned int socket);
 	void removeUser(User &user, const string &reason);
 	[[nodiscard]] User *getUser(int socket);
 	[[nodiscard]] User *getUser(const string &nickname);
 	[[nodiscard]] deque<User> &getUsers();
 
+	// Channel management
 	Channel &addChannel(const string &channelName);
 	void removeChannel(Channel &channel);
 	[[nodiscard]] Channel *getChannel(const string &name);
 	[[nodiscard]] deque<Channel> &getChannels();
 
-	[[nodiscard]] const string &getHostname();
+	// Server operator management
 	void addOperator(const string &nickname);
 	void removeOperator(const string &nickname);
 	[[nodiscard]] bool operatorCheck(User *user) const;
-
-	string getUserCount() const;
+	[[nodiscard]] bool operatorCheck(const string &nickname) const;
 };
 
 ostream &operator<<(ostream &stream, Server &server);

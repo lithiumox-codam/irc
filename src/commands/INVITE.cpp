@@ -16,6 +16,7 @@ void INVITE(IRStream &stream, string &args, User *user) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}
+	
 	auto [InviteeName, ChannelName] = splitPair(args, ' ');
 
 	if (ChannelName.empty() || InviteeName.empty()) {
@@ -39,7 +40,7 @@ void INVITE(IRStream &stream, string &args, User *user) {
 		channel->addInvited(invitee);
 		stream.prefix().code(RPL_INVITING).param(user->getNickname()).param(InviteeName).param(ChannelName).end();
 		IRStream invStream;
-		invStream.prefix(user).param("INVITE").param(InviteeName).param(ChannelName).end().sendPacket(invitee);
+		invStream.prefix(user).param("INVITE").param(InviteeName).trail(ChannelName).end().sendPacket(invitee);
 	} catch (const IrcException &e) {
 		e.e_stream(stream, user);
 	}

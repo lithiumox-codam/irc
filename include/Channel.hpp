@@ -15,7 +15,7 @@ using namespace std;
 
 #define MEMBER_LIMIT 50
 
-typedef pair<User*, Modes> Member;
+typedef pair<User *, Modes> Member;
 
 class Channel {
    private:

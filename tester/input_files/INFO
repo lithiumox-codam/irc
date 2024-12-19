@@ -1,0 +1,13 @@
+# Testing INFO before logging in
+INFO
+
+# Testing INFO while logging in
+NICK info_nick
+INFO
+USER info_user 0 * :info_realname
+INFO
+PASS test
+INFO
+CAP LS
+CAP END
+INFO

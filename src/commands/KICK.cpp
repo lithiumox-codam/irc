@@ -1,5 +1,5 @@
-
-#include <stdexcept>
+#include <algorithm>
+#include <vector>
 
 #include "Channel.hpp"
 #include "Codes.hpp"
@@ -9,11 +9,24 @@
 #include "Modes.hpp"
 #include "Server.hpp"
 #include "User.hpp"
-#include <algorithm>
 
 extern Server server;
 
 using namespace std;
+
+static string getMessage(vector<string> &tokens) {
+	string message;
+
+	if (tokens.size() < 2) {
+		for (size_t i = 2; i < tokens.size(); i++) {
+			message += ' ' + tokens[i];
+		}
+	} else {
+		message = "No reason provided";
+	}
+
+	return message;
+}
 
 void KICK(IRStream &stream, string &args, User *user) {
 	if (!user->hasHandshake(H_AUTHENTICATED)) {
@@ -40,13 +53,8 @@ void KICK(IRStream &stream, string &args, User *user) {
 			throw UserNotOperatorException();
 		}
 
-		stream.prefix(user).command().param(channel->getName()).param(target->first->getNickname());
-		if (tokens.size() > 2) {
-			for_each(tokens.begin() + 2, tokens.end(), [&stream](const string &str) { stream.param(str); });
-		} else {
-			stream.param(kicker->first->getNickname());
-		}
-		stream.end();
+		stream.prefix(user).command().param(tokens[0]).param(tokens[1]).trail(getMessage(tokens)).end();
+
 		channel->broadcast(stream, kicker->first);
 		channel->removeUser(target->first);
 	} catch (const IrcException &e) {

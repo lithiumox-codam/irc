@@ -1,7 +1,9 @@
 #include <csignal>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 
+#include "Exceptions.hpp"
 #include "Server.hpp"
 
 Server server;
@@ -10,17 +12,13 @@ void signalHandler(int signum) {
 	switch (signum) {
 		case SIGINT:  // ctrl + c
 			server.stop();
+			exit (EXIT_SUCCESS);
 			break;
 		case SIGTERM:  // kill command
 			server.stop();
-			break;
-		case SIGKILL:  // kill -9 command
-			server.stop();
-			break;
-		default:
+			exit (signum);
 			break;
 	}
-	exit(signum);
 }
 
 int main(int argc, char **argv) {
@@ -28,26 +26,26 @@ int main(int argc, char **argv) {
 	signal(SIGTERM, signalHandler);
 	signal(SIGKILL, signalHandler);
 
-	getEnv();
-	if (server.getPassword().empty() && !server.isBound()) {
-		if (argc != 3) {
-			cerr << "Error: Password and/or port not set by env. Please provide them like:" << '\n';
-			cerr << "./ircserver [port] [password]" << '\n';
-			return 1;
-		}
-		if (server.getHostname().empty()) {
-			server.setHostname("localhost");
-		}
-		server.bindSocket(argv[1]);
-		server.setPassword(argv[2]);
-	} else {
-		if (server.getPassword().empty() || !server.isBound()) {
-			cerr << "Error: Password and/or port not set by env. Please provide them like:" << '\n';
-			cerr << "./ircserver [port] [password]" << '\n';
-			return 1;
-		}
+	try {
+		server.init(argc, argv);
+		server.start();
+
+	} catch (const ArgumentNotProvidedException &e) {
+		cerr << "Error: " << e.what() << " not set by environment or parameter." << '\n';
+		cerr << "Please provide it like:" << "\n\n";
+		cerr << "       ./ircserver [port] [password]" << '\n';
+		cerr << "                 or" << '\n';
+		cerr << "PORT=[port] PASSWORD=[password] ./ircserver" << '\n';
+		return EXIT_FAILURE;
+
+	} catch (const SetUpException &e) {
+		cerr << "Error during setup: " << e.what() << ": " << strerror(errno) << '\n';
+		return EXIT_FAILURE;
+
+	} catch (const ExecutionException &e) {
+		cerr << "Error during execution: " << e.what() << ": " << strerror(errno) << '\n';
+		return EXIT_FAILURE;
 	}
 
-	server.start();
-	return 0;
+	return EXIT_SUCCESS;
 }

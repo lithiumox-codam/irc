@@ -38,9 +38,8 @@ void QUIT(IRStream& stream, string& args, User* user);
  * which function to call.
  */
 const map<string, void (*)(IRStream&, string&, User*)> store = {
-	{"PASS", PASS}, {"CAP", CAP}, {"NICK", NICK}, {"MOTD", MOTD}, {"USER", USER}, {"INFO", INFO},
-	{"JOIN", JOIN}, {"PING", PING}, {"PRIVMSG", PRIVMSG}, {"WHO", WHO}, {"TOPIC", TOPIC}, {"PART", PART},
-	{"KICK", KICK}, {"INVITE", INVITE}, {"MODE", MODE}, {"LIST", LIST}, {"QUIT", QUIT}
-};
+	{"PASS", PASS}, {"CAP", CAP},		{"NICK", NICK},		  {"MOTD", MOTD}, {"USER", USER},	{"INFO", INFO},
+	{"JOIN", JOIN}, {"PING", PING},		{"PRIVMSG", PRIVMSG}, {"WHO", WHO},	  {"TOPIC", TOPIC}, {"PART", PART},
+	{"KICK", KICK}, {"INVITE", INVITE}, {"MODE", MODE},		  {"LIST", LIST}, {"QUIT", QUIT}};
 
 void parse(User* user);
