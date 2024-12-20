@@ -12,11 +12,11 @@ void signalHandler(int signum) {
 	switch (signum) {
 		case SIGINT:  // ctrl + c
 			server.stop();
-			exit (EXIT_SUCCESS);
+			exit(EXIT_SUCCESS);
 			break;
 		case SIGTERM:  // kill command
 			server.stop();
-			exit (signum);
+			exit(signum);
 			break;
 	}
 }

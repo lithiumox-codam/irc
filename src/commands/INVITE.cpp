@@ -16,7 +16,7 @@ void INVITE(IRStream &stream, string &args, User *user) {
 		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}
-	
+
 	auto [InviteeName, ChannelName] = splitPair(args, ' ');
 
 	if (ChannelName.empty() || InviteeName.empty()) {

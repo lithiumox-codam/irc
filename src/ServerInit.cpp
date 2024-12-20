@@ -1,29 +1,29 @@
+#include <sys/epoll.h>
+#include <sys/socket.h>
+
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <string>
 
-#include <sys/epoll.h>
-#include <sys/socket.h>
-
-#include "Server.hpp"
-#include "General.hpp"
 #include "Exceptions.hpp"
+#include "General.hpp"
+#include "Server.hpp"
 
 using namespace std;
 
 #define MIN_PORT 0
 #define MAX_PORT 65535
 
-#define HOSTNAME			"HOSTNAME"
-#define PORT				"PORT"
-#define PASSWORD			"PASSWORD"
-#define OPERATORS			"OPERATORS"
-#define ENV_FILE			"../.env"
+#define HOSTNAME "HOSTNAME"
+#define PORT "PORT"
+#define PASSWORD "PASSWORD"
+#define OPERATORS "OPERATORS"
+#define ENV_FILE "../.env"
 
-#define DEFAULT_HOSTNAME	"localhost"
-#define DEFAULT_PORT		"6667"
-#define DEFAULT_PASSWORD	"test"
+#define DEFAULT_HOSTNAME "localhost"
+#define DEFAULT_PORT "6667"
+#define DEFAULT_PASSWORD "test"
 
 extern Server server;
 map<string, string> env;
@@ -44,7 +44,7 @@ void Server::socketCreate() {
 		throw SetUpException("Setting server socket flags failed");
 	}
 
-	int optval = 1; //true
+	int optval = 1;	 // true
 	if (setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
 		throw SetUpException("Setting server socket options failed");
 	}
@@ -156,13 +156,13 @@ static void parseEnvFile(const string &filename) {
 
 	if (!file.is_open()) {
 		cerr << "Warning: Unable to find or open env file " << filename << '\n';
-		return ;
+		return;
 	}
 
 	while (std::getline(file, line)) {
 		if (file.bad()) {
 			cerr << "Error: Unable to read env file " << filename << '\n';
-			break ;
+			break;
 		}
 
 		auto [key, value] = splitPair(line, '=');

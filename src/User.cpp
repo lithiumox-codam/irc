@@ -9,8 +9,8 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
-#include <ostream>
 #include <map>
+#include <ostream>
 
 #include "Exceptions.hpp"
 #include "Server.hpp"
@@ -62,9 +62,7 @@ void User::closeSocket() {
 
 int User::getSocket() const { return this->socket; }
 
-string User::getNickname() const {
-	return this->nickname.empty() ? "*" : this->nickname;
-}
+string User::getNickname() const { return this->nickname.empty() ? "*" : this->nickname; }
 
 const string &User::getUsername() const { return this->username; };
 
