@@ -19,11 +19,7 @@ using namespace std;
 #define PORT "PORT"
 #define PASSWORD "PASSWORD"
 #define OPERATORS "OPERATORS"
-#define ENV_FILE "../.env"
-
-#define DEFAULT_HOSTNAME "localhost"
-#define DEFAULT_PORT "6667"
-#define DEFAULT_PASSWORD "test"
+#define ENV_FILE ".env"
 
 extern Server server;
 map<string, string> env;
@@ -66,19 +62,9 @@ void Server::epollCreate() {
 	}
 }
 
-static string getFromSystemEnv(const string &key) {
-	const char *value = getenv(key.c_str());
-
-	return (value == nullptr) ? "" : value;
-}
-
 void Server::setPort(string &port) {
 	if (port.empty()) {
-		port = getFromSystemEnv(PORT);
-
-		if (port.empty()) {
-			throw ArgumentNotProvidedException(PORT);
-		}
+		throw ArgumentNotProvidedException(PORT);
 	}
 
 	int portNum;
@@ -86,7 +72,7 @@ void Server::setPort(string &port) {
 	try {
 		portNum = stoi(port);
 	} catch (const std::out_of_range &e) {
-		throw SetUpException("Port number out of range: " + port);
+		throw SetUpException("Port number out of stoi range: " + port);
 	} catch (const std::exception &e) {
 		throw SetUpException("Invalid port number: " + port);
 	}
@@ -100,11 +86,7 @@ void Server::setPort(string &port) {
 
 void Server::setPassword(string &password) {
 	if (password.empty()) {
-		password = getFromSystemEnv(PASSWORD);
-
-		if (password.empty()) {
-			throw ArgumentNotProvidedException(PASSWORD);
-		}
+		throw ArgumentNotProvidedException(PASSWORD);
 	}
 
 	this->password = password;
@@ -112,12 +94,8 @@ void Server::setPassword(string &password) {
 
 void Server::setHostname(string &hostname) {
 	if (hostname.empty()) {
-		hostname = getFromSystemEnv(HOSTNAME);
-
-		if (hostname.empty()) {
-			cerr << "Warning: HOSTNAME not set. Using default [localhost]" << '\n';
-			hostname = "localhost";
-		}
+		cerr << "Warning: HOSTNAME not set. Using default [localhost]" << '\n';
+		hostname = "localhost";
 	}
 
 	this->hostname = hostname;
@@ -125,24 +103,20 @@ void Server::setHostname(string &hostname) {
 
 static void setOperators(string &operators) {
 	if (operators.empty()) {
-		operators = getFromSystemEnv(OPERATORS);
-
-		if (operators.empty()) {
-			cerr << "Warning: No server operators set" << '\n';
-			return;
-		}
+		cerr << "Warning: No server operators set" << '\n';
+		return;
 	}
 
 	vector<string> opers = split(operators, ',');
 
 	for (const string &oper : opers) {
 		if (oper.empty()) {
-			cerr << "Error: Invalid operator" << '\n';
+			cerr << "Warning: Invalid operator" << '\n';
 			continue;
 		}
 
 		if (server.operatorCheck(oper)) {
-			cerr << "Error: Operator already exists" << '\n';
+			cerr << "Warning: Operator already exists" << '\n';
 			continue;
 		}
 
@@ -167,15 +141,31 @@ static void parseEnvFile(const string &filename) {
 
 		auto [key, value] = splitPair(line, '=');
 
-		if (env[key].empty()) {
-			env[key] = value;
-		}
+		env[key] = value;
 	}
 
 	file.close();
 }
 
+
+static void setFromSystemEnv(const string &key) {
+	const char *value = getenv(key.c_str());
+
+	env[key] = (value == nullptr) ? "" : value;
+}
+
+
 void Server::init(int argc, char **argv) {
+	// First check the system environment
+	setFromSystemEnv(PORT);
+	setFromSystemEnv(PASSWORD);
+	setFromSystemEnv(HOSTNAME);
+	setFromSystemEnv(OPERATORS);
+
+	// Then check the .env file and overwrite any values
+	parseEnvFile(ENV_FILE);
+
+	// Then check the command line arguments and overwrite any values
 	if (argc > 1) {
 		env[PORT] = argv[1];
 	}
@@ -188,8 +178,7 @@ void Server::init(int argc, char **argv) {
 		env[HOSTNAME] = argv[3];
 	}
 
-	parseEnvFile(ENV_FILE);
-
+	// Finally set the values inside the server
 	setPort(env[PORT]);
 	setPassword(env[PASSWORD]);
 	setHostname(env[HOSTNAME]);
