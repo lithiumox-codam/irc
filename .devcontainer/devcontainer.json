@@ -16,7 +16,8 @@
 				"llvm-vs-code-extensions.vscode-clangd",
 				"xaver.clang-format",
 				"CS128.cs128-clang-tidy",
-				"cschlosser.doxdocgen"
+				"cschlosser.doxdocgen",
+				"iliazeus.vscode-ansi"
 			]
 		}
 	},

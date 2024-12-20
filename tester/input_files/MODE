@@ -1,0 +1,15 @@
+# Logging in for MODE
+NICK modetest
+USER modetest 0 * :modetest
+PASS test
+CAP LS
+CAP END
+
+# Adding modes
+JOIN #kak
+MODE #kak +i
+MODE #kak
+MODE #kak +tml 10
+MODE #kak
+
+

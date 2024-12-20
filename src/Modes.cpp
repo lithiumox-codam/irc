@@ -1,6 +1,7 @@
 #include "Modes.hpp"
 
 #include "Server.hpp"
+#include <ranges>
 
 extern Server server;
 

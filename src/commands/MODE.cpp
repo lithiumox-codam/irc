@@ -208,9 +208,16 @@ static void handleUserMode(IRStream &stream, vector<string> &tokens, User *user)
 */
 static void handleChannelModes(IRStream &stream, vector<string> &tokens, User *user) {
 	char sign = '\0';
+	Channel *channel = server.getChannel(tokens[0]);
+	if (tokens.size() == 1) {
+		stream.prefix().code(RPL_CHANNELMODEIS).param(user->getNickname()).param(tokens[0]).param(channel->modes.getString()).end();
+		return;
+	}
+	if (!channel->hasOperator(user)) {
+		throw UserNotOperatorException();
+	}
 	string modes = diffModes(tokens[1]);
 	auto tokenIt = tokens.begin() + 2;
-	Channel *channel = server.getChannel(tokens[0]);
 
 	for (size_t i = 0; i < modes.length(); ++i) {
 		char chr = modes[i];
