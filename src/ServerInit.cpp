@@ -147,13 +147,11 @@ static void parseEnvFile(const string &filename) {
 	file.close();
 }
 
-
 static void setFromSystemEnv(const string &key) {
 	const char *value = getenv(key.c_str());
 
 	env[key] = (value == nullptr) ? "" : value;
 }
-
 
 void Server::init(int argc, char **argv) {
 	// First check the system environment
