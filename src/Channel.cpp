@@ -41,6 +41,11 @@ void Channel::setPassword(const string &password) {
 	this->modes.add(M_PASSWORD);
 }
 
+void Channel::removePassword() {
+	this->password.clear();
+	this->modes.remove(M_PASSWORD);
+}
+
 void Channel::setName(const string &name) {
 	// Name validation
 	if (name.size() < 2 || name.size() > 16) {
@@ -211,5 +216,7 @@ void Channel::setLimit(size_t limit) {
 	this->limit = limit;
 	this->modes.add(M_LIMIT);
 }
+
+size_t Channel::getLimit() const { return this->limit; }
 
 void Channel::removeLimit() { this->modes.remove(M_LIMIT); }

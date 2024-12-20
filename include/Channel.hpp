@@ -37,12 +37,14 @@ class Channel {
 	Channel(const string &name);
 	Channel(const Channel &channel) noexcept;
 	Channel &operator=(const Channel &channel) noexcept;
+	~Channel() = default;
 
 	[[nodiscard]] const string &getName() const;
 	void setName(const std::string &name);
 
 	[[nodiscard]] const string &getPassword() const;
 	void setPassword(const std::string &password);
+	void removePassword();
 
 	void setTopic(const string &topic);
 	[[nodiscard]] const string &getTopic() const;
@@ -78,6 +80,7 @@ class Channel {
 	[[nodiscard]] time_t getCreated() const;
 
 	void setLimit(size_t limit);
+	[[nodiscard]] size_t getLimit() const;
 	void removeLimit();
 };
 

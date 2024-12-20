@@ -62,6 +62,9 @@ static void channelChecks(Channel *channel, User *user) {
 	if (channel->hasUser(user)) {
 		throw UserAlreadyOnChannelException();
 	}
+	if (channel->modes.has(M_LIMIT) && channel->getMembers()->size() >= channel->getLimit()) {
+		throw ChannelFullException(channel->getName());
+	}
 	if (channel->getMembers()->size() >= MEMBER_LIMIT) {
 		throw ChannelFullException(channel->getName());
 	}

@@ -148,7 +148,6 @@ void Server::start() {
 	while (this->running) {
 		EventArray events;
 		int numberOfEvents = epoll_wait(this->epoll_fd, events.data(), (int)ServerConfig::MAX_EVENTS, -1);
-
 		if (numberOfEvents == -1) {
 			throw ExecutionException("Waiting for epoll events failed");
 		}
