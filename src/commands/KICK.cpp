@@ -15,14 +15,14 @@ extern Server server;
 using namespace std;
 
 static string getMessage(vector<string> &tokens) {
-	string message;
+	if (tokens.size() == 2) {
+		return "No reason provided";
+	}
 
-	if (tokens.size() < 2) {
-		for (size_t i = 2; i < tokens.size(); i++) {
-			message += ' ' + tokens[i];
-		}
-	} else {
-		message = "No reason provided";
+	string message = tokens[2].substr(1);
+
+	for (size_t i = 3; i < tokens.size(); i++) {
+		message += ' ' + tokens[i];
 	}
 
 	return message;
