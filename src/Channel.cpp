@@ -10,7 +10,7 @@
 
 using namespace std;
 
-Channel::Channel() : modes(Type::CHANNEL) {};
+Channel::Channel() : modes(Type::CHANNEL){};
 
 Channel::Channel(const string &name) : created(time(nullptr)), modes(Type::CHANNEL) { this->setName(name); }
 
