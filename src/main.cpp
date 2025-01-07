@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 
 	} catch (const ArgumentNotProvidedException &e) {
 		cerr << "Error: " << e.what() << " not set by environment or parameter." << '\n';
-		cerr << "Please provide it like:" << "\n\n";
+		cerr << "Please provide it like:\n\n";
 		cerr << "       ./ircserver [port] [password]" << '\n';
 		cerr << "                 or" << '\n';
 		cerr << "PORT=[port] PASSWORD=[password] ./ircserver" << '\n';

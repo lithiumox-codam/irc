@@ -15,14 +15,7 @@ using namespace std;
 #define MIN_PORT 0
 #define MAX_PORT 65535
 
-#define HOSTNAME "HOSTNAME"
-#define PORT "PORT"
-#define PASSWORD "PASSWORD"
-#define OPERATORS "OPERATORS"
-#define ENV_FILE ".env"
-
 extern Server server;
-map<string, string> env;
 
 void Server::socketCreate() {
 	this->socket = ::socket(AF_INET, SOCK_STREAM, 0);
@@ -64,7 +57,7 @@ void Server::epollCreate() {
 
 void Server::setPort(string &port) {
 	if (port.empty()) {
-		throw ArgumentNotProvidedException(PORT);
+		throw ArgumentNotProvidedException("PORT");
 	}
 
 	int portNum;
@@ -86,7 +79,7 @@ void Server::setPort(string &port) {
 
 void Server::setPassword(string &password) {
 	if (password.empty()) {
-		throw ArgumentNotProvidedException(PASSWORD);
+		throw ArgumentNotProvidedException("PASSWORD");
 	}
 
 	this->password = password;
@@ -124,7 +117,7 @@ static void setOperators(string &operators) {
 	}
 }
 
-static void parseEnvFile(const string &filename) {
+static void parseEnvFile(map<string, string> &env, const string &filename) {
 	std::ifstream file(filename);
 	string line;
 
@@ -147,40 +140,42 @@ static void parseEnvFile(const string &filename) {
 	file.close();
 }
 
-static void setFromSystemEnv(const string &key) {
+static void setFromSystemEnv(map<string, string> &env, const string &key) {
 	const char *value = getenv(key.c_str());
 
 	env[key] = (value == nullptr) ? "" : value;
 }
 
 void Server::init(int argc, char **argv) {
+	map<string, string> env;
+
 	// First check the system environment
-	setFromSystemEnv(PORT);
-	setFromSystemEnv(PASSWORD);
-	setFromSystemEnv(HOSTNAME);
-	setFromSystemEnv(OPERATORS);
+	setFromSystemEnv(env, "PORT");
+	setFromSystemEnv(env, "PASSWORD");
+	setFromSystemEnv(env, "HOSTNAME");
+	setFromSystemEnv(env, "OPERATORS");
 
 	// Then check the .env file and overwrite any values
-	parseEnvFile(ENV_FILE);
+	parseEnvFile(env, ".env");
 
 	// Then check the command line arguments and overwrite any values
 	if (argc > 1) {
-		env[PORT] = argv[1];
+		env["PORT"] = argv[1];
 	}
 
 	if (argc > 2) {
-		env[PASSWORD] = argv[2];
+		env["PASSWORD"] = argv[2];
 	}
 
 	if (argc > 3) {
-		env[HOSTNAME] = argv[3];
+		env["HOSTNAME"] = argv[3];
 	}
 
 	// Finally set the values inside the server
-	setPort(env[PORT]);
-	setPassword(env[PASSWORD]);
-	setHostname(env[HOSTNAME]);
-	setOperators(env[OPERATORS]);
+	setPort(env["PORT"]);
+	setPassword(env["PASSWORD"]);
+	setHostname(env["HOSTNAME"]);
+	setOperators(env["OPERATORS"]);
 
 	epollCreate();
 	socketCreate();

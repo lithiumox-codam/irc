@@ -63,7 +63,7 @@ class User {
 	void closeSocket();
 	[[nodiscard]] int getSocket() const;
 
-	[[nodiscard]] string getNickname() const;
+	[[nodiscard]] const string &getNickname() const;
 	[[nodiscard]] const string &getUsername() const;
 	[[nodiscard]] const string &getRealname() const;
 	[[nodiscard]] const string &getHostname() const;

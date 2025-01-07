@@ -17,7 +17,7 @@
 
 extern Server server;
 
-User::User(int socket) : socket(socket), handshake(0), modes(Type::USER) {}
+User::User(int socket) : nickname("*"), socket(socket), handshake(0), modes(Type::USER) {}
 
 User::User(const User &user) noexcept : modes(user.modes) {
 	this->socket = user.socket;
@@ -62,9 +62,9 @@ void User::closeSocket() {
 
 int User::getSocket() const { return this->socket; }
 
-string User::getNickname() const { return this->nickname.empty() ? "*" : this->nickname; }
+const string &User::getNickname() const { return this->nickname; }
 
-const string &User::getUsername() const { return this->username; };
+const string &User::getUsername() const { return this->username; }
 
 const string &User::getRealname() const { return this->realname; }
 
