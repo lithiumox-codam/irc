@@ -27,6 +27,9 @@ void TOPIC(IRStream &stream, string &args, User *user) {
 		if (!channel->hasUser(user)) {
 			throw NotOnChannelException(tokens.first);
 		}
+		if (channel->modes.has(M_TOPIC_LOCK) && !channel->hasOperator(user)) {
+			throw UserNotOperatorException();
+		}
 		if (tokens.second.empty()) {
 			if (channel->getTopic().empty()) {
 				stream.prefix()
