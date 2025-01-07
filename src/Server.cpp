@@ -182,7 +182,6 @@ User *Server::getUser(const int socket) {
 
 User *Server::getUser(const string &nickname) {
 	for (auto &user : this->users) {
-		cout << "User: " << user.getNickname() << '\n';
 		if (user.getNickname() == nickname) {
 			return &user;
 		}
