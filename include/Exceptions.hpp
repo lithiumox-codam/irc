@@ -80,9 +80,9 @@ class NotOnChannelException : public IrcException {
 
 class UserNotOperatorException : public IrcException {
    public:
-	UserNotOperatorException() : IrcException("You're not a channel operator", ERR_CHANOPRIVSNEEDED) {}
+	UserNotOperatorException(const string &param) : IrcException("You're not a channel operator", ERR_CHANOPRIVSNEEDED, param) {}
 	void e_stream(IRStream &stream, User *user) const override {
-		stream.prefix().code(code).param(user->getNickname()).trail(message).end();
+		stream.prefix().code(code).param(user->getNickname()).param(param).trail(message).end();
 	}
 };
 
