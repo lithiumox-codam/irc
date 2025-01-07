@@ -264,6 +264,15 @@ static void handleChannelModes(IRStream &stream, vector<string> &tokens, User *u
 						broadcastModeChange(channel, user, {sign, chr}, "");
 					}
 					break;
+				case 't':
+					if (sign == '+') {
+						channel->modes.add(M_TOPIC_LOCK);
+						broadcastModeChange(channel, user, {sign, chr}, "");
+					} else {
+						channel->modes.remove(M_TOPIC_LOCK);
+						broadcastModeChange(channel, user, {sign, chr}, "");
+					}
+					break;
 				default:
 					auto unsupportedModes = channel->modes.applyChanges({sign, chr});
 					if (!unsupportedModes.empty()) {
