@@ -36,7 +36,7 @@ void KICK(IRStream &stream, string &args, User *user) {
 		}
 		Member *kicker = channel->getMember(user);
 		if (!kicker->second.has(M_OPERATOR)) {
-			UserNotOperatorException(channel->getName());
+			throw UserNotOperatorException(channel->getName());
 		}
 		stream.prefix(user).command().param(tokens[0]).param(tokens[1]);
 		if (tokens.size() > 2) {
