@@ -36,7 +36,7 @@ void KICK(IRStream &stream, string &args, User *user) {
 		}
 		Member *kicker = channel->getMember(user);
 		if (!kicker->second.has(M_OPERATOR)) {
-			throw UserNotOperatorException();
+			UserNotOperatorException(channel->getName());
 		}
 		stream.prefix(user).command().param(tokens[0]).param(tokens[1]);
 		if (tokens.size() > 2) {
@@ -45,7 +45,7 @@ void KICK(IRStream &stream, string &args, User *user) {
 			stream.trail("Kicked by " + user->getNickname());
 		}
 		stream.end();
-
+		
 		channel->broadcast(stream, kicker->first);
 		channel->removeUser(target->first);
 	} catch (const IrcException &e) {

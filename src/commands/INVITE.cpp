@@ -31,7 +31,7 @@ void INVITE(IRStream &stream, string &args, User *user) {
 		}
 
 		if (channel->modes.has(M_INVITE_ONLY) && !inviter->second.has(M_OPERATOR)) {
-			throw UserNotOperatorException();
+			UserNotOperatorException(channel->getName());
 		}
 		User *invitee = server.getUser(InviteeName);
 		if (channel->getMember(invitee) != nullptr) {
