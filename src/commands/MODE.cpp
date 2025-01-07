@@ -255,6 +255,15 @@ static void handleChannelModes(IRStream &stream, vector<string> &tokens, User *u
 						broadcastModeChange(channel, user, {sign, chr}, channel->getName());
 					}
 					break;
+				case 'i':
+					if (sign == '+') {
+						channel->modes.add(M_INVITE_ONLY);
+						broadcastModeChange(channel, user, {sign, chr}, "");
+					} else {
+						channel->modes.remove(M_INVITE_ONLY);
+						broadcastModeChange(channel, user, {sign, chr}, "");
+					}
+					break;
 				default:
 					auto unsupportedModes = channel->modes.applyChanges({sign, chr});
 					if (!unsupportedModes.empty()) {

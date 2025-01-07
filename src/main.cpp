@@ -24,7 +24,6 @@ void signalHandler(int signum) {
 int main(int argc, char **argv) {
 	signal(SIGINT, signalHandler);
 	signal(SIGTERM, signalHandler);
-	signal(SIGKILL, signalHandler);
 
 	try {
 		server.init(argc, argv);
