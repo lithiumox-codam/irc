@@ -138,7 +138,7 @@ static void channelOperatorHelper(const string &mode, User *user, Channel *chann
 	auto *target = channel->getMember(targetnick);
 
 	if (!channel->hasOperator(user)) {
-		throw UserNotOperatorException();
+		UserNotOperatorException(channel->getName());
 	}
 	if (mode[0] == '+') {
 		channel->addOperator(target->first);
@@ -214,7 +214,7 @@ static void handleChannelModes(IRStream &stream, vector<string> &tokens, User *u
 		return;
 	}
 	if (!channel->hasOperator(user)) {
-		throw UserNotOperatorException();
+		UserNotOperatorException(channel->getName());
 	}
 	string modes = diffModes(tokens[1]);
 	auto tokenIt = tokens.begin() + 2;
