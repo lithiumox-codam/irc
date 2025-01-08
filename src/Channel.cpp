@@ -1,6 +1,5 @@
 #include "Channel.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <utility>
 
@@ -11,11 +10,9 @@
 
 using namespace std;
 
-Channel::Channel() : modes(Type::CHANNEL) {};
+Channel::Channel() : modes(Type::CHANNEL){};
 
-Channel::Channel(const string &name) : created(time(nullptr)), modes(Type::CHANNEL) {
-	this->setName(name);
-}
+Channel::Channel(const string &name) : created(time(nullptr)), modes(Type::CHANNEL) { this->setName(name); }
 
 Channel::Channel(const Channel &channel) noexcept
 	: members(channel.members),

@@ -138,7 +138,7 @@ static void channelOperatorHelper(const string &mode, User *user, Channel *chann
 	auto *target = channel->getMember(targetnick);
 
 	if (!channel->hasOperator(user)) {
-		throw UserNotOperatorException();
+		throw UserNotOperatorException(channel->getName());
 	}
 	if (mode[0] == '+') {
 		channel->addOperator(target->first);
@@ -158,40 +158,36 @@ static void channelOperatorHelper(const string &mode, User *user, Channel *chann
 * @param user The user that sent the command.
 */
 static void handleUserMode(IRStream &stream, vector<string> &tokens, User *user) {
-	try {
-		switch (tokens.size()) {
-			case 1: {
-				if (tokens[0] != user->getNickname() && !server.operatorCheck(user)) {
-					stream.prefix().code(ERR_NOPRIVILEGES).param(user->getNickname()).trail("Permission denied").end();
-					return;
-				}
-				auto *target = (tokens[0] != user->getNickname()) ? server.getUser(tokens[0]) : user;
-				sendModeChange(stream, user, target->modes.getString());
-			} break;
-
-			case 2: {
-				User *target = (tokens[0] != user->getNickname()) ? server.getUser(tokens[0]) : user;
-				if (target->getNickname() != user->getNickname() && !server.operatorCheck(user)) {
-					throw NoOtherUserModeException();
-				}
-				if (tokens[1].find('o') != string::npos && !server.operatorCheck(user)) {
-					stream.prefix().code(ERR_NOPRIVILEGES).param(user->getNickname()).trail("Permission denied").end();
-					return;
-				}
-				auto unsupportedModes = target->modes.applyChanges(tokens[1]);
-				serverOperatorHelper(tokens[1], target);
-				if (!unsupportedModes.empty()) {
-					sendUnknownMode(stream, user, unsupportedModes);
-				}
-				sendModeChange(stream, user, diffModes(tokens[1], unsupportedModes));
-			} break;
-
-			default: {
-				throw NotEnoughParametersException();
+	switch (tokens.size()) {
+		case 1: {
+			if (tokens[0] != user->getNickname() && !server.operatorCheck(user)) {
+				stream.prefix().code(ERR_NOPRIVILEGES).param(user->getNickname()).trail("Permission denied").end();
+				return;
 			}
+			auto *target = (tokens[0] != user->getNickname()) ? server.getUser(tokens[0]) : user;
+			sendModeChange(stream, user, target->modes.getString());
+		} break;
+
+		case 2: {
+			User *target = (tokens[0] != user->getNickname()) ? server.getUser(tokens[0]) : user;
+			if (target->getNickname() != user->getNickname() && !server.operatorCheck(user)) {
+				throw NoOtherUserModeException();
+			}
+			if (tokens[1].find('o') != string::npos && !server.operatorCheck(user)) {
+				stream.prefix().code(ERR_NOPRIVILEGES).param(user->getNickname()).trail("Permission denied").end();
+				return;
+			}
+			auto unsupportedModes = target->modes.applyChanges(tokens[1]);
+			serverOperatorHelper(tokens[1], target);
+			if (!unsupportedModes.empty()) {
+				sendUnknownMode(stream, user, unsupportedModes);
+			}
+			sendModeChange(stream, user, diffModes(tokens[1], unsupportedModes));
+		} break;
+
+		default: {
+			throw NotEnoughParametersException();
 		}
-	} catch (const IrcException &e) {
-		e.e_stream(stream, user);
 	}
 }
 
@@ -208,9 +204,16 @@ static void handleUserMode(IRStream &stream, vector<string> &tokens, User *user)
 */
 static void handleChannelModes(IRStream &stream, vector<string> &tokens, User *user) {
 	char sign = '\0';
+	Channel *channel = server.getChannel(tokens[0]);
+	if (tokens.size() == 1) {
+		stream.prefix().code(RPL_CHANNELMODEIS).param(user->getNickname()).param(tokens[0]).param(channel->modes.getString()).end();
+		return;
+	}
+	if (!channel->hasOperator(user)) {
+		throw UserNotOperatorException(channel->getName());
+	}
 	string modes = diffModes(tokens[1]);
 	auto tokenIt = tokens.begin() + 2;
-	Channel *channel = server.getChannel(tokens[0]);
 
 	for (size_t i = 0; i < modes.length(); ++i) {
 		char chr = modes[i];
@@ -246,6 +249,24 @@ static void handleChannelModes(IRStream &stream, vector<string> &tokens, User *u
 					} else {
 						channel->removePassword();
 						broadcastModeChange(channel, user, {sign, chr}, channel->getName());
+					}
+					break;
+				case 'i':
+					if (sign == '+') {
+						channel->modes.add(M_INVITE_ONLY);
+						broadcastModeChange(channel, user, {sign, chr}, "");
+					} else {
+						channel->modes.remove(M_INVITE_ONLY);
+						broadcastModeChange(channel, user, {sign, chr}, "");
+					}
+					break;
+				case 't':
+					if (sign == '+') {
+						channel->modes.add(M_TOPIC_LOCK);
+						broadcastModeChange(channel, user, {sign, chr}, "");
+					} else {
+						channel->modes.remove(M_TOPIC_LOCK);
+						broadcastModeChange(channel, user, {sign, chr}, "");
 					}
 					break;
 				default:
@@ -284,14 +305,14 @@ void MODE(IRStream &stream, string &args, User *user) {
 		return;
 	}
 
-	if (tokens.front().starts_with("#")) {
-		try {
+	try {
+		if (tokens.front().starts_with("#")) {
 			handleChannelModes(stream, tokens, user);
-		} catch (const IrcException &e) {
-			e.e_stream(stream, user);
+		} else {
+			handleUserMode(stream, tokens, user);
 		}
-	} else {
-		handleUserMode(stream, tokens, user);
+	} catch (const IrcException &e) {
+		e.e_stream(stream, user);
 	}
 }
 

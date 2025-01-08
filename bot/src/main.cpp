@@ -1,6 +1,8 @@
 #include "../include/Bot.hpp"
 #include "../include/Epoll.hpp"
 
+#include <csignal>
+#include <cstdlib>
 #include <string>
 #include <iostream>
 
@@ -18,120 +20,93 @@ int			server;
 EpollClass	myEpoll;
 Bot			bot;
 
-static void createSocket(void) {
-	// Create a socket
-	server = ::socket(AF_INET, SOCK_STREAM, 0);
+static inline string epollErrorEvent(int socketfd) {
+	int err;
+	socklen_t len = sizeof(err);
 
-	int			reuseAddr = 1;
-	setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr));
+	getsockopt(socketfd, SOL_SOCKET, SO_ERROR, &err, &len);
 
-	if (server == -1) {
-		cerr << "Error: socket creation failed" << '\n';
-		exit(EXIT_FAILURE);
-	}
-
-	// Set socket to non-blocking
-	int			flags = fcntl(server, F_GETFL, 0);
-
-	if (fcntl(server, F_SETFL, flags | O_NONBLOCK) == -1) {
-		cerr << "Error: fcntl failed" << '\n';
-		exit(EXIT_FAILURE);
-	}
+	return strerror(err);
 }
 
-static void connectToServer(const string &hostname, const string &port) {
-	cout << "Connecting to server " << hostname << ":" << port << "..." << '\n';
+static void	handleEvent(epoll_event& event) {
+	bool	disconnect = false;
+	string	reason;
 
-	// Get server IP
-	struct hostent	*host = gethostbyname(hostname.c_str());
-
-	// Set server address and port
-	struct sockaddr_in	addr = {
-		.sin_family = AF_INET,										// IPv4
-		.sin_port = htons(stoi(port)),				// Port
-		.sin_addr = {(in_addr_t) *host->h_addr_list[0]},	// Server IP
-		.sin_zero = {0}											// Padding
-	};
-
-	// Connect to the server
-	if (connect(server, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-		if (errno == EINPROGRESS) {
-			return;
+	if ((event.events & EPOLLIN) != 0) {
+		try {
+			bot.readFromServer();
+		} catch (const ExecutionException &e) {
+			disconnect = true;
+			reason = e.what();
 		}
+	}
 
-		cerr << "Error: connect failed" << '\n';
-		cerr << "Error: " << strerror(errno) << '\n';
-		exit(EXIT_FAILURE);
+	if ((event.events & EPOLLOUT) != 0) {
+		try {
+			bot.sendToServer();
+		} catch (const ExecutionException &e) {
+			disconnect = true;
+			reason = e.what();
+		}
+	}
+
+	if ((event.events & EPOLLHUP) != 0) {
+		disconnect = true;
+		reason = "Server shut down (HANGUP)";
+	}
+
+	if ((event.events & EPOLLRDHUP) != 0) {
+		disconnect = true;
+		reason = "Server shut down (READ HANGUP)";
+	}
+
+	if ((event.events & EPOLLERR) != 0) {
+		disconnect = true;
+		reason = "Error on socket: " + epollErrorEvent(event.data.fd);
+	}
+
+	if (disconnect) {
+		throw ExecutionException(reason);
 	}
 }
 
-void	handleEvent(epoll_event& event) {
-	if (event.events & EPOLLIN) {
-		// Read from the socket
-		bot.readFromServer();
-	}
+static void start(void) {
+	while (true) {
+		myEpoll.wait();
 
-	if (event.events & EPOLLOUT) {
-		// Write to the socket
-		bot.sendToServer();
+		for (int i = 0; i < myEpoll.numberOfEvents; i++) {
+			handleEvent(myEpoll.events[i]);
+		}
 	}
+}
 
-	if (event.events & EPOLLERR) {
-		cerr << "Error: EPOLLERR: " << strerror(errno) << '\n';
-		exit (EXIT_FAILURE);
-	}
-
-	if (event.events & EPOLLHUP) {
-		cerr << "Server shut down: EPOLLHUP" << '\n';
-		exit(EXIT_FAILURE);
-	}
-
-	if (event.events & EPOLLRDHUP) {
-		cerr << "Server shut down: EPOLLRDHUP" << '\n';
-		exit(EXIT_FAILURE);
+void signalHandler(int signum) {
+	switch (signum) {
+		case SIGINT:  // ctrl + C
+			exit(EXIT_SUCCESS);
+			break;
+		case SIGTERM:  // kill command
+			exit(signum);
+			break;
 	}
 }
 
 int main(int argc, char **argv) {
-	cout << "Starting IRC bot..." << '\n';
+	signal(SIGINT, signalHandler);
+	signal(SIGTERM, signalHandler);
 
-	if (argc != 3) {
-		cerr << "Error: Server hostname and/or port not set by env. Please provide them like:" << '\n';
-		cerr << "./ircbot [hostname] [port]" << '\n';
-		exit (EXIT_FAILURE);
+	try {
+		bot.init(argc, argv);
+		start();
+	}
+	catch (const SetUpException &e) {
+		cerr << "Error during setup: " << e.what() << ": " << strerror(errno) << '\n';
+		return EXIT_FAILURE;
+	} catch (const ExecutionException &e) {
+		cerr << "Error during execution: " << e.what() << '\n';
+		return EXIT_FAILURE;
 	}
 
-	// Get server hostname and port
-	string		hostname = argv[1];
-	string		port = argv[2];
-
-	// Create server socket
-	createSocket();
-
-	// Connect to the server
-	connectToServer(hostname, port);
-
-	// Add the server socket to the epoll
-	myEpoll.add(server);
-
-	// Join the server
-	bot.join();
-
-	// Listen for messages
-	while (true) {
-		myEpoll.wait();
-
-		for (epoll_event &event : myEpoll.events) {
-			if (event.events) {
-				handleEvent(event);
-			}
-		}
-	}
-
-	// Get reply from chatGPT
-
-	// Close the server socket
-	close(server);
-
-	return 0;
+	return EXIT_SUCCESS;
 }

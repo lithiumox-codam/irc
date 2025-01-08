@@ -1,0 +1,46 @@
+# Logging in for MODE
+NICK modetest
+USER modetest 0 * :modetest
+PASS test
+CAP LS
+CAP END
+
+# Joining a channel
+JOIN #kak
+
+# General tests
+MODE
+MODE #kak
+
+# Channel key (k)
+MODE #kak +k
+MODE #kak +k test
+MODE #kak +k test test2
+MODE #kak +kkk test
+MODE #kak
+MODE #kak -k
+
+# Channel limit (l)
+MODE #kak +l 123
+MODE #kak +l -123
+MODE #kak +lll 123
+MODE #kak +l 12345678912
+MODE #kak +l ""
+MODE #kak +lllllll 
+MODE #kak +l
+MODE #kak +l -12345678912345
+MODE #kak +l text
+MODE #kak +l c
+MODE #kak
+MODE #kak -l
+MODE #kak -l 123
+MODE #kak -l -123
+MODE #kak -lll 123
+MODE #kak -l 12345678912
+MODE #kak -l ""
+MODE #kak -lllllll
+MODE #kak -l
+MODE #kak -l -12345678912345
+MODE #kak -l text
+MODE #kak -l c
+MODE #kak

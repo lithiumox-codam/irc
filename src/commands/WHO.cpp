@@ -40,7 +40,7 @@ static void sendWhoReply(IRStream& stream, User* requestingUser, Channel* channe
 
 void WHO(IRStream& stream, string& args, User* user) {
 	if (!user->hasHandshake(H_REGISTERED)) {
-		stream.prefix().code(ERR_NOTREGISTERED).trail("You have not registered").end();
+		stream.prefix().code(ERR_NOTREGISTERED).param(user->getNickname()).trail("You have not registered").end();
 		return;
 	}
 

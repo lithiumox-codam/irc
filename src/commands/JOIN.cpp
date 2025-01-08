@@ -71,6 +71,8 @@ static void channelChecks(Channel *channel, User *user) {
 
 	if (channel->hasInvited(user)) {
 		channel->removeInvited(user);
+	} else if (channel->hasOperator(user)) {
+		return;
 	} else if (channel->modes.has(M_INVITE_ONLY)) {
 		throw InviteOnlyChannelException();
 	}

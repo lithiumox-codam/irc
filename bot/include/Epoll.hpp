@@ -20,6 +20,7 @@ class EpollClass {
 
 		// Event list
 		array<struct epoll_event, MAXEVENTS>		events;
+		int											numberOfEvents;
 
 		// Functions
 		void			add(int socket_fd) const;

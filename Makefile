@@ -49,7 +49,6 @@ open: $(NAME)
 bonus:
 	@ make run -C $(BONUS_DIR)
 
-
 clean:
 	@ echo "$(RED)$(BOLD)Cleaning $(NICKNAME)...$(RESET)"
 	@ rm -rf $(OBJ_DIR)

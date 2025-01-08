@@ -3,19 +3,38 @@
 
 #include <sys/socket.h>
 #include <sys/epoll.h>
+#include <unistd.h>
+
 #include <cstring>
 #include <string>
+#include <iostream>
+#include <iomanip>
+
+#include <functional>
 #include <vector>
+#include <map>
+
+#define ERR_NICKNAMEINUSE "433"		 // Nickname in use
+#define ERR_PASSWDMISMATCH "464"	 // Password mismatch
+#define RPL_ENDOFMOTD "376"			 // End of MOTD
+
+using CommandHandler = std::function<string(const vector<string> &)>;
+
+using namespace std;
+
+#define RED "\033[1;31m"
+#define YELLOW "\033[1;33m"
+#define GREEN "\033[1;32m"
+#define RESET "\033[0m"
 
 extern EpollClass	myEpoll;
-extern int			server;
 
 // Constructors
-
-Bot::Bot() {}
+Bot::Bot() : socketfd(-1) {}
 
 Bot &Bot::operator=(const Bot &other) {
 	if (this != &other) {
+		this->socketfd = other.socketfd;
 		this->in_buffer = other.in_buffer;
 		this->out_buffer = other.out_buffer;
 	}
@@ -26,81 +45,82 @@ Bot::Bot(const Bot &other) {
 	*this = other;
 }
 
-Bot::~Bot() {}
+Bot::~Bot() {
+	if (this->socketfd == -1) {
+		return;
+	}
+
+	if (close(socketfd) == -1) {
+		cerr << "Shutting down the bot failed: " << strerror(errno) << '\n';
+		exit(EXIT_FAILURE);
+	}
+	
+	this->socketfd = -1;
+}
 
 // Server Functions
 void Bot::readFromServer(void) {
 	char	buffer[4096];
 	int		ret;
 
-	ret = recv(server, buffer, sizeof(buffer) + 1, 0);
+	ret = recv(this->socketfd, buffer, sizeof(buffer), 0);
 
 	if (ret == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return;
 		}
-		cerr << "Error: recv(): " << strerror(errno) << '\n';
-		exit(EXIT_FAILURE);
+		throw ExecutionException("Unexpected error in recv:" + string(strerror(errno)));
 	}
 
 	if (ret == 0) {
-		cerr << "Server connection lost..." << '\n';
-		exit(EXIT_FAILURE);
+		throw ExecutionException("Connection to server lost...");
 	}
 
 	buffer[ret] = '\0';
 	this->in_buffer.append(buffer, ret);
-	cout << "DEBUG: Received: " << this->in_buffer << '\n';
 
 	this->parse();
 }
 
 void Bot::sendToServer(void) {
-	cout << "DEBUG: Sending: " << this->out_buffer << '\n';
-
 	// Send the buffer
-	while (!this->out_buffer.empty()) {
-		int ret = send(server, this->out_buffer.data(), this->out_buffer.size(), 0);
+	int ret = send(this->socketfd, this->out_buffer.data(), this->out_buffer.size(), 0);
 
-		if (ret == -1) {
-			if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				return;
-			}
-			cerr << "Error: send():" << strerror(errno) << '\n';
-			exit(EXIT_FAILURE);
+	if (ret == -1) {
+		if (errno == EWOULDBLOCK || errno == EAGAIN) {
+			return;
 		}
-
-		if (ret == 0) {
-			cerr << "DEBUG: Server gracefully disconnected..." << '\n';
-			exit(EXIT_FAILURE);
-		}
-
-		this->out_buffer.erase(0, ret);
+		throw ExecutionException("Unexpected error in send:" + string(strerror(errno)));
 	}
 
+	if (ret == 0) {
+		throw ExecutionException("Connection to server lost...");
+	}
+
+	this->out_buffer.erase(0, ret);
+
 	// Change the epoll to remove the EPOLLOUT flag
-	myEpoll.change(server, EPOLLIN);
+	if (this->out_buffer.empty()) {
+		myEpoll.change(this->socketfd, EPOLLIN);
+	}
 }
 
 void	Bot::addToBuffer(const string &data) {
 	this->out_buffer.append(data);
 }
 
-void Bot::join(void) {
-	cout << "Joining the server..." << '\n';
+void Bot::join(const string &password) {
+	cout << "Joining the server as [ircbot] with password [" << password << "]..." << "\n\n\n";
 
 	// Join the server
 	this->addToBuffer("NICK ircbot\r\n");
 	this->addToBuffer("USER ircbot 0 * :ircbot\r\n");
+	this->addToBuffer("PASS " + password + "\r\n");
 	this->addToBuffer("CAP LS\r\n");
-	this->addToBuffer("PASS test\r\n");
 	this->addToBuffer("CAP END\r\n");
 
-	// Join the #bot channel
-	this->addToBuffer("JOIN #bot\r\n");
-
 	// Set the epoll to be ready to write
-	myEpoll.change(server, EPOLLIN | EPOLLOUT);
+	myEpoll.change(this->socketfd, EPOLLIN | EPOLLOUT);
 }
 
 // Bot Functions
@@ -167,11 +187,26 @@ static vector<string> getCommands(string &buffer, const string &delim) {
 	return commands;
 }
 
-// :<server> 433 <username> <nickname> :Nickname is already in use
+#define WIDTH 12
+// :<this->socketfd> 433 <username> <nickname> :Nickname is already in use
 // :ircbot!ircbot@localhost JOIN #bot
 // :opelser!olebol@localhost JOIN :#bot
 // :opelser!olebol@localhost PRIVMSG #bot :hello bot!
 // :opelser!olebol@localhost PART #bot :Leaving
+static void logMessage(const string &nick, const string &channel, const string &message) {
+	// Set width for nickname
+	int width;
+
+	width = nick.size() > WIDTH ? nick.size() : WIDTH;
+	cout << YELLOW << setw(width) << left << "[" + nick + "] " << RESET;
+
+	// Set width for channel
+	width = channel.size() > WIDTH ? channel.size() : WIDTH;
+	cout << RED << setw(width) << left << "[" + channel + "] " << RESET;
+
+	// Print the message
+	cout << message << '\n';
+}
 
 static string getNick(const string &sender) {
 	size_t nickEnd = sender.find('!');
@@ -183,33 +218,92 @@ static string getNick(const string &sender) {
 	return sender.substr(0, nickEnd);
 }
 
-static string replyJOIN(const vector<string> &parts) {
+static string JOIN(const vector<string> &parts) {
 	string nick = getNick(parts[0]);
+	string response;
 
 	if (nick == "ircbot") {
-		cout << "DEBUG: Joined the server" << '\n';
-	} else {
-		cout << "DEBUG: " << nick << " joined the channel" << '\n';
-		return "PRIVMSG " + parts[2] + " :Hello " + nick + ", welcome to the channel!\r\n";
+		response = "Hello! I'm ircbot. Thanks for inviting me! Ask me anything!";
+		logMessage(nick, "server", "Joined channel " + parts[2]);
 	}
-	return string();
+	else {
+		response = "Hello " + nick + ", welcome to the channel!";
+		logMessage("server", parts[2], nick + " joined the channel");
+	}
+
+	logMessage("ircbot", parts[2], response);
+
+	return "PRIVMSG " + parts[2] + " :" + response + "\r\n";
 }
 
-static string replyPRIVMSG(vector<string> &parts) {
+static string PRIVMSG(const vector<string> &parts) {
 	string nick = getNick(parts[0]);
-	string message = parts.back();
+	const string &message = parts.back();
 
-	cout << "DEBUG: " << nick << " said: " << message << '\n';
+	string response = getGPTResponse(nick, message);
 
-	return "PRIVMSG " + parts[2] + " :" + getGPTResponse(nick, message) + "\r\n";
+	logMessage(nick, parts[2], message);
+	logMessage("ircbot", parts[2], response);
+
+	return "PRIVMSG " + parts[2] + " :" + response + "\r\n";
 }
 
-static string replyPART(const vector<string> &parts) {
+static string PART(const vector<string> &parts) {
+	string nick = getNick(parts[0]);
+	string response = "Goodbye " + nick + "! Have a nice day!";
+
+	logMessage(nick, parts[2], "left the channel");
+	logMessage("ircbot", parts[2], response);
+
+	return "PRIVMSG " + parts[2] + response + "\r\n";
+}
+
+static string INVITE(const vector<string> &parts) {
+	string nick = getNick(parts[0]);
+	string channel = parts[3].starts_with(':') ? parts[3].substr(1) : parts[3];
+
+	logMessage(nick, "server", "Invited me to channel " + channel);
+
+	return "JOIN " + channel + "\r\n";
+}
+
+static string NICKNAMEINUSE(const vector<string> &parts) {
 	string nick = getNick(parts[0]);
 
-	cout << "DEBUG: " << nick << " left the channel" << '\n';
+	throw ExecutionException("Nickname << " + nick + " >> is already in use");
+}
 
-	return "PRIVMSG " + parts[2] + " :Goodbye " + nick + "! Have a nice day!\r\n";
+static string PASSWDMISMATCH(const vector<string> &parts) {
+	(void)parts;
+	throw ExecutionException("Password mismatch");
+}
+
+static string ENDOFMOTD(const vector<string> &parts) {
+	(void)parts;
+	logMessage("ircbot", "server", "Connected to the server");
+	return "";
+}
+
+static string getResponse(vector<string> &parts) {
+	const string &command = parts[1];
+
+	static const map<string, CommandHandler> handlers = {
+		{"JOIN", JOIN},
+		{"PRIVMSG", PRIVMSG},
+		{"PART", PART},
+		{"INVITE", INVITE},
+		{ERR_NICKNAMEINUSE, NICKNAMEINUSE},
+		{ERR_PASSWDMISMATCH, PASSWDMISMATCH},
+		{RPL_ENDOFMOTD, ENDOFMOTD}
+	};
+
+	auto handler = handlers.find(command);
+
+	if (handler != handlers.end()) {
+		return handler->second(parts);
+	}
+
+	return "";
 }
 
 void Bot::parse(void) {
@@ -217,28 +311,16 @@ void Bot::parse(void) {
 	for (string &command : commands) {
 		vector<string> parts = getCommandParts(command);
 
-		string response;
-
-		if (parts[1] == "433") {
-			cerr << "Error: Nickname is already in use" << '\n';
-			exit(EXIT_FAILURE);
+		if (parts.size() < 2) {
+			cerr << "Warning: Redeived an invalid command: [" << command << "]" << '\n';
+			continue ;
 		}
 
-		else if (parts[1] == "JOIN") {
-			response = replyJOIN(parts);
-		}
+		string response = getResponse(parts);
 
-		else if (parts[1] == "PRIVMSG") {
-			response = replyPRIVMSG(parts);
-		}
-
-		else if (parts[1] == "PART") {
-			response = replyPART(parts);
-		}
-		
 		if (!response.empty()) {
 			this->addToBuffer(response);
-			this->sendToServer();
+			myEpoll.change(this->socketfd, EPOLLIN | EPOLLOUT);
 		}
 	}
 }

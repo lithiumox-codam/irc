@@ -21,11 +21,13 @@ void TOPIC(IRStream &stream, string &args, User *user) {
 		return;
 	}
 	pair<string, string> tokens = splitPair(args, ' ');
-	// cerr << "parser gives: " << tokens.first << " and [" << tokens.second << "]\n";
 	try {
 		Channel *channel = server.getChannel(tokens.first);
 		if (!channel->hasUser(user)) {
 			throw NotOnChannelException(tokens.first);
+		}
+		if (channel->modes.has(M_TOPIC_LOCK) && !channel->hasOperator(user)) {
+			throw UserNotOperatorException(channel->getName());
 		}
 		if (tokens.second.empty()) {
 			if (channel->getTopic().empty()) {
