@@ -1,13 +1,11 @@
 #include "Server.hpp"
 
-#include <limits.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
 #include <array>
 #include <cerrno>
-#include <climits>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
