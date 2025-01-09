@@ -21,7 +21,11 @@ void PASS(IRStream &stream, string &args, User *user) {
 	}
 
 	if (user->hasHandshake(H_PASS)) {
-		stream.prefix().code(ERR_ALREADYREGISTRED).param(user->getNickname()).trail("You are already authenticated").end();
+		stream.prefix()
+			.code(ERR_ALREADYREGISTRED)
+			.param(user->getNickname())
+			.trail("You are already authenticated")
+			.end();
 		return;
 	}
 
