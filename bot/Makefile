@@ -3,20 +3,21 @@ NICKNAME		:= BOT
 
 # Directories
 HDR_DIR			:= include
-LIB_DIR			:= lib
 SRC_DIR			:= src
 OBJ_DIR			:= build
 
 # Compiler flags
 CC				:= c++
-CFLAGS			:= -Wall -Werror -Wextra -std=c++20 -I./$(HDR_DIR) -I $(LIB_DIR)
+CFLAGS			:= -Wall -Werror -Wextra -std=c++20
 
+# Add other flags as necessary
 ifdef DEBUG
-	CFLAGS		+= -g -fsanitize=address
+    CFLAGS += -g -fsanitize=address
 endif
 
 # Linker flags
-LDFLAGS			:= -lcurl
+CURL_H	:= /home/opelser/.capt/root/usr/include/x86_64-linux-gnu
+LDFLAGS	:= /lib/x86_64-linux-gnu/libcurl.so.4
 
 # Includes
 HDR		:= $(shell find $(HDR_DIR) -name '*.hpp')
@@ -33,7 +34,12 @@ BOLD			:= \033[1m
 RESET			:= \033[0m
 
 # Rules
-all: ${NAME}
+all: update_submodules ${NAME}
+
+update_submodules:
+	@ echo "$(YELLOW)Checking and updating git submodules...$(RESET)"
+	@ git submodule update --init --recursive
+	@ echo "$(GREEN)Submodules are up to date!$(RESET)"
 
 $(NAME): $(OBJ)
 	@ printf "%b%s%b" "$(YELLOW)$(BOLD)" "Compiling $(NICKNAME)..." "$(RESET)"
@@ -42,7 +48,7 @@ $(NAME): $(OBJ)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HDR)
 	@ mkdir -p $(dir $@)
-	@ $(CC) $(CFLAGS) -c $< -o $@ -I $(HDR_DIR)
+	@ $(CC) $(CFLAGS) -c $< -o $@ -I $(HDR_DIR) -I $(CURL_H)
 
 open: $(NAME)
 	@ ./$(NAME) 8080

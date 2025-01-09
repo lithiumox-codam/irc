@@ -1,5 +1,3 @@
-#include <stdexcept>
-
 #include "Channel.hpp"
 #include "Codes.hpp"
 #include "Exceptions.hpp"
