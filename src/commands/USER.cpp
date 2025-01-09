@@ -3,8 +3,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include <iostream>
-
 #include "Codes.hpp"
 #include "Exceptions.hpp"
 #include "General.hpp"

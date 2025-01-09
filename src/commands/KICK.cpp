@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <vector>
 
 #include "Channel.hpp"
@@ -45,7 +44,7 @@ void KICK(IRStream &stream, string &args, User *user) {
 			stream.trail("Kicked by " + user->getNickname());
 		}
 		stream.end();
-		
+
 		channel->broadcast(stream, kicker->first);
 		channel->removeUser(target->first);
 	} catch (const IrcException &e) {
